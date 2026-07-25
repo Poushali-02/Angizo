@@ -1,0 +1,76 @@
+# -----------------------------
+# OS / Editor
+# -----------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+
+# VS Code workspace-local files
+.vscode/*
+!.vscode/extensions.json
+
+# -----------------------------
+# Python / FastAPI (neurocode-backend)
+# -----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+neurocode-backend/.venv/
+
+# Python tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+.tox/
+.nox/
+
+# Coverage / test artifacts
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# -----------------------------
+# Node / VS Code Extension (neurocode-extension)
+# -----------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Extension build outputs
+neurocode-extension/out/
+neurocode-extension/dist/
+neurocode-extension/.eslintcache
+neurocode-extension/.npm/
+*.vsix
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# -----------------------------
+# Misc runtime artifacts
+# -----------------------------
+*.log
