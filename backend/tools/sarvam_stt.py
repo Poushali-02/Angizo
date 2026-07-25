@@ -26,7 +26,7 @@ class SarvamSTT:
         if not self.api_key:
             logger.warning("[SarvamSTT] SARVAM_API_KEY not configured. STT skipping.")
             return ""
-
+        print(f"SARVAM API KEY {self.api_key}")
         headers = {
             "api-subscription-key": self.api_key
         }

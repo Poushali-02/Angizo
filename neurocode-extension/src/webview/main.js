@@ -140,12 +140,29 @@
 
   // --- Audio State ---
   let isCapturing = false;
-  let activeAudioPlayer = null;
+
+  // --- Pre-cache Female Voice (async voice load fix for Windows/Chromium) ---
+  let cachedFemaleVoice = null;
+  function cacheFemaleVoice() {
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length === 0) return;
+    cachedFemaleVoice = voices.find(v =>
+      /zira|female|hazel|samantha|victoria|karen|eva|catherine|anushka/i.test(v.name) &&
+      !/david|mark|george|james|male|guy/i.test(v.name)
+    ) || voices.find(v => !/david|mark|george|james|male/i.test(v.name) && v.lang.startsWith('en'));
+    if (cachedFemaleVoice) {
+      console.log('[Webview Speech] Cached female voice:', cachedFemaleVoice.name);
+    }
+  }
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = cacheFemaleVoice;
+    cacheFemaleVoice();
+  }
 
   // --- Web Audio Earcon Synthesizer ---
-  // Synthesizes 4 distinct earcon tones locally using OscillatorNode.
-  // Called by play_earcon postMessage from extension host (<5ms latency).
+  // Synthesizes 4 distinct earcon tones locally via OscillatorNode (<5ms latency).
   let audioCtxEarcon = null;
+  let audioCtxPrewarmed = false;
 
   function getEarconContext() {
     if (!audioCtxEarcon || audioCtxEarcon.state === 'closed') {
@@ -156,6 +173,28 @@
     }
     return audioCtxEarcon;
   }
+
+  // Pre-warm AudioContext on first user interaction (click/key) to guarantee earcons fire.
+  // Browsers block audio until a user gesture has occurred at least once.
+  function prewarmAudioContext() {
+    if (audioCtxPrewarmed) return;
+    try {
+      const ctx = getEarconContext();
+      // Play a silent node to unblock the context
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+      audioCtxPrewarmed = true;
+      console.log('[Webview Audio] AudioContext pre-warmed — earcons ready');
+    } catch (e) { /* silent */ }
+  }
+  // Attach to common user gestures
+  document.addEventListener('click', prewarmAudioContext, { once: false, capture: true });
+  document.addEventListener('keydown', prewarmAudioContext, { once: false, capture: true });
+  // Also try immediately (may work if no autoplay block in VS Code webview)
+  setTimeout(prewarmAudioContext, 500);
 
   function playTone(freq, duration, type = 'sine', gain = 0.18) {
     try {
@@ -230,7 +269,7 @@
     }
   }
 
-  // Browser Web Speech API fallback for zero-dependency 100% reliable voice playback
+  // Browser Web Speech API — ONLY used as last-resort fallback when cloud TTS fails.
   function speakText(text) {
     if (!text || typeof text !== 'string') return;
     try {
@@ -239,53 +278,95 @@
         const cleanText = text.replace(/[*_#`~]/g, '').trim();
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.rate = 1.05;
-        utterance.pitch = 1.0;
+        utterance.pitch = 1.15;
+        if (cachedFemaleVoice) utterance.voice = cachedFemaleVoice;
         window.speechSynthesis.speak(utterance);
-        console.log('[Webview Speech] Spoke text via Web Speech API:', cleanText.substring(0, 60));
+        console.log('[Webview Speech] Web Speech API fallback (Female):', cleanText.substring(0, 60));
       }
     } catch (err) {
       console.warn('[Webview Speech] SpeechSynthesis error:', err);
     }
   }
 
-  // Helper to play base64 audio response from Sarvam / ElevenLabs TTS with Web Speech fallback
-  function playAudioNarration(base64Data, fallbackText = '') {
-    // Cancel any ongoing local speech or audio playback to prevent voice overlapping
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    if (activeAudioPlayer) {
-      try {
-        activeAudioPlayer.pause();
-        activeAudioPlayer.currentTime = 0;
-      } catch (e) {}
-    }
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AudioQueueManager — Sequential, gap-free audio playback
+  // Queues earcon sounds and cloud TTS narration so they play one after another
+  // without overlap or stutter. Higher priority items can interrupt lower ones.
+  // ═══════════════════════════════════════════════════════════════════════════
+  const AudioQueue = {
+    _queue: [],          // Array of { base64, fallbackText, priority }
+    _player: null,       // Shared HTMLAudioElement
+    _playing: false,
 
-    if (base64Data && base64Data.length > 50) {
-      try {
-        const mimeType = base64Data.startsWith('UklGR') ? 'audio/wav' : 'audio/mp3';
-        const audioSrc = `data:${mimeType};base64,${base64Data}`;
-        if (!activeAudioPlayer) {
-          activeAudioPlayer = new Audio();
-        }
-        activeAudioPlayer.src = audioSrc;
-        activeAudioPlayer.play()
-          .then(() => console.log('[Webview Audio] Playing cloud TTS audio'))
-          .catch(err => {
-            console.warn('[Webview Audio] Cloud audio element failed, using Web Speech fallback:', err);
-            if (fallbackText) speakText(fallbackText);
-          });
-        return;
-      } catch (err) {
-        console.warn('[Webview Audio] Exception, using Web Speech fallback:', err);
+    /** Add audio to the queue and start playback if idle. */
+    enqueue(base64Data, fallbackText = '', priority = 0) {
+      // If a higher-priority item arrives (e.g. runtime error > syntax error),
+      // stop current audio and jump to new content.
+      if (priority > 1 && this._playing) {
+        this.stop();
       }
-    }
+      this._queue.push({ base64Data, fallbackText, priority });
+      if (!this._playing) this._playNext();
+    },
 
-    // Fallback if cloud TTS API returned empty/invalid audio
-    if (fallbackText) {
-      console.log('[Webview Audio] Cloud TTS unavailable, using Web Speech API fallback');
-      speakText(fallbackText);
-    }
+    /** Stop current playback and flush the queue. */
+    stop() {
+      if (this._player) {
+        try { this._player.pause(); this._player.currentTime = 0; } catch(e) {}
+      }
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      this._queue = [];
+      this._playing = false;
+    },
+
+    /** Internal: play the next item in the queue. */
+    _playNext() {
+      if (this._queue.length === 0) {
+        this._playing = false;
+        return;
+      }
+      this._playing = true;
+      const { base64Data, fallbackText } = this._queue.shift();
+
+      if (base64Data && base64Data.length > 50) {
+        try {
+          const mimeType = base64Data.startsWith('UklGR') ? 'audio/wav' : 'audio/mp3';
+          if (!this._player) this._player = new Audio();
+          this._player.src = `data:${mimeType};base64,${base64Data}`;
+          this._player.onended = () => this._playNext();
+          this._player.onerror = () => {
+            console.warn('[AudioQueue] Audio element error, trying Web Speech fallback');
+            if (fallbackText) speakText(fallbackText);
+            this._playNext();
+          };
+          this._player.play()
+            .then(() => console.log('[AudioQueue] Playing cloud TTS audio'))
+            .catch(err => {
+              console.warn('[AudioQueue] play() rejected:', err);
+              if (fallbackText) speakText(fallbackText);
+              this._playNext();
+            });
+          return;
+        } catch (err) {
+          console.warn('[AudioQueue] Exception creating audio element:', err);
+        }
+      }
+
+      // Fallback: Web Speech API
+      if (fallbackText) {
+        speakText(fallbackText);
+        // Web Speech doesn't give us an onended event reliably; wait estimated duration
+        const estimatedMs = Math.max(1500, fallbackText.length * 60);
+        setTimeout(() => this._playNext(), estimatedMs);
+      } else {
+        this._playNext();
+      }
+    },
+  };
+
+  /** Legacy helper — enqueue audio narration from cloud TTS or fall back to Web Speech. */
+  function playAudioNarration(base64Data, fallbackText = '', priority = 0) {
+    AudioQueue.enqueue(base64Data, fallbackText, priority);
   }
 
   // --- Listen for messages from the Extension Host ---
@@ -349,10 +430,11 @@
         }
         playAudioNarration(payload.audio_base64, payload.prompt);
       } else if (payload.type === 'audio_narration') {
-        log('Audio narration received');
+        const channelLabel = payload.channel === 'manual_observer' ? 'ERROR ANALYSIS' : 'OBSERVER NARRATION';
         if (payload.narration) {
-          addFeedItem('OBSERVER NARRATION', payload.narration, 'assistant');
+          addFeedItem(channelLabel, payload.narration, 'assistant');
         }
+        // Play cloud TTS audio (female Sarvam/ElevenLabs) — DO NOT also call speakText
         playAudioNarration(payload.audio_base64, payload.narration);
       } else if (payload.type === 'workspace_ack') {
         if (payload.detail) {

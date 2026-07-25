@@ -15,6 +15,8 @@ import * as path from "path";
 import { NeurocodeWsClient } from "./ws-client";
 import { WebviewBridge } from "./webview-bridge";
 import { CopilotWatcher, CopilotObserverEvent } from "./observer/copilot-watcher";
+import { ManualWatcher, ManualSyntaxErrorEvent } from "./observer/manual-watcher";
+import { TerminalWatcher, TerminalRuntimeErrorEvent } from "./observer/terminal-watcher";
 import { ObserverEarcon } from "./observer/observer-earcon";
 import { ObserverStatusBar } from "./observer/observer-status-bar";
 import { ObserverHud } from "./observer/observer-hud";
@@ -25,6 +27,8 @@ let bridge: WebviewBridge | undefined;
 
 // --- Copilot Observer modules (live for the full extension lifetime) ---
 let copilotWatcher: CopilotWatcher | undefined;
+let manualWatcher: ManualWatcher | undefined;
+let terminalWatcher: TerminalWatcher | undefined;
 let observerEarcon: ObserverEarcon | undefined;
 let observerStatusBar: ObserverStatusBar | undefined;
 let observerHud: ObserverHud | undefined;
@@ -40,14 +44,16 @@ export function activate(context: vscode.ExtensionContext) {
     wsClient.setWorkspacePath(workspaceFolders[0].uri.fsPath);
   }
 
-  function ensureWebviewPanel(): vscode.WebviewPanel {
+  function ensureWebviewPanel(preserveFocus: boolean = true): vscode.WebviewPanel {
     if (panel) {
-      panel.reveal(vscode.ViewColumn.Beside);
+      if (!preserveFocus) {
+        panel.reveal(vscode.ViewColumn.Beside, false);
+      }
     } else {
       panel = vscode.window.createWebviewPanel(
         "neurocodePanel",
         "NeuroCode",
-        vscode.ViewColumn.Beside,
+        { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
         {
           enableScripts: true,
           retainContextWhenHidden: true,
@@ -123,13 +129,52 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  context.subscriptions.push(startCmd, stopCmd, confirmCmd, cancelCmd);
+  // --- Toggle Manual Coding Stream command ---
+  const toggleManualStreamCmd = vscode.commands.registerCommand(
+    "neurocode.toggleManualStream",
+    () => {
+      if (manualWatcher) {
+        const newState = !manualWatcher.isEnabled();
+        manualWatcher.setEnabled(newState);
+        terminalWatcher?.setEnabled(newState);
+        vscode.window.showInformationMessage(
+          `NeuroCode: Manual Coding Stream ${newState ? "ENABLED ⚡" : "DISABLED ⏸️"}`
+        );
+      }
+    }
+  );
+
+  context.subscriptions.push(startCmd, stopCmd, confirmCmd, cancelCmd, toggleManualStreamCmd);
 
   // ─── Copilot Observer ────────────────────────────────────────────────────
   // Observer starts watching immediately (does not require the webview panel)
   observerStatusBar = new ObserverStatusBar();
   observerHud = new ObserverHud();
   observerEarcon = new ObserverEarcon(); // panel attached later when panel opens
+
+  // ─── Manual Coding Streamer & Error Interceptors ─────────────────────────
+  manualWatcher = new ManualWatcher((event: ManualSyntaxErrorEvent) => {
+    const currentPanel = ensureWebviewPanel();
+    if (event.isResolved) {
+      observerEarcon?.play("complete", currentPanel);
+      observerStatusBar?.setComplete(0, 0, event.file);
+      observerHud?.show(`NeuroCode: Syntax error resolved in ${event.file}`);
+      observerHud?.scheduleHide();
+    } else {
+      observerEarcon?.play("error", currentPanel);
+      observerStatusBar?.setError(event.errorCount);
+      observerHud?.show(`NeuroCode Alert: Syntax error on line ${event.line} in ${event.file}`);
+    }
+  }, wsClient);
+  manualWatcher.activate(context);
+
+  terminalWatcher = new TerminalWatcher((event: TerminalRuntimeErrorEvent) => {
+    const currentPanel = ensureWebviewPanel();
+    observerEarcon?.play("error", currentPanel);
+    observerStatusBar?.setError(1);
+    observerHud?.show(`NeuroCode Intercept: Runtime ${event.errorName} in ${event.file}`);
+  }, wsClient);
+  terminalWatcher.activate(context);
 
   /** Routes CopilotObserverEvents to earcon, HUD, status bar, and webview */
   function handleObserverEvent(event: CopilotObserverEvent): void {
@@ -146,10 +191,6 @@ export function activate(context: vscode.ExtensionContext) {
           type: "observer_status",
           state: "generating",
           file: event.file,
-        });
-        currentPanel.webview.postMessage({
-          type: "speak_text",
-          text: `Copilot generating in ${shortName}.`,
         });
         break;
       }

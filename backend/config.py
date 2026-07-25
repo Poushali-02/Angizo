@@ -52,3 +52,6 @@ SARVAM_FILLER_SPEAKER: str = os.getenv("SARVAM_FILLER_SPEAKER", "shubh")
 SARVAM_TTS_MODEL: str = os.getenv("SARVAM_TTS_MODEL", "bulbul:v3")
 SARVAM_CACHE_ENABLED: bool = os.getenv("SARVAM_CACHE_ENABLED", "true").lower() == "true"
 ELEVENLABS_VOICE_ID: str = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM") # Standard neutral speaker ID
+SARVAM_FILLER_SPEAKER: str = os.getenv("SARVAM_FILLER_SPEAKER", "anushka") # Compatible with bulbul:v2
+ELEVENLABS_VOICE_ID: str = os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL") # Bella - Premade female voice (Free tier compatible)
+ELEVENLABS_MODEL_ID: str = os.getenv("ELEVENLABS_MODEL_ID", "eleven_flash_v2_5") # Ultra-low latency (<150ms), Free Tier compatible

@@ -365,6 +365,47 @@ async def handle_observer_event(ws: WebSocket, session_id: int, msg: dict):
         logger.error(f"[Observer] Error handling observer event: {e}")
 
 
+async def handle_manual_observer_event(ws: WebSocket, session_id: int, msg: dict):
+    """
+    Handles Stage 1 (Syntax Error) and Stage 2 (Runtime / Compilation Error) events.
+    """
+    event_type = msg.get("event_type", "syntax_error")
+    target_file = (msg.get("file") or "your file").split("/")[-1]
+    logger.info(f"[ManualObserver] Received event: {event_type} for file: {target_file}")
+
+    try:
+        if event_type == "syntax_error":
+            is_resolved = msg.get("is_resolved", False)
+            line = msg.get("line", 1)
+            err_msg = msg.get("error_message", "")
+            narration = diff_intelligence.format_syntax_error_narration(target_file, line, err_msg, is_resolved)
+        else:
+            # Stage 2: Runtime Exception / Compilation Error
+            narration = await diff_intelligence.generate_runtime_error_summary(msg)
+
+        logger.info(f"[ManualObserver] Narration ({event_type}): {narration}")
+
+        # Convert to audio via Sarvam TTS
+        audio_b64 = await sarvam_tts_client.generate_filler_audio_base64(narration)
+
+        if audio_b64:
+            await ws.send_json({
+                "type": "audio_narration",
+                "channel": "manual_observer",
+                "narration": narration,
+                "audio_base64": audio_b64,
+            })
+        else:
+            await ws.send_json({
+                "type": "action_result",
+                "status": "success",
+                "detail": narration,
+            })
+
+    except Exception as e:
+        logger.error(f"[ManualObserver] Error handling manual event: {e}")
+
+
 @router.websocket("/ws/session")
 async def ws_session(ws: WebSocket):
     await ws.accept()
@@ -491,6 +532,9 @@ async def ws_session(ws: WebSocket):
 
             elif msg_type == "copilot_observer_event":
                 asyncio.create_task(handle_observer_event(ws, session_id, msg))
+
+            elif msg_type == "manual_observer_event":
+                asyncio.create_task(handle_manual_observer_event(ws, session_id, msg))
 
             else:
                 await ws.send_json({"type": "action_result", "status": "failure", "detail": f"Unknown message type: {msg_type}"})
