@@ -55,7 +55,7 @@ class SarvamFillerTTS:
         Strictly enforces male speaker selection.
         self.speaker = getattr(config, "SARVAM_FILLER_SPEAKER", "anushka")
         # Persistent HTTP client (reused across requests — saves TCP/TLS handshake time)
-        self._client: httpx.AsyncClient | None = None
+        self._client: httpx.AsyncClient | None = None"""
 
     def _get_client(self) -> httpx.AsyncClient:
         """Return or create a persistent AsyncClient with connection pooling."""
@@ -89,12 +89,6 @@ class SarvamFillerTTS:
             truncated = clean_text[:447]
             last_space = truncated.rfind(" ")
             clean_text = (truncated[:last_space] + "...") if last_space > 350 else (truncated + "...")
-
-        # ── Cache Hit → instant return ────────────────────────────────────────
-        key = _cache_key(clean_text, speaker)
-        if key in _tts_cache:
-            logger.debug(f"[SarvamTTS] Cache HIT for '{clean_text[:40]}...' — returning instantly")
-            return _tts_cache[key]
 
         model = getattr(config, "SARVAM_TTS_MODEL", "bulbul:v3")
         configured_speaker = getattr(config, "SARVAM_FILLER_SPEAKER", "shubh").lower()
