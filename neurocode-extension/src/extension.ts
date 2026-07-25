@@ -227,6 +227,24 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // --- Announce Observer Status command (Screen Reader Hotkey Ctrl+Shift+S) ---
+  const announceStatusCmd = vscode.commands.registerCommand(
+    "neurocode.announceStatus",
+    () => {
+      if (!observerStatusBar) return;
+      const label = observerStatusBar.getAccessibleLabel();
+      vscode.window.showInformationMessage(`NeuroCode: ${label}`);
+      if (panel) {
+        panel.webview.postMessage({
+          type: "speak_text",
+          text: label,
+        });
+      }
+    }
+  );
+
+  context.subscriptions.push(toggleObserverCmd, announceStatusCmd);
+
   // Guard .env file access for screen-reader (blind/low-vision) users
   function checkEnvAccess(editor: vscode.TextEditor | undefined) {
     if (editor && editor.document) {
@@ -262,7 +280,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(editorListener);
   checkEnvAccess(vscode.window.activeTextEditor);
 
-  context.subscriptions.push(toggleObserverCmd, observerStatusBar, observerHud);
+  context.subscriptions.push(observerStatusBar, observerHud);
 }
 
 export function deactivate() {

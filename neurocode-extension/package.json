@@ -27,6 +27,10 @@
         "title": "NeuroCode: Toggle Copilot Observer (Mute/Unmute)"
       },
       {
+        "command": "neurocode.announceStatus",
+        "title": "NeuroCode: Announce Copilot Observer Status (Screen Reader Hotkey)"
+      },
+      {
         "command": "neurocode.confirm",
         "title": "NeuroCode: Confirm Action (Yes)"
       },
@@ -36,6 +40,11 @@
       }
     ],
     "keybindings": [
+      {
+        "command": "neurocode.announceStatus",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s"
+      },
       {
         "command": "neurocode.confirm",
         "key": "alt+y",
