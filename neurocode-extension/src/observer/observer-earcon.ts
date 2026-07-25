@@ -44,14 +44,14 @@ export class ObserverEarcon {
     p.webview.postMessage({ type: "play_earcon", earconType: type });
   }
 
-  /** Start repeating tick pulse (every 500ms) */
+  /** Start repeating tick pulse (every 1s) */
   startTick(targetPanel?: vscode.WebviewPanel): void {
     if (this.muted) return;
     this.stopTick(); // clear any existing
     this.play("tick", targetPanel);
     this.tickTimer = setInterval(() => {
       if (!this.muted) this.play("tick", targetPanel);
-    }, 500);
+    }, 1000);
   }
 
   /** Stop repeating tick pulse */

@@ -338,15 +338,8 @@ async def handle_observer_event(ws: WebSocket, session_id: int, msg: dict):
         if event_type == "copilot_start":
             narration = f"Copilot is generating code in {target_file}."
         else:
-            # Generate deep explanation (what code does & why it is necessary)
-            narration = await diff_intelligence.generate_observer_summary({
-                "file": msg.get("file"),
-                "code_snippet": msg.get("code_snippet"),
-                "modified_files": msg.get("modified_files", []),
-                "created_files": msg.get("created_files", []),
-                "lines_added": msg.get("lines_added", 0),
-                "error_count": msg.get("error_count", 0),
-            })
+            # Generate summary narration matching STREAM.md specifications
+            narration = await diff_intelligence.generate_observer_summary(msg)
 
         logger.info(f"[Observer] Narration ({event_type}): {narration}")
 

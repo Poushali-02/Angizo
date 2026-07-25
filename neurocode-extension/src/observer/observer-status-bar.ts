@@ -1,4 +1,4 @@
-﻿/**
+/**
  * neurocode-extension/src/observer/observer-status-bar.ts
  *
  * Accessible VS Code Status Bar item for the Copilot Observer.
@@ -80,6 +80,10 @@ export class ObserverStatusBar {
       label: "NeuroCode Observer is muted. Click to unmute.",
       role: "button",
     };
+  }
+
+  getAccessibleLabel(): string {
+    return this.item.accessibilityInformation?.label || this.item.text.replace(/\$\([^\)]+\)\s*/g, "");
   }
 
   private shortName(filePath: string): string {

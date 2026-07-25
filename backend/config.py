@@ -9,6 +9,19 @@ Loaded server-side only — never exposed to the webview
 """
 
 import os
+from pathlib import Path
+
+# Parse backend/.env file into os.environ
+env_path = Path(__file__).parent / ".env"
+if env_path.exists():
+    with open(env_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                k = k.strip()
+                if k not in os.environ:
+                    os.environ[k] = v.strip()
 
 
 # --- Server ---
@@ -22,6 +35,7 @@ REPO_PATH: str = os.getenv("NEUROCODE_REPO_PATH", os.getcwd())
 
 # --- API Keys ---
 SARVAM_API_KEY: str = os.getenv("SARVAM_API_KEY", "")
+SARVAM_API_KEYS: str = os.getenv("SARVAM_API_KEYS", os.getenv("SARVAM_API_KEY", ""))
 ELEVENLABS_API_KEY: str = os.getenv("ELEVENLABS_API_KEY", "")
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
@@ -34,6 +48,10 @@ GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 # Voice / Audio Settings
 SARVAM_STT_ENDPOINT: str = os.getenv("SARVAM_STT_ENDPOINT", "https://api.sarvam.ai/speech-to-text")
+SARVAM_FILLER_SPEAKER: str = os.getenv("SARVAM_FILLER_SPEAKER", "shubh")
+SARVAM_TTS_MODEL: str = os.getenv("SARVAM_TTS_MODEL", "bulbul:v3")
+SARVAM_CACHE_ENABLED: bool = os.getenv("SARVAM_CACHE_ENABLED", "true").lower() == "true"
+ELEVENLABS_VOICE_ID: str = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM") # Standard neutral speaker ID
 SARVAM_FILLER_SPEAKER: str = os.getenv("SARVAM_FILLER_SPEAKER", "anushka") # Compatible with bulbul:v2
 ELEVENLABS_VOICE_ID: str = os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL") # Bella - Premade female voice (Free tier compatible)
 ELEVENLABS_MODEL_ID: str = os.getenv("ELEVENLABS_MODEL_ID", "eleven_flash_v2_5") # Ultra-low latency (<150ms), Free Tier compatible

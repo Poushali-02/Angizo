@@ -123,8 +123,8 @@ export class CopilotWatcher {
       const insertedText = change.text;
       const insertedLen = insertedText.length;
 
-      // AI generation heuristic: large single-event insertion (>= 5 chars)
-      if (insertedLen >= 5) {
+      // AI generation heuristic: large single-event insertion (>= 10 chars)
+      if (insertedLen >= AI_CHUNK_THRESHOLD) {
         const filePath = event.document.uri.fsPath;
         const fileName = vscode.workspace.asRelativePath(filePath);
         console.log(`[CopilotWatcher] AI insertion detected in ${fileName}: ${insertedLen} chars`);
@@ -155,6 +155,14 @@ export class CopilotWatcher {
 
     this.createdFiles.push(fileName);
     this.emit({ type: "file_created", file: fileName });
+
+    if (this.wsClient) {
+      this.wsClient.sendObserverEvent({
+        event_type: "file_created",
+        file: fileName,
+        created_files: [fileName],
+      });
+    }
   }
 
   private onFileChanged(uri: vscode.Uri): void {
@@ -166,6 +174,13 @@ export class CopilotWatcher {
 
     if (DEPENDENCY_FILES.has(basename)) {
       this.emit({ type: "dependency_updated", dependencyFile: fileName });
+
+      if (this.wsClient) {
+        this.wsClient.sendObserverEvent({
+          event_type: "dependency_updated",
+          file: fileName,
+        });
+      }
     }
   }
 
