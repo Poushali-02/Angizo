@@ -24,9 +24,20 @@ class DiffIntelligence:
         self.endpoint = "https://api.groq.com/openai/v1/chat/completions"
         # Model name (default from config)
         self.model = config.GROQ_MODEL if hasattr(config, "GROQ_MODEL") else "llama-3.3-70b-versatile"
+        # Persistent HTTP client — reused across requests to avoid TCP/TLS handshake overhead
+        self._client: httpx.AsyncClient | None = None
+
+    def _get_client(self) -> httpx.AsyncClient:
+        """Return or create a persistent AsyncClient with connection pooling."""
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(
+                timeout=httpx.Timeout(connect=2.0, read=12.0, write=5.0, pool=1.0),
+                limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
+            )
+        return self._client
 
     async def _call_groq(self, prompt: str) -> str:
-        """Internal helper to query Groq API (OpenAI‑compatible)."""
+        """Internal helper to query Groq API (OpenAI-compatible) with persistent connection."""
         if not self.api_key:
             return ""
 
@@ -40,16 +51,15 @@ class DiffIntelligence:
             "temperature": 0.0,
         }
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                res = await client.post(self.endpoint, json=payload, headers=headers)
-                if res.status_code == 200:
-                    data = res.json()
-                    # Groq returns a list of choices with message content
-                    choices = data.get("choices", [])
-                    if choices:
-                        return choices[0].get("message", {}).get("content", "").strip()
-                else:
-                    logger.warning(f"[Groq] API error {res.status_code}: {res.text}")
+            client = self._get_client()
+            res = await client.post(self.endpoint, json=payload, headers=headers)
+            if res.status_code == 200:
+                data = res.json()
+                choices = data.get("choices", [])
+                if choices:
+                    return choices[0].get("message", {}).get("content", "").strip()
+            else:
+                logger.warning(f"[Groq] API error {res.status_code}: {res.text}")
         except Exception as e:
             logger.error(f"[Groq] Exception during API call: {e}")
         return ""
@@ -250,5 +260,50 @@ Explain what this code does and why it is necessary for the application in clear
 
         primary_file = file_name.split("/")[-1]
         return f"Copilot updated {primary_file} with {lines_added} lines of code to implement core application logic."
+
+    async def generate_runtime_error_summary(self, event_data: dict) -> str:
+        """
+        Analyzes a runtime exception / crash stack trace during compilation or execution.
+        Explains:
+          1. What error occurred on which file and line.
+          2. What in the code triggered the error.
+        """
+        file_name = event_data.get("file", "active file").split("/")[-1]
+        line = event_data.get("line", 1)
+        err_name = event_data.get("error_name", "Runtime Error")
+        err_msg = event_data.get("error_message", "")
+        stack_trace = event_data.get("stack_trace", "")
+
+        prompt = f"""You are the accessibility AI assistant for a blind software developer.
+A runtime / compilation error occurred during code execution.
+
+ERROR DETAILS:
+- File: {file_name}
+- Line: {line}
+- Error: {err_name} ({err_msg})
+
+STACK TRACE / CONTEXT:
+```
+{stack_trace[:1000]}
+```
+
+Provide EXACTLY a 2-sentence spoken explanation for a TTS screen reader:
+Sentence 1: State the error name, file, and line number.
+Sentence 2: Explain specifically what in the code triggered the error.
+
+Do NOT use code formatting, quotes, or markdown. Return only the plain spoken prose.
+"""
+        result = await self._call_groq(prompt)
+        if result and len(result.strip()) > 10:
+            return result.strip().strip('"').strip("'")
+
+        return f"Runtime {err_name} occurred on line {line} in {file_name}. Triggered by {err_msg}."
+
+    def format_syntax_error_narration(self, file_name: str, line: int, error_msg: str, is_resolved: bool) -> str:
+        short_file = file_name.split("/")[-1] if file_name else "file"
+        if is_resolved:
+            return f"Syntax errors resolved in {short_file}."
+        return f"Syntax error in {short_file} on line {line}: {error_msg}."
+
 
 diff_intelligence = DiffIntelligence()

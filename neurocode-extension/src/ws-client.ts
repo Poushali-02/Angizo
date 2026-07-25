@@ -155,6 +155,24 @@ export class NeurocodeWsClient extends EventEmitter {
   }
 
   /**
+   * Send a Manual Coding Observer event (syntax error or runtime exception) to the backend.
+   */
+  sendManualObserverEvent(event: {
+    event_type: "syntax_error" | "runtime_error";
+    file: string;
+    line?: number;
+    column?: number;
+    error_message?: string;
+    is_resolved?: boolean;
+    error_count?: number;
+    error_name?: string;
+    stack_trace?: string;
+  }): void {
+    console.log(`[ws-client] Sending manual observer event: ${event.event_type}`);
+    this.send({ type: "manual_observer_event", ...event });
+  }
+
+  /**
    * Send an interrupt signal (Step 2+).
    */
   sendInterrupt(): void {

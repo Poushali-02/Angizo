@@ -35,4 +35,5 @@ GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 # Voice / Audio Settings
 SARVAM_STT_ENDPOINT: str = os.getenv("SARVAM_STT_ENDPOINT", "https://api.sarvam.ai/speech-to-text")
 SARVAM_FILLER_SPEAKER: str = os.getenv("SARVAM_FILLER_SPEAKER", "anushka") # Compatible with bulbul:v2
-ELEVENLABS_VOICE_ID: str = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM") # Standard neutral speaker ID
+ELEVENLABS_VOICE_ID: str = os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL") # Bella - Premade female voice (Free tier compatible)
+ELEVENLABS_MODEL_ID: str = os.getenv("ELEVENLABS_MODEL_ID", "eleven_flash_v2_5") # Ultra-low latency (<150ms), Free Tier compatible

@@ -33,6 +33,10 @@
       {
         "command": "neurocode.cancel",
         "title": "NeuroCode: Cancel Action (No)"
+      },
+      {
+        "command": "neurocode.toggleManualStream",
+        "title": "NeuroCode: Toggle Manual Coding Stream"
       }
     ],
     "keybindings": [
@@ -45,6 +49,11 @@
         "command": "neurocode.cancel",
         "key": "alt+n",
         "mac": "cmd+alt+n"
+      },
+      {
+        "command": "neurocode.toggleManualStream",
+        "key": "alt+m",
+        "mac": "cmd+alt+m"
       }
     ],
     "configuration": {
