@@ -109,49 +109,6 @@ NeuroCode exposes native VS Code commands and accessible keyboard shortcuts:
 
 ---
 
-## 🏗️ System Architecture & Data Flow
-
-```mermaid
-graph TD
-    subgraph VS Code Extension Host (Node.js)
-        CopilotWatcher["CopilotWatcher<br/>(AI Insertion Classifier)"]
-        ManualWatcher["ManualWatcher<br/>(LSP Diagnostics Squiggle Interceptor)"]
-        TerminalWatcher["TerminalWatcher<br/>(Terminal Output & Debugger Interceptor)"]
-        AuthorTracker["AuthorTracker<br/>(State Coordinator)"]
-        WebviewPanel["Webview Sidebar UI<br/>(Web Audio Earcons & PCM Stream)"]
-        WSClient["ws-client.ts<br/>(WebSocket Client)"]
-    end
-
-    subgraph Python FastAPI Backend Engine (:7001)
-        WSHandler["api/ws.py<br/>(WebSocket Router & SoundDevice Mic)"]
-        LangGraph["agent/graph.py<br/>(7-Node StateGraph Workflow)"]
-        DiffIntel["tools/diff_intelligence.py<br/>(Groq Llama 3.3 70B Summary Engine)"]
-        SarvamSTT["tools/sarvam_stt.py<br/>(Sarvam Speech-to-Text)"]
-        SarvamTTS["tools/sarvam_tts.py<br/>(Sarvam TTS Filler Engine)"]
-        ElevenLabsTTS["tools/elevenlabs_tts.py<br/>(ElevenLabs Narration Engine)"]
-        GitTool["tools/git_tool.py<br/>(GitPython Repo Interface)"]
-    end
-
-    CopilotWatcher --> AuthorTracker
-    ManualWatcher --> AuthorTracker
-    CopilotWatcher -- "copilot_observer_event" --> WSClient
-    ManualWatcher -- "manual_observer_event" --> WSClient
-    TerminalWatcher -- "manual_observer_event" --> WSClient
-    WebviewPanel <-->|postMessage| WSClient
-
-    WSClient <== "WebSocket (ws://localhost:7001/ws/session)" ==> WSHandler
-
-    WSHandler --> SarvamSTT
-    WSHandler --> LangGraph
-    LangGraph --> GitTool
-    LangGraph --> DiffIntel
-    DiffIntel --> ElevenLabsTTS & SarvamTTS
-    SarvamTTS & ElevenLabsTTS -- "audio_narration (Base64 PCM)" --> WSHandler
-    WSHandler -- "audio_narration" --> WSClient --> WebviewPanel
-```
-
----
-
 ## 📂 Repository Structure
 
 ```
