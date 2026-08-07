@@ -38,6 +38,11 @@ async def execute_action(state: AgentState) -> AgentState:
             logger.error(f"[Execute] Tool step '{tool_name}' failed: {failure_detail}. Aborting remaining tools.")
             break
 
+    # Read-only status/diff tools do not mutate state and are treated as skipped execution
+    is_read_only = all(tc.get("tool") in ["get_git_status", "get_git_diff", "query_codebase_rag"] for tc in tool_calls)
+    if is_read_only and overall_status == "success":
+        overall_status = "skipped"
+
     return {
         "action_result": {
             "status": overall_status,
@@ -45,3 +50,4 @@ async def execute_action(state: AgentState) -> AgentState:
             "detail": failure_detail if overall_status == "failure" else f"Successfully executed {len(executed_results)} planned tool step(s)."
         }
     }
+

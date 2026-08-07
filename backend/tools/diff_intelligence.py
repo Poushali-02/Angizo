@@ -335,10 +335,10 @@ Do NOT use code formatting, quotes, or markdown. Return only the plain spoken pr
         return f"Runtime {err_name} occurred on line {line} in {file_name}. Triggered by {err_msg}."
 
     def format_syntax_error_narration(self, file_name: str, line: int, error_msg: str, is_resolved: bool) -> str:
-        short_file = file_name.split("/")[-1] if file_name else "file"
+        short_file = file_name.split("/")[-1].split("\\")[-1] if file_name else "file"
         if is_resolved:
-            return f"Syntax errors resolved in {short_file}."
-        return f"Syntax error in {short_file} on line {line}: {error_msg}."
+            return f"Syntax error resolved in {short_file}."
+        return f"Syntax error detected in {short_file} on line {line}: {error_msg}."
 
 
 diff_intelligence = DiffIntelligence()

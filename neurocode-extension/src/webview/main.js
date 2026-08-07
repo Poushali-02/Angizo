@@ -82,12 +82,34 @@
     }
   }
 
+  // --- Zero Dead-Air Processing Audio Ticker ---
+  let pendingRequestTicker = null;
+
+  function startProcessingAudio() {
+    stopProcessingAudio();
+    playEarcon('start');
+    speakText('Processing your request...');
+    
+    // Continuous tick chime sound every 1.8s while waiting for backend LLM response
+    pendingRequestTicker = setInterval(() => {
+      playEarcon('tick');
+    }, 1800);
+  }
+
+  function stopProcessingAudio() {
+    if (pendingRequestTicker) {
+      clearInterval(pendingRequestTicker);
+      pendingRequestTicker = null;
+    }
+  }
+
   // --- UI Event Listeners ---
   if (sendBtn && textInput) {
     sendBtn.addEventListener('click', () => {
       const text = textInput.value.trim();
       if (text) {
         log('Sent text: ' + text);
+        startProcessingAudio();
         vscode.postMessage({ type: 'text_command', text });
         textInput.value = '';
       }
@@ -99,6 +121,7 @@
       }
     });
   }
+
 
   if (micBtn) {
     micBtn.disabled = false;
@@ -418,9 +441,11 @@
           }
         }
       } else if (payload.type === 'action_result') {
+        stopProcessingAudio();
         log('Backend: ' + payload.detail);
         playAudioNarration(payload.audio_base64, payload.detail);
       } else if (payload.type === 'confirmation_request') {
+        stopProcessingAudio();
         if (payload.prompt) {
           addFeedItem('NEUROCODE REASONING', payload.prompt, 'assistant');
         }
@@ -430,12 +455,14 @@
         }
         playAudioNarration(payload.audio_base64, payload.prompt);
       } else if (payload.type === 'audio_narration') {
+        stopProcessingAudio();
         const channelLabel = payload.channel === 'manual_observer' ? 'ERROR ANALYSIS' : 'OBSERVER NARRATION';
         if (payload.narration) {
           addFeedItem(channelLabel, payload.narration, 'assistant');
         }
         // Play cloud TTS audio (female Sarvam/ElevenLabs) — DO NOT also call speakText
         playAudioNarration(payload.audio_base64, payload.narration);
+
       } else if (payload.type === 'workspace_ack') {
         if (payload.detail) {
           addFeedItem('SYSTEM EVENT', payload.detail, 'system');

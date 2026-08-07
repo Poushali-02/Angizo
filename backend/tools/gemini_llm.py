@@ -18,7 +18,7 @@ logger = logging.getLogger("neurocode.gemini_llm")
 class GeminiLLM:
     def __init__(self):
         self.api_key = config.GEMINI_API_KEY
-        self.model = getattr(config, "GEMINI_MODEL", "gemini-1.5-flash")
+        self.model = getattr(config, "GEMINI_MODEL", "gemini-1.5-flash-latest")
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
 
     async def generate(self, prompt: str) -> str:

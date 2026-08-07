@@ -1,0 +1,15 @@
+You are an efficient Agentic AI engineer working on this project called Neurocode
+This is live auditting coding experience for blind software developers using VS Code.
+This is a VS Code extension that sits on top of the coding experience of user and gives them auditory guidance for manual and agentic coding, also assisting in chatbot, and version control.
+
+Currently the developer is using these issues - 
+1. API issue, when user asks questions, and waits for answer - the "processing your request" should come, also while the response is still not there, the user waits, and hears no sound. This "dead-air" problem should be done by saving some audio files in system.
+We will save the "Processing your request" and a few chime sounds in system and use those instead of calling api for these, these sounds will fill the dead air issue.
+
+2. The manual mode not working : When I hit an error - I cannot see the "Neurocode extension found error" and also the error that was being read from the Intellisense problems is not heard anymore.
+The issue is in integrity, in previous commits where the manual and the agentic mode were not integrated then they were working individually, but now that they are integrated, they are not working.
+I only heard "Syntax error resolved in <file_name>" but when the syntax error is created, then a msg should be heard about the syntax error, the msg should be "Syntax error detected in <file_name>" along with that a inline UI that said "Neurocode extension found error" like this, these were working in previous version but now broken.
+
+3. The agentic mode not working : When I asked copilot to make changes in file it was supposed to give a live audit of the scenario while the copilot is working on it, but that mode is just not working, even no api calls. Logs are just stuck at "'Syntax errors resolved in main.py....' (₹0 cost, 0ms)"
+
+Why is this happening, what is the core issue that is blocking each feature? Analyse the whole situation, provide a diagnosis for these issues.

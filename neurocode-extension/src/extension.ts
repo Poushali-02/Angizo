@@ -158,12 +158,14 @@ export function activate(context: vscode.ExtensionContext) {
     if (event.isResolved) {
       observerEarcon?.play("complete", currentPanel);
       observerStatusBar?.setComplete(0, 0, event.file);
+      observerHud?.clearInlineError();
       observerHud?.show(`NeuroCode: Syntax error resolved in ${event.file}`);
       observerHud?.scheduleHide();
     } else {
       observerEarcon?.play("error", currentPanel);
       observerStatusBar?.setError(event.errorCount);
-      observerHud?.show(`NeuroCode Alert: Syntax error on line ${event.line} in ${event.file}`);
+      observerHud?.showInlineError(event.line);
+      observerHud?.show(`NeuroCode extension found error: Syntax error detected in ${event.file}`);
     }
   }, wsClient);
   manualWatcher.activate(context);

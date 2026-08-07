@@ -182,18 +182,32 @@ export class ManualWatcher {
         }
       }
 
-      // Instant earcon on new error event
+      // Instant earcon & WebSocket narration event on new syntax error
       const primaryError = syntaxErrors[0];
+      const lineNum = primaryError.range.start.line + 1;
+      const colNum = primaryError.range.start.character + 1;
       const instantPayload: ManualSyntaxErrorEvent = {
         type: "syntax_error",
         file: relPath,
-        line: primaryError.range.start.line + 1,
-        column: primaryError.range.start.character + 1,
+        line: lineNum,
+        column: colNum,
         message: primaryError.message,
         isResolved: false,
         errorCount: currentCount,
       };
       this.onEvent(instantPayload);
+
+      if (!hadErrors && this.wsClient && this.wsClient.isConnected) {
+        this.wsClient.sendManualObserverEvent({
+          event_type: "syntax_error",
+          file: relPath,
+          line: lineNum,
+          column: colNum,
+          error_message: primaryError.message,
+          is_resolved: false,
+          error_count: currentCount,
+        });
+      }
 
     } else if (hadErrors && !nowHasErrors) {
       // ── Errors just cleared (or still 0 from previous LSP pass) ────────

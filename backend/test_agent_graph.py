@@ -67,7 +67,7 @@ async def test_git_commit():
     print("User says 'yes'. Resuming graph...")
     from agent.nodes import execute_action, verify_action, narrate_response
     
-    state = execute_action(result)
+    state = await execute_action(result)
     result.update(state)
     state = verify_action(result)
     result.update(state)

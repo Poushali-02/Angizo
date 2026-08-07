@@ -30,9 +30,19 @@ async def understand_intent(state: AgentState) -> AgentState:
         }
 
     tool_names = [tc.get("tool") for tc in plan_data.get("tool_calls", [])]
-    logger.info(f"[Understand] transcript: '{transcript}' -> planned tools: {tool_names}")
+    first_tool = tool_names[0] if tool_names else "dynamic_plan"
+    intent_map = {
+        "get_git_status": "git_status",
+        "get_git_diff": "git_status",
+        "commit_changes": "git_commit",
+        "push_to_remote": "git_push",
+        "pull_from_remote": "git_pull",
+    }
+    intent_name = intent_map.get(first_tool, first_tool)
+    logger.info(f"[Understand] transcript: '{transcript}' -> planned tools: {tool_names} (intent: {intent_name})")
 
     return {
-        "intent": tool_names[0] if tool_names else "dynamic_plan",
+        "intent": intent_name,
         "plan_data": plan_data
     }
+

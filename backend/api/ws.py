@@ -204,18 +204,7 @@ async def run_agent_graph(ws: WebSocket, session_id: str):
         })
         return
 
-    # Trigger non-blocking Sarvam zero-silence filler narration if available
-    try:
-        from tools.sarvam_tts import sarvam_tts_client
-        filler_audio = await sarvam_tts_client.generate_filler_audio_base64("Processing your request...")
-        if filler_audio:
-            await ws.send_json({
-                "type": "audio_narration",
-                "audio_base64": filler_audio,
-                "channel": "filler"
-            })
-    except Exception as e:
-        logger.debug(f"[WS] Filler TTS skipped: {e}")
+    # Filler audio is now handled instantly on the client webview side to avoid network latency.
 
     # Otherwise, it's a new command. Run the graph from the start.
     logger.info(f"[WS] Invoking agent graph for transcript: '{state['transcript']}'")

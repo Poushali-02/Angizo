@@ -37,7 +37,7 @@ export interface CopilotObserverEvent {
 // --- Constants ---------------------------------------------------------------
 
 /** Min chars in a single contentChange to classify as AI generation */
-const AI_CHUNK_THRESHOLD = 10;
+const AI_CHUNK_THRESHOLD = 3;
 
 /** Ms of silence after last AI chunk before firing copilot_complete */
 const COMPLETE_DEBOUNCE_MS = 1500;
@@ -70,6 +70,9 @@ export class CopilotWatcher {
   private sessionInsertedCode: string[] = [];
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // Cache last clipboard text to distinguish manual paste (Ctrl+V) from Copilot AI generation
+  private lastClipboardText = "";
+
   // Mute toggle
   private muted = false;
 
@@ -79,10 +82,25 @@ export class CopilotWatcher {
   ) {
     this.onEvent = onEvent;
     this.wsClient = wsClient;
+    this.updateClipboardCache();
+  }
+
+  private updateClipboardCache(): void {
+    vscode.env.clipboard.readText().then(
+      (text) => {
+        if (text) this.lastClipboardText = text.trim();
+      },
+      () => {}
+    );
   }
 
   /** Activate all VS Code event watchers */
   activate(context: vscode.ExtensionContext): void {
+    // Refresh clipboard cache on selection change / window active
+    const selWatcher = vscode.window.onDidChangeTextEditorSelection(() => {
+      this.updateClipboardCache();
+    });
+
     // 1. Text document change - AI classifier
     const textWatcher = vscode.workspace.onDidChangeTextDocument(
       (event) => this.onTextDocumentChange(event)
@@ -98,7 +116,7 @@ export class CopilotWatcher {
       (event) => this.onDiagnosticsChanged(event)
     );
 
-    this.disposables.push(textWatcher, fsWatcher, diagWatcher);
+    this.disposables.push(selWatcher, textWatcher, fsWatcher, diagWatcher);
     context.subscriptions.push(...this.disposables);
     console.log("[CopilotWatcher] Activated.");
   }
@@ -123,28 +141,45 @@ export class CopilotWatcher {
       const insertedText = change.text;
       const insertedLen = insertedText.length;
 
-      // AI generation heuristic: large single-event insertion (>= 10 chars)
-      if (insertedLen >= AI_CHUNK_THRESHOLD) {
-        const filePath = event.document.uri.fsPath;
-        const fileName = vscode.workspace.asRelativePath(filePath);
-        console.log(`[CopilotWatcher] AI insertion detected in ${fileName}: ${insertedLen} chars`);
+      // Ignore single typed characters or small edits (< 3 chars)
+      if (insertedLen < AI_CHUNK_THRESHOLD) continue;
 
-        const addedLines = (insertedText.match(/\n/g) || []).length;
-        this.linesAdded += addedLines;
-        this.modifiedFiles.add(fileName);
-        this.sessionInsertedCode.push(insertedText);
-
-        if (!this.isGenerating) {
-          this.isGenerating = true;
-          this.generatingFile = fileName;
-          this.emit({ type: "copilot_start", file: fileName });
-        }
-
-        // Reset the completion debounce timer on each chunk
-        this.scheduleComplete(fileName);
+      // Filter out User Copy/Paste (Ctrl+V / Cmd+V):
+      // If inserted text matches current clipboard content, it is a manual paste!
+      const trimmedInsert = insertedText.trim();
+      if (this.lastClipboardText && (trimmedInsert === this.lastClipboardText || this.lastClipboardText.includes(trimmedInsert))) {
+        console.log(`[CopilotWatcher] Ignoring manual user copy-paste insertion (${insertedLen} chars)`);
+        continue;
       }
+
+      // AI generation heuristic: insertion >= threshold and not in user clipboard
+      const filePath = event.document.uri.fsPath;
+      const fileName = vscode.workspace.asRelativePath(filePath);
+      console.log(`[CopilotWatcher] AI insertion detected in ${fileName}: ${insertedLen} chars`);
+
+      const addedLines = (insertedText.match(/\n/g) || []).length;
+      this.linesAdded += addedLines;
+      this.modifiedFiles.add(fileName);
+      this.sessionInsertedCode.push(insertedText);
+
+      if (!this.isGenerating) {
+        this.isGenerating = true;
+        this.generatingFile = fileName;
+        this.emit({ type: "copilot_start", file: fileName });
+
+        if (this.wsClient) {
+          this.wsClient.sendObserverEvent({
+            event_type: "copilot_start",
+            file: fileName,
+          });
+        }
+      }
+
+      // Reset the completion debounce timer on each chunk
+      this.scheduleComplete(fileName);
     }
   }
+
 
   private onFileCreated(uri: vscode.Uri): void {
     if (this.muted) return;
