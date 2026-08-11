@@ -35,6 +35,7 @@ let observerHud: ObserverHud | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("NeuroCode extension activating");
+  vscode.window.showInformationMessage("⚡ NeuroCode Extension Activated & Listening!");
 
   // Create persistent WebSocket client immediately on extension startup
   const wsPort = "7001";
@@ -157,13 +158,13 @@ export function activate(context: vscode.ExtensionContext) {
     const currentPanel = ensureWebviewPanel();
     if (event.isResolved) {
       observerEarcon?.play("complete", currentPanel);
-      observerStatusBar?.setComplete(0, 0, event.file);
+      observerStatusBar?.setComplete(0, 0, event.file, "Manual");
       observerHud?.clearInlineError();
       observerHud?.show(`NeuroCode: Syntax error resolved in ${event.file}`);
       observerHud?.scheduleHide();
     } else {
       observerEarcon?.play("error", currentPanel);
-      observerStatusBar?.setError(event.errorCount);
+      observerStatusBar?.setError(event.errorCount, "Manual");
       observerHud?.showInlineError(event.line);
       observerHud?.show(`NeuroCode extension found error: Syntax error detected in ${event.file}`);
     }
@@ -173,7 +174,7 @@ export function activate(context: vscode.ExtensionContext) {
   terminalWatcher = new TerminalWatcher((event: TerminalRuntimeErrorEvent) => {
     const currentPanel = ensureWebviewPanel();
     observerEarcon?.play("error", currentPanel);
-    observerStatusBar?.setError(1);
+    observerStatusBar?.setError(1, "Runtime");
     observerHud?.show(`NeuroCode Intercept: Runtime ${event.errorName} in ${event.file}`);
   }, wsClient);
   terminalWatcher.activate(context);

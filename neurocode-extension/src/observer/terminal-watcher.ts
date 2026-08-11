@@ -43,28 +43,32 @@ export class TerminalWatcher {
 
   activate(context: vscode.ExtensionContext): void {
     // ── Strategy 1: Terminal data stream ────────────────────────────────────
-    if ("onDidWriteTerminalData" in vscode.window) {
-      const termWatcher = (vscode.window as any).onDidWriteTerminalData((e: any) => {
-        if (!this.enabled) return;
-        // Strip ANSI escape codes before buffering
-        const cleanData = (e.data as string).replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
-        this.terminalBuffer += cleanData;
+    // Wrapped in try/catch because accessing onDidWriteTerminalData throws a strict
+    // "CANNOT use API proposal" error in standard VS Code unless --enable-proposed-api is used.
+    try {
+      if ("onDidWriteTerminalData" in vscode.window) {
+        const termWatcher = (vscode.window as any).onDidWriteTerminalData((e: any) => {
+          if (!this.enabled) return;
+          // Strip ANSI escape codes before buffering
+          const cleanData = (e.data as string).replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
+          this.terminalBuffer += cleanData;
 
-        // Keep buffer manageable (last 8,000 chars)
-        if (this.terminalBuffer.length > 8000) {
-          this.terminalBuffer = this.terminalBuffer.slice(-8000);
-        }
+          // Keep buffer manageable (last 8,000 chars)
+          if (this.terminalBuffer.length > 8000) {
+            this.terminalBuffer = this.terminalBuffer.slice(-8000);
+          }
 
-        // Debounce: analyse 900ms after last data arrives
-        if (this.debounceTimer) clearTimeout(this.debounceTimer);
-        this.debounceTimer = setTimeout(() => {
-          this.analyzeTerminalOutput();
-        }, 900);
-      });
-      this.disposables.push(termWatcher);
-      console.log("[TerminalWatcher] onDidWriteTerminalData hooked.");
-    } else {
-      console.warn("[TerminalWatcher] onDidWriteTerminalData not available (VS Code < 1.93). Using debug events only.");
+          // Debounce: analyse 900ms after last data arrives
+          if (this.debounceTimer) clearTimeout(this.debounceTimer);
+          this.debounceTimer = setTimeout(() => {
+            this.analyzeTerminalOutput();
+          }, 900);
+        });
+        this.disposables.push(termWatcher);
+        console.log("[TerminalWatcher] onDidWriteTerminalData hooked.");
+      }
+    } catch (err) {
+      console.log("[TerminalWatcher] Proposed API 'onDidWriteTerminalData' not available, skipping Strategy 1.");
     }
 
     // ── Strategy 2: Debug session exception events ───────────────────────────

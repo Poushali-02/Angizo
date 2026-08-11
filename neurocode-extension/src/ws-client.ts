@@ -150,9 +150,14 @@ export class NeurocodeWsClient extends EventEmitter {
     warning_count?: number;
     code_snippet?: string;
   }): void {
+    try {
+      const vscode = require("vscode");
+      vscode.window.showInformationMessage(`[WS Client] Sending ${event.event_type} for ${event.file || "file"}`);
+    } catch (e) {}
     console.log(`[ws-client] Sending observer event: ${event.event_type}`);
     this.send({ type: "copilot_observer_event", ...event });
   }
+
 
   /**
    * Send a Manual Coding Observer event (syntax error or runtime exception) to the backend.

@@ -48,27 +48,36 @@ export class ObserverStatusBar {
     };
   }
 
-  setComplete(linesAdded: number, errorCount: number, fileName: string): void {
+  setComplete(linesAdded: number, errorCount: number, fileName: string, source: string = "Copilot"): void {
     const errText = errorCount === 0
       ? "0 errors"
       : `${errorCount} error${errorCount > 1 ? "s" : ""}`;
-    this.item.text = `$(check) Copilot: ${linesAdded} lines added · ${errText}`;
+    
+    if (source === "Copilot") {
+      this.item.text = `$(check) Copilot: ${linesAdded} lines added · ${errText}`;
+    } else {
+      this.item.text = `$(check) ${source}: ${errText}`;
+    }
+    
     this.item.backgroundColor = errorCount > 0
       ? new vscode.ThemeColor("statusBarItem.warningBackground")
       : undefined;
     this.item.accessibilityInformation = {
-      label: `Copilot finished: ${linesAdded} lines added to ${fileName} with ${errText}`,
+      label: source === "Copilot" 
+        ? `Copilot finished: ${linesAdded} lines added to ${fileName} with ${errText}`
+        : `${source} finished in ${fileName} with ${errText}`,
       role: "status",
     };
   }
 
-  setError(errorCount: number): void {
-    this.item.text = `$(warning) Copilot: ${errorCount} error${errorCount > 1 ? "s" : ""} introduced`;
+  setError(errorCount: number, source: string = "Copilot"): void {
+    const errorText = `${errorCount} error${errorCount > 1 ? "s" : ""}`;
+    this.item.text = `$(warning) ${source}: ${errorText} introduced`;
     this.item.backgroundColor = new vscode.ThemeColor(
       "statusBarItem.warningBackground"
     );
     this.item.accessibilityInformation = {
-      label: `Warning: Copilot introduced ${errorCount} error${errorCount > 1 ? "s" : ""}`,
+      label: `Warning: ${source} introduced ${errorText}`,
       role: "status",
     };
   }
