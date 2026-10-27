@@ -1,4 +1,4 @@
-# 🧠 NeuroCode (Angizo) — AI Accessibility Agent for Developers
+# 🧠 Angizo — AI Accessibility Agent for Developers
 
 > **Empowering Blind and Low-Vision Software Developers through Voice-Driven Git Workflows, Real-Time Copilot Observer Streams, and Intellisense Error Interceptors.**
 
