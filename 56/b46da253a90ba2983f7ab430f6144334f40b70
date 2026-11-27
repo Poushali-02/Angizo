@@ -1,0 +1,252 @@
+backend/agent/graph.py
+  s_2adf9dde9c0a0e::t_f15c808d17e781 3-20,22,24-27,31,33-35,37-38,42-43,45-46,52-56,60,65,73,76-77,80-82
+  s_2adf9dde9c0a0e::t_ebac83c4279d49 44,47-48
+backend/agent/nodes/confirm.py
+  s_2adf9dde9c0a0e::t_184ed1ade454ea 3-12,14,16-18,24-36,38-42,44-45
+  s_2adf9dde9c0a0e::t_a89d6a299d4c91 43
+backend/agent/nodes/narrate.py
+  s_2adf9dde9c0a0e::t_ba67d48ec787a3 3-6,8,10-11,16-24,26,28,30,32,34-37,43-44,56-65
+backend/agent/nodes/reason.py
+  s_2adf9dde9c0a0e::t_a89d6a299d4c91 41,94
+backend/agent/nodes/recover.py
+  s_2adf9dde9c0a0e::t_51a6d7f5af8d1f 1-57
+backend/agent/nodes/verify.py
+  s_2adf9dde9c0a0e::t_6cb0f49de795f1 3-7,9,11,19,21-47
+  s_2adf9dde9c0a0e::t_a68ae388f4b797 16-18,20
+backend/agent/plan_schema.py
+  s_2adf9dde9c0a0e::t_584771395a9041 1-104,106,110-111
+  s_2adf9dde9c0a0e::t_ad1c4f929ec2af 105,107-109
+backend/agent/state.py
+  s_2adf9dde9c0a0e::t_dd6cade4e46f7f 4-6,12-13,16-19,23,26-27,29,31,33,35,38-43,45
+  s_2adf9dde9c0a0e::t_a89d6a299d4c91 28
+backend/api/ws.py
+  s_2adf9dde9c0a0e::t_c90aa7ca2c6ba7 17-18,147-166,175,190,199,392,437
+  s_2adf9dde9c0a0e::t_ec1f1a759907b9 27,106-108,111-112,118,120,122,134,202-205,207-216,223-242,245-257,260-268,271-293,460,536-537,540,542,561
+backend/tests/conftest.py
+  s_2adf9dde9c0a0e::t_f87bbf132a368b 70-123
+  s_2adf9dde9c0a0e::t_8c9f3b0ae2a097 142-144
+backend/tests/test_agent_graph.py
+  s_2adf9dde9c0a0e::t_74f64a36e2ccb3 1-4,7-10,15-22,24-26,28-29,32-35,38,43,45,54,61-72,75,77-80,84,86-87,93,95,102-149,154,156-159,166,168-172,174-175,180-182,188,191,194,197,199-201,205-206,208,210-212,215,217-221,224-227,229,231-232,234,236-283
+  s_2adf9dde9c0a0e::t_df08d4d8d41cbc 173,176
+  s_2adf9dde9c0a0e::t_a70de83cd047cb 178
+backend/tests/test_tools.py
+  s_2adf9dde9c0a0e::t_b59ed4f2877f1d 464-488,491-507
+  s_2adf9dde9c0a0e::t_2ed706bc82ced7 489-490
+  s_2adf9dde9c0a0e::t_a479dbebaa3cd4 508-529
+backend/tests/test_ws_api.py
+  s_2adf9dde9c0a0e::t_c6acc4b46d34df 189,191-192,194-198,200,203,208-209,214-241
+backend/tests_live/test_live_llm.py
+  s_2adf9dde9c0a0e::t_d5fe2987c877b2 93,96-101,104-109
+backend/tools/diff_intelligence.py
+  s_2adf9dde9c0a0e::t_1a2f5646a450c2 13-14
+  s_2adf9dde9c0a0e::t_e742ee8689067d 35-37
+  s_2adf9dde9c0a0e::t_981a31dfbc0262 83,85-93
+backend/tools/gemini_llm.py
+  s_2adf9dde9c0a0e::t_234c3c78563483 15
+  s_2adf9dde9c0a0e::t_a3d95d89beb2d2 54-59
+  s_2adf9dde9c0a0e::t_d9d96d1347f281 95-96
+  s_2adf9dde9c0a0e::t_ee7cf9b0a6ff49 121-122,124-138
+  s_2adf9dde9c0a0e::t_5a6e5073ae538f 278
+  s_2adf9dde9c0a0e::t_b8cdd1b900cc51 288
+  s_2adf9dde9c0a0e::t_a479dbebaa3cd4 289
+backend/tools/git_tool.py
+  s_2adf9dde9c0a0e::t_f91f753960bd5f 121-127
+  s_2adf9dde9c0a0e::t_eb36f03e5b8a13 166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "autter_version": "3.9.1",
+  "base_commit_sha": "56b46da253a90ba2983f7ab430f6144334f40b70",
+  "branch": "v1",
+  "prompts": {
+    "s_2adf9dde9c0a0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "64563ae5-3f51-4e7b-b39d-5a6e8568c454",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:91d6889db4516bcca730e0052c2d4bb923d4be455d570523beb0f08109d7b296",
+      "total_additions": 2109,
+      "total_deletions": 362,
+      "accepted_lines": 896,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_2adf9dde9c0a0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "64563ae5-3f51-4e7b-b39d-5a6e8568c454",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:91d6889db4516bcca730e0052c2d4bb923d4be455d570523beb0f08109d7b296",
+      "stats": {
+        "total_additions": 2109,
+        "total_deletions": 362,
+        "accepted_lines": 896,
+        "overriden_lines": 0,
+        "files": {
+          "CHANGELOG.md": {
+            "total_additions": 38,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "README.md": {
+            "total_additions": 13,
+            "total_deletions": 4,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "backend/agent/graph.py": {
+            "total_additions": 62,
+            "total_deletions": 49,
+            "accepted_lines": 49,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/confirm.py": {
+            "total_additions": 36,
+            "total_deletions": 11,
+            "accepted_lines": 35,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/narrate.py": {
+            "total_additions": 38,
+            "total_deletions": 12,
+            "accepted_lines": 36,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/reason.py": {
+            "total_additions": 2,
+            "total_deletions": 0,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/recover.py": {
+            "total_additions": 57,
+            "total_deletions": 0,
+            "accepted_lines": 57,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/verify.py": {
+            "total_additions": 41,
+            "total_deletions": 12,
+            "accepted_lines": 39,
+            "overriden_lines": 0
+          },
+          "backend/agent/plan_schema.py": {
+            "total_additions": 112,
+            "total_deletions": 1,
+            "accepted_lines": 111,
+            "overriden_lines": 0
+          },
+          "backend/agent/state.py": {
+            "total_additions": 26,
+            "total_deletions": 19,
+            "accepted_lines": 24,
+            "overriden_lines": 0
+          },
+          "backend/api/ws.py": {
+            "total_additions": 122,
+            "total_deletions": 128,
+            "accepted_lines": 122,
+            "overriden_lines": 0
+          },
+          "backend/evals/measure.py": {
+            "total_additions": 503,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "backend/tests/conftest.py": {
+            "total_additions": 57,
+            "total_deletions": 0,
+            "accepted_lines": 57,
+            "overriden_lines": 0
+          },
+          "backend/tests/test_agent_graph.py": {
+            "total_additions": 206,
+            "total_deletions": 67,
+            "accepted_lines": 193,
+            "overriden_lines": 0
+          },
+          "backend/tests/test_tools.py": {
+            "total_additions": 67,
+            "total_deletions": 1,
+            "accepted_lines": 66,
+            "overriden_lines": 0
+          },
+          "backend/tests/test_ws_api.py": {
+            "total_additions": 42,
+            "total_deletions": 16,
+            "accepted_lines": 40,
+            "overriden_lines": 0
+          },
+          "backend/tests_live/test_live_llm.py": {
+            "total_additions": 13,
+            "total_deletions": 12,
+            "accepted_lines": 13,
+            "overriden_lines": 0
+          },
+          "backend/tools/diff_intelligence.py": {
+            "total_additions": 15,
+            "total_deletions": 0,
+            "accepted_lines": 15,
+            "overriden_lines": 0
+          },
+          "backend/tools/gemini_llm.py": {
+            "total_additions": 29,
+            "total_deletions": 16,
+            "accepted_lines": 29,
+            "overriden_lines": 0
+          },
+          "backend/tools/git_tool.py": {
+            "total_additions": 8,
+            "total_deletions": 3,
+            "accepted_lines": 8,
+            "overriden_lines": 0
+          },
+          "docs/DEMO.md": {
+            "total_additions": 126,
+            "total_deletions": 1,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/package.json": {
+            "total_additions": 4,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/src/extension.ts": {
+            "total_additions": 21,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/src/webview/main.js": {
+            "total_additions": 4,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/test/demo/scenes.js": {
+            "total_additions": 180,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "scripts/record_demo.py": {
+            "total_additions": 287,
+            "total_deletions": 10,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          }
+        }
+      }
+    }
+  },
+  "integrity": {"v":1,"commit":"56b46da253a90ba2983f7ab430f6144334f40b70","tree":"ce46936020423f9fc881f2a61a4a86fd53719c36","files":{"backend/agent/graph.py":"5f282e26f3ff1ef8d6da54b6be445a3b68b3a208","backend/agent/nodes/confirm.py":"294decfe1477f5274357763c3a2e9da9b2421954","backend/agent/nodes/narrate.py":"9448c6a9e5b2e693ce072e74a697514e5722f9e3","backend/agent/nodes/reason.py":"a775a8f4a6d5e29cf5f9c5eb3ee5d76957d8e2fb","backend/agent/nodes/recover.py":"fb7fbb96b5adf356f9d51d9f4b7c9c6fc85b5faf","backend/agent/nodes/verify.py":"616b45ddaebe400b762da10fb873fd20c555700b","backend/agent/plan_schema.py":"4aed30fd3e9f0a9161fcbe313e558b463ded80d9","backend/agent/state.py":"1badc54cfe1a4de070e148df2bef57f5010d9a58","backend/api/ws.py":"01dd9cd0223398763a7143dd85d0c5a4d3462c12","backend/tests/conftest.py":"8347dc28af4f44659e4688265810ed7f1c77d6fe","backend/tests/test_agent_graph.py":"f5aa9c2d2ae29d08b635893e77e8b5dcaacfed16","backend/tests/test_tools.py":"679308577c6d8398e41798aea638d0c57398bbeb","backend/tests/test_ws_api.py":"5ef6c6264d9f8210a9bbf525fa8d9dc6c803d200","backend/tests_live/test_live_llm.py":"c604c76c9b441bc6b3d1f3453d2a868f04e7f82d","backend/tools/diff_intelligence.py":"8adf442f6814416ab2827edc51cc07edadc0954f","backend/tools/gemini_llm.py":"ba553055606a95bfd3100651d931c4f0b2dbe8aa","backend/tools/git_tool.py":"13ecb627b9b6360ed9131ad6498dd1b26889f6f6"},"digest":"f20bb0ae5ae332f9746a3234963e66e0563caeaa2de8c0ed2e7c4ffa2a1fa8fb"}
+}
