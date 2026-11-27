@@ -1,0 +1,97 @@
+backend/evals/measure.py
+  s_2adf9dde9c0a0e::t_fc8f4b2751f9db 1-145,150-503
+  s_2adf9dde9c0a0e::t_958445cdabbc9d 146-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "autter_version": "3.9.1",
+  "base_commit_sha": "4193fcdd916b3e55bb1eebcbbb674844a9f2c951",
+  "branch": "v1",
+  "prompts": {
+    "s_2adf9dde9c0a0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "64563ae5-3f51-4e7b-b39d-5a6e8568c454",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 503,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_2adf9dde9c0a0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "64563ae5-3f51-4e7b-b39d-5a6e8568c454",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "stats": {
+        "total_additions": 0,
+        "total_deletions": 0,
+        "accepted_lines": 503,
+        "overriden_lines": 0,
+        "files": {
+          "CHANGELOG.md": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "README.md": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "backend/evals/measure.py": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 503,
+            "overriden_lines": 0
+          },
+          "docs/DEMO.md": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/package.json": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/src/extension.ts": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/src/webview/main.js": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/test/demo/scenes.js": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "scripts/record_demo.py": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          }
+        }
+      }
+    }
+  },
+  "integrity": {"v":1,"commit":"4193fcdd916b3e55bb1eebcbbb674844a9f2c951","tree":"7bff5927ac6fabe0fb59dc8d8d622f9739831649","files":{"backend/evals/measure.py":"3d806dd21faf58bd250aeec087dafa734fdab39a"},"digest":"6708d462cd8875119ecf6f7ae7798a7d3c12b3ab99bf9b38094ab4652e0035c7"}
+}
