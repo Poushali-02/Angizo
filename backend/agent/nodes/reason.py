@@ -71,9 +71,9 @@ async def reason_plan(state: AgentState) -> AgentState:
         changed = len(git_status.get("changed_files", []))
         if diff_text.strip():
             prose_review = await diff_intelligence.review_before_commit(diff_text)
-            reasoning = f"You are on branch '{branch}' with {changed} changed file(s). {prose_review}"
+            reasoning = f"On {branch}, {_speak_files(git_status.get('changed_files', []))}. {prose_review}"
         else:
-            reasoning = f"You are on branch '{branch}' with no uncommitted file changes."
+            reasoning = f"On {branch}, no uncommitted changes."
         confirmation_required = False
 
     else:

@@ -184,3 +184,65 @@ def test_empty_text_makes_no_request(monkeypatch, sarvam_keys):
     calls = mock_httpx(monkeypatch, sarvam_module, lambda req: httpx.Response(200, json={"audios": ["X"]}))
     assert asyncio.run(SarvamFillerTTS().generate_filler_audio_base64("   ")) == ""
     assert calls == []
+
+
+# ── Plan guard: actions the user did not ask for are removed ─────────────────
+
+from tools.gemini_llm import GeminiLLM as _Planner, guard_plan  # noqa: E402
+
+
+def _plan(*tools):
+    return {"reasoning": "x", "tool_calls": [{"tool": t, "args": {}} for t in tools]}
+
+
+def _tools(plan):
+    return [c["tool"] for c in plan["tool_calls"]]
+
+
+@pytest.mark.parametrize("command, proposed, allowed", [
+    ("pull the latest changes", ["commit_changes", "pull_from_remote"], ["pull_from_remote"]),
+    ("commit my changes", ["get_git_diff", "commit_changes"], ["get_git_diff", "commit_changes"]),
+    ("save my work", ["commit_changes"], ["commit_changes"]),
+    ("commit and push", ["commit_changes", "push_to_remote"], ["commit_changes", "push_to_remote"]),
+    ("push my branch", ["commit_changes", "push_to_remote"], ["push_to_remote"]),
+    ("review my diff", ["get_git_diff", "commit_changes"], ["get_git_diff"]),
+    ("don't commit anything, just show me the diff", ["get_git_diff", "commit_changes"], ["get_git_diff"]),
+    ("what would happen if I committed now?", ["commit_changes"], ["get_git_status", "get_git_diff"]),
+    ("is it safe to push right now?", ["push_to_remote"], ["get_git_status", "get_git_diff"]),
+    ("what does charge do", ["query_codebase_rag"], ["query_codebase_rag"]),
+])
+def test_guard_keeps_only_requested_actions(command, proposed, allowed):
+    assert _tools(guard_plan(command, _plan(*proposed))) == allowed
+
+
+@pytest.mark.parametrize("command, expected", [
+    ("commit my changes", ["get_git_diff", "commit_changes"]),
+    ("commit and push", ["get_git_diff", "commit_changes", "push_to_remote"]),
+    ("push to origin", ["push_to_remote"]),  # never commits on its own
+    ("pull the latest changes", ["pull_from_remote"]),
+    ("don't commit anything, just show me the diff", ["get_git_status", "get_git_diff"]),
+    ("what would happen if I committed now?", ["get_git_status", "get_git_diff"]),
+    ("what is my status", ["get_git_status", "get_git_diff"]),
+    ("what does the charge function do", ["query_codebase_rag"]),
+])
+def test_rule_fallback_planner(command, expected):
+    assert _tools(guard_plan(command, _Planner._rule_plan(command))) == expected
+
+
+def test_llm_plan_with_an_unrequested_commit_is_cut_back(fake_llm):
+    fake_llm.plan = _plan("commit_changes", "pull_from_remote")
+    plan = asyncio.run(_Planner().plan_actions("pull the latest changes", {}))
+    assert _tools(plan) == ["pull_from_remote"]
+    assert plan["dropped_actions"] == ["commit_changes"]
+
+
+def test_groq_client_survives_a_new_event_loop(monkeypatch):
+    """Each asyncio.run() is a new loop; the pooled client must not be reused across loops."""
+    seen = mock_httpx(monkeypatch, __import__("tools.diff_intelligence", fromlist=["x"]),
+                      lambda req: httpx.Response(200, json={"choices": [{"message": {"content": "hi"}}]}))
+    monkeypatch.setattr(diff_intelligence, "api_key", "test-key")
+    monkeypatch.setattr(diff_intelligence, "_client", None)
+    assert asyncio.run(diff_intelligence._call_groq("a")) == "hi"
+    assert asyncio.run(diff_intelligence._call_groq("b")) == "hi"
+    assert len(seen) == 2
+    assert json.loads(seen[0].content).get("reasoning_effort") in (None, "low")

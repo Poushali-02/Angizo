@@ -134,3 +134,13 @@ def test_failed_commit_is_narrated_as_a_failure(git_repo, fake_llm, fake_voice):
     assert final["verification_status"] == "failure"
     assert final["narration"].startswith("Action failed")
     assert final["earcon"] == "high-risk"
+
+
+def test_spoken_review_has_no_markdown(git_repo, fake_llm, fake_voice):
+    (git_repo / "auth.py").write_text("changed\n")
+    fake_llm.review = "The `login` function is **now** simpler."
+
+    final = run_graph("review my diff")
+
+    assert final["narration"] == "On main, 1 changed file: auth.py. The login function is now simpler."
+    assert fake_voice.spoken[-1] == final["narration"]  # exactly this text was sent to the voice

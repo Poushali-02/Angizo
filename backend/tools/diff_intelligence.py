@@ -9,6 +9,7 @@ Gemini AI Integration for Diff Intelligence & Intent Classification:
 - Conflict diagnosis explanation
 """
 
+import asyncio
 import logging
 import json
 import httpx
@@ -28,12 +29,18 @@ class DiffIntelligence:
         self._client: httpx.AsyncClient | None = None
 
     def _get_client(self) -> httpx.AsyncClient:
-        """Return or create a persistent AsyncClient with connection pooling."""
-        if self._client is None or self._client.is_closed:
+        """
+        Return a pooled AsyncClient for the running event loop. A client's pooled connections
+        belong to the loop that opened them, so a new loop (a restarted server, a test calling
+        asyncio.run again) gets a new client instead of failing with "Event loop is closed".
+        """
+        loop = asyncio.get_running_loop()
+        if self._client is None or self._client.is_closed or getattr(self, "_client_loop", None) is not loop:
             self._client = httpx.AsyncClient(
-                timeout=httpx.Timeout(connect=2.0, read=12.0, write=5.0, pool=1.0),
+                timeout=httpx.Timeout(connect=3.0, read=20.0, write=5.0, pool=2.0),
                 limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
             )
+            self._client_loop = loop
         return self._client
 
     async def _call_groq(self, prompt: str) -> str:
@@ -50,6 +57,9 @@ class DiffIntelligence:
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.0,
         }
+        if "gpt-oss" in self.model:
+            # Short spoken answers need little reasoning: about half the tokens and latency
+            payload["reasoning_effort"] = "low"
         try:
             client = self._get_client()
             res = await client.post(self.endpoint, json=payload, headers=headers)
@@ -197,11 +207,12 @@ Analyze this exact git diff and explain the precise changes made:
 Instructions for voice response:
 - Explicitly describe the specific code modifications in the diff (for example: mention exact status codes changed like 500 to 400, modified variables, added try-catch blocks, or updated endpoints).
 - Do NOT give generic statements like "changes related to exam configuration". State the exact code edits made.
-- Keep the response direct, clear, and spoken-friendly in 2-3 sentences.
+- At most 2 short sentences and 40 words: it is read aloud, and every extra word adds speaking time.
+- Plain words only: no markdown, backticks, asterisks or code formatting.
 """
         review = await self._call_groq(prompt)
         if review:
-            return review.strip()
+            return _clean_spoken(review) or review.strip()
         return "Your repository has modified files with uncommitted changes."
 
     async def explain_conflict(self, diagnosis_info: dict) -> str:

@@ -11,7 +11,7 @@ import json
 import logging
 import httpx
 import config
-from tools.diff_intelligence import diff_intelligence
+from tools.diff_intelligence import diff_intelligence, _clean_spoken
 
 logger = logging.getLogger("neurocode.gemini_llm")
 
@@ -91,6 +91,10 @@ Branch: {status_info.get('branch', 'main')}, Uncommitted Changed Files: {len(sta
 Rules:
 - If the user asks to commit or save their work, include commit_changes even when they gave no message. Never ask them for a message; the user confirms before anything runs.
 - Never return an empty tool_calls list. For a general question, use query_codebase_rag.
+- Plan only what the user asked for. Never add commit_changes, push_to_remote or pull_from_remote
+  unless the user asked for that action, even if there are uncommitted changes.
+- Questions about an action ("is it safe to push?", "what would happen if I committed?") and negations
+  ("don't commit, just show me the diff") are read-only: use get_git_status / get_git_diff instead.
 
 Return JSON ONLY in this format:
 {{
@@ -108,17 +112,24 @@ Return JSON ONLY in this format:
             data = json.loads(clean_json)
             # An empty plan falls through to the rule-based planner below
             if isinstance(data.get("tool_calls"), list) and data["tool_calls"]:
-                return data
+                return guard_plan(transcript, data)
         except Exception:
             pass
 
-        # Rule-based dynamic fallback planner
+        return guard_plan(transcript, self._rule_plan(transcript))
+
+    @staticmethod
+    def _rule_plan(transcript: str) -> dict:
+        """Keyword planner used when the LLM is unavailable or returns no usable plan."""
         text_lower = transcript.lower()
         tool_calls = []
         requires_confirm = False
         risk_band = "safe"
 
-        if "commit" in text_lower and "push" in text_lower:
+        if _is_question_or_negated(text_lower):
+            # "what would happen if I committed?", "don't commit, show me the diff": read only
+            tool_calls = [{"tool": "get_git_status", "args": {}}, {"tool": "get_git_diff", "args": {}}]
+        elif "commit" in text_lower and "push" in text_lower:
             tool_calls = [
                 {"tool": "get_git_diff", "args": {}},
                 {"tool": "commit_changes", "args": {}},
@@ -133,14 +144,8 @@ Return JSON ONLY in this format:
             ]
             requires_confirm = True
         elif "push" in text_lower:
-            if len(status_info.get("changed_files", [])) > 0:
-                tool_calls = [
-                    {"tool": "get_git_diff", "args": {}},
-                    {"tool": "commit_changes", "args": {}},
-                    {"tool": "push_to_remote", "args": {}}
-                ]
-            else:
-                tool_calls = [{"tool": "push_to_remote", "args": {}}]
+            # Push only what is already committed: never commit work the user didn't ask to commit
+            tool_calls = [{"tool": "push_to_remote", "args": {}}]
             requires_confirm = True
             risk_band = "caution"
         elif "pull" in text_lower:
@@ -166,7 +171,7 @@ Return JSON ONLY in this format:
         RAG codebase context, git status/diffs, and user prompt.
         """
         prompt = f"""You are the AI assistant for NeuroCode, a voice-driven accessibility tool.
-Answer the user's question clearly and concisely in 2-3 spoken sentences based on the provided codebase context.
+Answer the user's question in at most 2 short spoken sentences (under 45 words) based on the provided codebase context.
 
 User Question: "{transcript}"
 
@@ -180,10 +185,10 @@ Answer requirement:
 - Answer the user's specific question directly (e.g. mention the exact tech stack or framework used in the code snippets).
 - Do NOT output intent names like 'code_query' or 'git_status'.
 - Do NOT use markdown code blocks or code fences.
-- Return plain text spoken response only.
+- Return plain text spoken response only: no markdown, backticks or asterisks.
 """
         response = await self.generate(prompt)
-        response_clean = response.strip().replace("code_query", "").strip() if response else ""
+        response_clean = _clean_spoken(response.replace("code_query", "")) if response else ""
         if response_clean and len(response_clean) > 5:
             return response_clean
         
@@ -191,5 +196,48 @@ Answer requirement:
         if rag_context:
             return "Based on your codebase files, this project uses Python with FastAPI for the backend and a VS Code TypeScript extension."
         return "Processed your codebase query successfully."
+
+# ── Plan guard: the LLM proposes, this code decides ─────────────────────────
+# A tool that changes the repository stays in a plan only if the user's own words asked for it.
+
+_ACTION_WORDS = {
+    "commit_changes": ("commit", "save"),
+    "push_to_remote": ("push", "publish", "upload"),
+    "pull_from_remote": ("pull", "sync", "fetch", "update from", "get the latest", "latest changes"),
+}
+_NEGATIONS = ("don't", "dont", "do not", "never", "without", "no need to", "instead of", "not yet")
+_QUESTION_STARTS = ("what would", "what happens", "what if", "is it safe", "should i", "can i safely",
+                    "why", "how do i", "how does", "explain")
+
+
+def _is_question_or_negated(text: str) -> bool:
+    text = text.lower().strip()
+    return any(n in text for n in _NEGATIONS) or text.startswith(_QUESTION_STARTS)
+
+
+def guard_plan(transcript: str, plan: dict) -> dict:
+    """
+    Remove repository-changing tools the user did not ask for: an action whose words never
+    appear in the command, or any action when the command is a question about it or a negation
+    ("is it safe to push?", "don't commit"). Read-only tools always pass. If nothing is left,
+    the plan becomes a read-only status + diff.
+    """
+    text = transcript.lower()
+    hypothetical = _is_question_or_negated(text)
+    kept, dropped = [], []
+    for call in plan.get("tool_calls", []):
+        tool = call.get("tool")
+        words = _ACTION_WORDS.get(tool)
+        if words is not None and (hypothetical or not any(w in text for w in words)):
+            dropped.append(tool)
+            continue
+        kept.append(call)
+    if not dropped:
+        return plan
+    logger.warning(f"[PlanGuard] Dropped unrequested actions {dropped} for: '{transcript}'")
+    if not kept:
+        kept = [{"tool": "get_git_status", "args": {}}, {"tool": "get_git_diff", "args": {}}]
+    return {**plan, "tool_calls": kept, "dropped_actions": dropped}
+
 
 gemini_llm = GeminiLLM()
