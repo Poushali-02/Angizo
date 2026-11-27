@@ -1,4 +1,3 @@
-1# Reload trigger comment
 """
 neurocode-backend/main.py
 
@@ -7,8 +6,10 @@ Matches DESIGN.md module layout: main.py at the backend root.
 """
 
 # Load .env FIRST — before any other local imports read os.getenv()
+import os
 from dotenv import load_dotenv
-load_dotenv()  # reads backend/.env into os.environ
+if os.getenv("ANGIZO_SKIP_DOTENV") != "1":  # tests set this so they never load real keys
+    load_dotenv()  # reads backend/.env into os.environ
 
 import logging
 import uvicorn

@@ -14,6 +14,7 @@ Matches DESIGN.md API contract:
 """
 
 import json
+import re
 import base64
 import logging
 import asyncio
@@ -106,15 +107,10 @@ async def handle_voice_transcript(ws: WebSocket, session_id: str, transcript: st
     logger.info(f"[Voice] Processing transcript: '{transcript}'")
     
     if state.get("confirmation_required"):
-        t_lower = transcript.lower().strip()
-        # Verbal confirm keywords
-        if any(w in t_lower for w in ["yes", "confirm", "proceed", "ok", "permit"]):
-            logger.info("[Voice] Verbal confirmation detected.")
-            state["confirmed"] = True
-            asyncio.create_task(run_agent_graph(ws, session_id))
-            return
-        # Verbal cancel keywords
-        elif any(w in t_lower for w in ["no", "cancel", "deny", "stop"]):
+        # Match whole words: a substring check heard "ok" in "look" and confirmed a commit.
+        words = set(re.findall(r"[a-z]+", transcript.lower()))
+        # Cancel wins when both appear ("no, don't confirm"), since it is the safe choice.
+        if words & {"no", "cancel", "deny", "stop", "don"}:
             logger.info("[Voice] Verbal cancellation detected.")
             state["confirmed"] = False
             state["confirmation_required"] = False
@@ -124,6 +120,11 @@ async def handle_voice_transcript(ws: WebSocket, session_id: str, transcript: st
                 "status": "cancelled",
                 "detail": "Action cancelled by user."
             })
+            return
+        elif words & {"yes", "confirm", "proceed", "ok", "okay", "permit"}:
+            logger.info("[Voice] Verbal confirmation detected.")
+            state["confirmed"] = True
+            asyncio.create_task(run_agent_graph(ws, session_id))
             return
 
     # Not in confirmation or not a confirmation keyword; treat as new text command

@@ -3,7 +3,7 @@ neurocode-backend/tools/gemini_llm.py
 
 Gemini LLM Integration (with Groq LLM Fallback):
 - Primary LLM: Google Gemini REST API (gemini-1.5-flash)
-- Fallback LLM: Groq API (llama-3.3-70b-versatile)
+- Fallback LLM: Groq API (openai/gpt-oss-120b)
 - Generates voice reasoning, code explanations, and intent classification with RAG context.
 """
 
@@ -49,12 +49,16 @@ class GeminiLLM:
                                 response_text = parts[0].get("text", "").strip()
                                 logger.info("[GeminiLLM] Response generated via Gemini API")
                                 return response_text
+                    elif res.status_code in (400, 401, 403) and "API key" in res.text:
+                        # A rejected key won't start working mid-session: stop paying the round trip
+                        logger.warning(f"[GeminiLLM] API key rejected ({res.status_code}). Using Groq only until restart.")
+                        self.api_key = ""
                     else:
                         logger.warning(f"[GeminiLLM] API error {res.status_code}: {res.text}. Falling back to Groq.")
             except Exception as e:
                 logger.warning(f"[GeminiLLM] Exception during Gemini API call: {e}. Falling back to Groq.")
 
-        # Fallback to Groq LLM (llama-3.3-70b-versatile)
+        # Fallback to Groq LLM (openai/gpt-oss-120b)
         logger.info("[GeminiLLM] Using Groq LLM fallback for generation")
         return await diff_intelligence._call_groq(prompt)
 
@@ -74,7 +78,7 @@ Analyze the user command and select atomic tools to execute:
 Available Atomic Tools:
 - get_git_status: Get active branch and modified/untracked files.
 - get_git_diff: Get working tree git diff for modified files.
-- commit_changes: Stage and commit changes (args: {{"message": "conventional commit msg"}}).
+- commit_changes: Stage and commit changes (args: {{"message": "conventional commit msg"}}, optional: leave it out and the system drafts one from the diff).
 - push_to_remote: Push commits to remote origin (args: {{"branch": "branch_name"}}).
 - pull_from_remote: Fetch and pull remote changes (args: {{"branch": "branch_name"}}).
 - query_codebase_rag: Search codebase files to answer user questions (args: {{"query": "search text"}}).
@@ -83,6 +87,10 @@ User Command: "{transcript}"
 
 Current Git Status:
 Branch: {status_info.get('branch', 'main')}, Uncommitted Changed Files: {len(status_info.get('changed_files', []))}
+
+Rules:
+- If the user asks to commit or save their work, include commit_changes even when they gave no message. Never ask them for a message; the user confirms before anything runs.
+- Never return an empty tool_calls list. For a general question, use query_codebase_rag.
 
 Return JSON ONLY in this format:
 {{
@@ -98,7 +106,8 @@ Return JSON ONLY in this format:
         try:
             clean_json = response.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
             data = json.loads(clean_json)
-            if "tool_calls" in data and isinstance(data["tool_calls"], list):
+            # An empty plan falls through to the rule-based planner below
+            if isinstance(data.get("tool_calls"), list) and data["tool_calls"]:
                 return data
         except Exception:
             pass

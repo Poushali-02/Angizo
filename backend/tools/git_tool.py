@@ -29,8 +29,23 @@ def _get_repo() -> git.Repo:
         logger.warning(f"No git repository found at {repo_path}")
         return None
 
+def _changed_paths(repo: git.Repo) -> list:
+    """Every path with uncommitted work: unstaged edits, staged edits and untracked files."""
+    paths = set()
+    for item in repo.index.diff(None):  # working tree vs index
+        paths.add(item.b_path or item.a_path)
+    try:
+        for item in repo.index.diff("HEAD"):  # index vs last commit (staged changes)
+            paths.add(item.b_path or item.a_path)
+    except (git.BadName, ValueError, git.GitCommandError):
+        # A repo with no commits yet has no HEAD: everything in the index is new
+        paths.update(path for path, _stage in repo.index.entries.keys())
+    paths.update(repo.untracked_files)  # .gitignore'd files never appear here
+    return sorted(paths)
+
+
 def status() -> dict:
-    """Returns changed/added/deleted files, current branch, ahead/behind counts."""
+    """Returns the current branch and every changed, staged or untracked file."""
     repo = _get_repo()
     if not repo:
         return {"error": "Not a git repository"}
@@ -39,44 +54,65 @@ def status() -> dict:
     if not repo.head.is_detached:
         branch = repo.active_branch.name
 
-    # Changed files (untracked + modified)
-    changed = [item.a_path for item in repo.index.diff(None)]
-    untracked = repo.untracked_files
-    all_changed = list(set(changed + untracked))
-
-    repo_path = repo.working_dir if repo else (_session_repo_path or config.REPO_PATH)
-
     return {
         "branch": branch,
-        "changed_files": all_changed,
-        "repo_path": repo_path
+        "changed_files": _changed_paths(repo),
+        "repo_path": repo.working_dir,
     }
 
+MAX_UNTRACKED_PREVIEW = 4000  # characters of new files shown to the LLM, in total
+
+
 def diff() -> str:
-    """Returns working tree git diff string."""
+    """Working tree + staged diff, plus a preview of new untracked files (git diff skips them)."""
     repo = _get_repo()
     if not repo:
         return ""
     try:
-        # Get working tree diff
-        unstaged = repo.git.diff()
-        staged = repo.git.diff("--cached")
-        combined = (unstaged + "\n" + staged).strip()
-        return combined
+        parts = [repo.git.diff(), repo.git.diff("--cached")]
+        budget = MAX_UNTRACKED_PREVIEW
+        for path in repo.untracked_files:
+            if budget <= 0:
+                parts.append(f"new file: {path} (not shown)")
+                continue
+            try:
+                with open(os.path.join(repo.working_dir, path), "r", encoding="utf-8") as f:
+                    text = f.read(budget)
+            except (OSError, UnicodeDecodeError):
+                parts.append(f"new file: {path} (binary or unreadable)")
+                continue
+            budget -= len(text)
+            body = "\n".join("+" + line for line in text.splitlines())
+            parts.append(f"diff --git a/{path} b/{path}\nnew file\n--- /dev/null\n+++ b/{path}\n{body}")
+        return "\n".join(p for p in parts if p).strip()
     except Exception as e:
         logger.error(f"[git_tool] Failed to fetch git diff: {e}")
         return ""
 
-def commit(message: str) -> dict:
-    """Runs git add . && git commit -m <message>."""
+def commit(message: str, files: list = None) -> dict:
+    """
+    Commits exactly `files` (the list the user heard and approved) with `message`.
+    Without a list it commits every changed file, as `git status` reports them.
+    Never uses `git add -A`, so files that appear after the confirmation are left alone.
+    """
     repo = _get_repo()
     if not repo:
         return {"status": "failure", "detail": "Not a git repository"}
 
     try:
-        repo.git.add(A=True)
-        commit_obj = repo.index.commit(message)
-        return {"status": "success", "commit_hash": commit_obj.hexsha}
+        current = set(_changed_paths(repo))
+        wanted = list(files) if files else sorted(current)
+        to_stage = [f for f in wanted if f in current]
+        if not to_stage:
+            return {"status": "failure", "detail": "No changes to commit."}
+        repo.git.add("--", *to_stage)  # also stages deletions of tracked files
+        repo.git.commit("-m", message, "--", *to_stage)
+        return {
+            "status": "success",
+            "commit_hash": repo.head.commit.hexsha,
+            "files": to_stage,
+            "message": message,
+        }
     except Exception as e:
         return {"status": "failure", "detail": str(e)}
 

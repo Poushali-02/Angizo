@@ -11,6 +11,7 @@ Codebase RAG (Retrieval Augmented Generation) Engine:
 import os
 import re
 import math
+import time
 import logging
 import asyncio
 import httpx
@@ -19,13 +20,15 @@ import config
 logger = logging.getLogger("neurocode.rag_engine")
 
 IGNORE_DIRS = {".git", ".venv", "node_modules", "out", "dist", "__pycache__", ".next", ".vscode", "build"}
-ALLOWED_EXTS = {".py", ".ts", ".js", ".json", ".md", ".html", ".css", ".sql", ".sh", ".env"}
+ALLOWED_EXTS = {".py", ".ts", ".js", ".json", ".md", ".html", ".css", ".sql", ".sh"}  # never secrets files
 
 class RAGEngine:
     def __init__(self):
         self.api_key = config.GEMINI_API_KEY
         self.embedding_model = "text-embedding-004"
-        self._index_cache = {} # path -> list of {file, content, tokens}
+        self._index_cache = {}  # path -> list of {file, content, tokens}
+        self._indexed_at = {}  # path -> time.monotonic() of the last scan
+        self.max_index_age_s = 60  # rescan after this, so new and edited files are found
 
     def _tokenize(self, text: str) -> set:
         """Helper to extract lowercase word tokens for TF-IDF / similarity matching."""
@@ -43,7 +46,8 @@ class RAGEngine:
             dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
             for file in files:
                 ext = os.path.splitext(file)[1].lower()
-                if ext not in ALLOWED_EXTS and file.lower() != ".env":
+                # Never index secrets files (.env, .env.local, ...): their text would reach the LLM prompt
+                if ext not in ALLOWED_EXTS or file.lower().startswith(".env"):
                     continue
 
                 full_path = os.path.join(root, file)
@@ -99,9 +103,11 @@ class RAGEngine:
             return ""
 
         # Build or get cached index
-        if target_path not in self._index_cache:
+        age = time.monotonic() - self._indexed_at.get(target_path, float("-inf"))
+        if target_path not in self._index_cache or age > self.max_index_age_s:
             logger.info(f"[RAG] Indexing workspace at: {target_path}")
             self._index_cache[target_path] = self._scan_and_chunk(target_path)
+            self._indexed_at[target_path] = time.monotonic()
 
         chunks = self._index_cache[target_path]
         if not chunks:

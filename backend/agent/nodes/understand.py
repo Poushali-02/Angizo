@@ -30,15 +30,19 @@ async def understand_intent(state: AgentState) -> AgentState:
         }
 
     tool_names = [tc.get("tool") for tc in plan_data.get("tool_calls", [])]
-    first_tool = tool_names[0] if tool_names else "dynamic_plan"
-    intent_map = {
-        "get_git_status": "git_status",
-        "get_git_diff": "git_status",
-        "commit_changes": "git_commit",
-        "push_to_remote": "git_push",
-        "pull_from_remote": "git_pull",
-    }
-    intent_name = intent_map.get(first_tool, first_tool)
+    # Name the command after its most significant tool, not its first one:
+    # "get diff, then commit" is a commit, not a status check.
+    intent_by_priority = [
+        ("commit_changes", "git_commit"),
+        ("push_to_remote", "git_push"),
+        ("pull_from_remote", "git_pull"),
+        ("get_git_diff", "git_status"),
+        ("get_git_status", "git_status"),
+    ]
+    intent_name = next(
+        (intent for tool, intent in intent_by_priority if tool in tool_names),
+        tool_names[0] if tool_names else "dynamic_plan",
+    )
     logger.info(f"[Understand] transcript: '{transcript}' -> planned tools: {tool_names} (intent: {intent_name})")
 
     return {

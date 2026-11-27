@@ -41,18 +41,18 @@ async def reason_plan(state: AgentState) -> AgentState:
                 "plan_data": plan_data
             }
 
-    if "commit_changes" in tool_names and "push_to_remote" in tool_names:
-        changed = len(git_status.get("changed_files", []))
+    if "commit_changes" in tool_names:
+        changed_files = list(git_status.get("changed_files", []))
         draft_msg = await diff_intelligence.draft_commit_message(diff_text)
-        branch = git_status.get("branch", "main")
-        reasoning = f"Found {changed} changed file(s). Suggested commit: '{draft_msg}'. Should I commit and push to origin/{branch}?"
-        confirmation_required = True
-        risk_band = "caution"
-
-    elif "commit_changes" in tool_names:
-        changed = len(git_status.get("changed_files", []))
-        draft_msg = await diff_intelligence.draft_commit_message(diff_text)
-        reasoning = f"Found {changed} changed file(s). Suggested commit message: '{draft_msg}'."
+        # Pin what the user approves: the commit later uses exactly this message and file list
+        plan_data = _pin_commit_args(plan_data, draft_msg, changed_files)
+        files_spoken = _speak_files(changed_files)
+        if "push_to_remote" in tool_names:
+            branch = git_status.get("branch", "main")
+            reasoning = f"Found {files_spoken}. Suggested commit: '{draft_msg}'. Should I commit and push to origin/{branch}?"
+            risk_band = "caution"
+        else:
+            reasoning = f"Found {files_spoken}. Suggested commit message: '{draft_msg}'. Should I commit?"
         confirmation_required = True
 
     elif "push_to_remote" in tool_names:
@@ -89,3 +89,26 @@ async def reason_plan(state: AgentState) -> AgentState:
         "context": {**ctx, "risk_band": risk_band},
         "plan_data": plan_data
     }
+
+
+def _speak_files(files: list) -> str:
+    """'2 changed files: auth.py and payment.py' (names only up to 5 files, so it stays short)."""
+    n = len(files)
+    if n == 0:
+        return "no changed files"
+    label = "changed file" if n == 1 else "changed files"
+    names = [f.replace("\\", "/").split("/")[-1] for f in files]
+    if n > 5:
+        return f"{n} {label}"
+    listed = names[0] if n == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+    return f"{n} {label}: {listed}"
+
+
+def _pin_commit_args(plan_data: dict, message: str, files: list) -> dict:
+    """Return a copy of the plan whose commit_changes call carries the approved message and files."""
+    calls = []
+    for tc in plan_data.get("tool_calls", []):
+        if tc.get("tool") == "commit_changes":
+            tc = {**tc, "args": {**tc.get("args", {}), "message": message, "files": files}}
+        calls.append(tc)
+    return {**plan_data, "tool_calls": calls}

@@ -87,7 +87,7 @@ async def execute_tool_call(tool_name: str, args: dict = None, context: dict = N
             if not msg:
                 diff_text = context.get("diff_text", git_diff_tool())
                 msg = await diff_intelligence.draft_commit_message(diff_text)
-            return git_commit_tool(msg)
+            return git_commit_tool(msg, files=args.get("files"))
 
         elif tool_name == "push_to_remote":
             branch = args.get("branch") or context.get("git_status", {}).get("branch", "main")
