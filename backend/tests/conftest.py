@@ -34,6 +34,13 @@ from tools.sarvam_tts import sarvam_tts_client  # noqa: E402
 FAKE_AUDIO = "RkFLRV9BVURJTw=="  # base64 of "FAKE_AUDIO"
 
 
+def pytest_configure(config):
+    """With ANGIZO_SANDBOX set (see scripts/make_sandbox.py), every temp repo goes in <sandbox>/runs/pytest."""
+    sandbox = os.environ.get("ANGIZO_SANDBOX")
+    if sandbox and not config.option.basetemp:
+        config.option.basetemp = str(Path(sandbox) / "runs" / "pytest")
+
+
 def run_git(repo: Path, *args: str) -> str:
     return subprocess.run(
         ["git", *args], cwd=repo, check=True, capture_output=True, text=True

@@ -83,7 +83,15 @@ function startFakeBackend(logFile) {
 }
 
 async function main() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "angizo-e2e-"));
+  // With ANGIZO_SANDBOX set (scripts/make_sandbox.py), everything goes in <sandbox>/runs/e2e
+  let root;
+  if (process.env.ANGIZO_SANDBOX) {
+    root = path.join(process.env.ANGIZO_SANDBOX, "runs", "e2e");
+    fs.rmSync(root, { recursive: true, force: true });
+    fs.mkdirSync(root, { recursive: true });
+  } else {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), "angizo-e2e-"));
+  }
   const logFile = path.join(root, "backend-messages.jsonl");
   fs.writeFileSync(logFile, "");
   const workspace = makeWorkspace(root);
