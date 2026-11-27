@@ -3,9 +3,9 @@
 > **Empowering Blind and Low-Vision Software Developers through Voice-Driven Git Workflows, Real-Time Copilot Observer Streams, and Intellisense Error Interceptors.**
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg?style=flat&logo=fastapi)](https://fastapi.tiangolo.com)
-[![VS Code Extension](https://img.shields.io/badge/VS_Code-v1.85+-007ACC.svg?style=flat&logo=visual-studio-code)](https://code.visualstudio.com/)
+[![VS Code Extension](https://img.shields.io/badge/VS_Code-v1.93+-007ACC.svg?style=flat&logo=visual-studio-code)](https://code.visualstudio.com/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-StateGraph-FF6F00.svg?style=flat)](https://langchain-ai.github.io/langgraph/)
-[![Groq LLM](https://img.shields.io/badge/Groq-Llama_3.3_70B-F05032.svg?style=flat)](https://groq.com)
+[![Groq LLM](https://img.shields.io/badge/Groq-gpt--oss--120b-F05032.svg?style=flat)](https://groq.com)
 [![Sarvam AI](https://img.shields.io/badge/Sarvam_AI-STT_%26_TTS-6B46C1.svg?style=flat)](https://sarvam.ai)
 [![ElevenLabs](https://img.shields.io/badge/ElevenLabs-Risk--Modulated_Voice-000000.svg?style=flat)](https://elevenlabs.io)
 
@@ -52,9 +52,9 @@ Designed for developer typing and real-time coding feedback, this feature acts a
   * **Strict Line-Shift Voice Narration**: Voice narration fires ONLY when the developer exits a line containing errors, eliminating speech stutter while actively typing on the line.
   * **Resolved State Tracking**: Automatically debounces and announces when all syntax errors in a file are resolved (`"All syntax errors resolved"`).
 * **Terminal & Debugger Runtime Interceptor (`TerminalWatcher`)**:
-  * Hooks into `vscode.window.onDidWriteTerminalData` and debug stderr events to capture compilation failures and runtime crash stack traces (Python `Traceback`, Node `TypeError`, Rust/Go panics).
+  * Reads each terminal command's output through VS Code's terminal shell integration (and debugger stderr); when a command exits with an error it looks for a stack trace to capture compilation failures and runtime crash stack traces (Python `Traceback`, Node `TypeError`, Rust/Go panics).
   * Sends stack traces over WebSocket to the Groq LLM backend to narrate the root cause and line number in 2 plain spoken sentences.
-* **Toggle Command**: `NeuroCode: Toggle Manual Coding Stream` (Hotkey: `Alt+M`).
+* **Toggle Command**: `Angizo: Toggle Manual Coding Stream` (Hotkey: `Alt+M`).
 
 ---
 
@@ -63,15 +63,15 @@ Designed for developer typing and real-time coding feedback, this feature acts a
 Eliminates "dead air" when GitHub Copilot, inline completions, or automated agents generate code, create files, or install dependencies:
 
 * **Insertion Velocity Classifier**:
-  * Differentiates human keystrokes (`len == 1`) from AI code generation (`len >= 5` in `<50ms` intervals).
+  * Differentiates human keystrokes (`len == 1`) from AI code generation (a single edit inserting 10 or more characters; the session ends after 1.5 s without new chunks).
 * **The 4-Layer Observer Interface**:
   1. **Ambient Audio Earcon Stream**: Ascending chime on generation start (🎵), soft background ticker pulse during streaming (⏱️), completion chime (✅), and error alert tone (⚠️).
   2. **Floating Editor HUD Banner**: High-contrast, WCAG 2.1 AAA compliant top banner embedded directly at the top of the active editor.
   3. **Accessible Status Bar**: Live update status item readable on-demand by standard screen readers.
-  4. **Backend Voice Summarization**: Sends exact inserted code snippets to Groq LLM (`llama-3.3-70b-versatile`) to generate a 2-sentence architectural summary explaining **what the code does and why it is necessary** for the application architecture.
+  4. **Backend Voice Summarization**: Sends exact inserted code snippets to Groq LLM (`openai/gpt-oss-120b`) to generate a 2-sentence architectural summary explaining **what the code does and why it is necessary** for the application architecture.
 * **`AuthorTracker` Coordination**:
   * Dynamically attributes active files to `"copilot"` or `"user"`, suppressing false syntax error alerts while Copilot is mid-stream and resuming manual checks after cooldown.
-* **Toggle Command**: `NeuroCode: Toggle Copilot Observer (Mute/Unmute)`.
+* **Toggle Command**: `Angizo: Toggle Copilot Observer (Mute/Unmute)`.
 
 ---
 
@@ -82,7 +82,7 @@ Voice-first repository management and intelligent Git diff analysis:
 * **Voice & Text Command Execution**:
   * Execute natural language commands (e.g., *"Commit my changes with message update auth"*, *"What files did I modify?"*, *"Review my git diff"*, *"Push to origin main"*).
 * **7-Node LangGraph StateMachine Architecture**:
-  * `understand` → `context` → `reason` → `confirm` → `execute` → `verify` → `narrate`.
+  * `context` → `understand` → `reason` → `confirm` → `execute` → `verify` → `narrate`.
   * Evaluates repository status, working tree diffs, and RAG context before taking action.
 * **Guarded `.env` File Access Security**:
   * When a screen-reader or blind-mode developer attempts to open a sensitive `.env` file, NeuroCode intercepts access and prompts an auditory confirmation: *"Warning: You are trying to access a dot env file containing sensitive credentials. Press Alt+Y to confirm or Alt+N to reject."*
@@ -99,7 +99,6 @@ NeuroCode exposes native VS Code commands and accessible keyboard shortcuts:
 
 | Command Title | Command ID | Default Keybinding | Description |
 |---|---|---|---|
-| **Toggle Voice Input (Backend Mic)** | `neurocode.toggleMic` | `Alt+M` (`Cmd+Alt+M`) | Toggles OS microphone capture via Python `sounddevice`. |
 | **Toggle Manual Coding Stream** | `neurocode.toggleManualStream` | `Alt+M` (`Cmd+Alt+M`) | Enables/disables Intellisense syntax & terminal error interception. |
 | **Confirm Action (Yes)** | `neurocode.confirm` | `Alt+Y` (`Cmd+Alt+Y`) | Confirms a pending agent action or sensitive file access. |
 | **Cancel Action (No)** | `neurocode.cancel` | `Alt+N` (`Cmd+Alt+N`) | Cancels a pending agent action or sensitive file access. |
@@ -133,8 +132,10 @@ angizo/
 │   ├── config.py                     # Environment variable config
 │   ├── main.py                       # FastAPI application entry point
 │   ├── .env                          # API keys & server configuration
+│   ├── tests/                        # pytest suite (LLM, voices and git all faked or sandboxed)
 │   ├── pyproject.toml
-│   └── requirements.txt
+│   ├── requirements.txt
+│   └── requirements-dev.txt          # adds pytest
 │
 ├── neurocode-extension/              # VS Code Extension
 │   ├── src/
@@ -144,14 +145,14 @@ angizo/
 │   │   └── observer/
 │   │       ├── copilot-watcher.ts    # Copilot AI generation detector & event emitter
 │   │       ├── manual-watcher.ts     # Intellisense LSP syntax error interceptor
-│   │       ├── terminal-watcher.ts   # Terminal stdout/stderr runtime crash interceptor
-│   │       ├── author-tracker.ts     # Coordinated state tracker (Copilot vs Human)
+│   │       ├── terminal-watcher.ts   # Terminal crash interceptor (shell integration + debugger)
 │   │       ├── observer-earcon.ts    # Web Audio synth chime generator
 │   │       ├── observer-hud.ts       # Top editor high-contrast overlay banner
 │   │       └── observer-status-bar.ts# Accessible status bar item
 │   │   └── webview/
 │   │       ├── main.js               # Accessible webview UI logic & audio player
 │   │       └── pcm-processor.js      # AudioWorklet PCM processor
+│   ├── test/e2e/                     # end-to-end test: real VS Code + fake backend
 │   ├── package.json
 │   └── tsconfig.json
 │
@@ -172,7 +173,7 @@ angizo/
 | **Python** | `>= 3.9` | `python --version` |
 | **Node.js** | `>= 18.x` | `node --version` |
 | **npm** | `>= 9.x` | `npm --version` |
-| **VS Code** | `>= 1.85.0` | Help → About |
+| **VS Code** | `>= 1.93.0` (terminal shell integration) | Help → About |
 | **uv** *(Recommended)* | Latest | `uv --version` |
 
 ---
@@ -195,9 +196,9 @@ GITHUB_PAT=your_github_token_here              # Optional (PR creation)
 
 # Engine Defaults
 SARVAM_STT_ENDPOINT=https://api.sarvam.ai/speech-to-text
-SARVAM_FILLER_SPEAKER=ratan
-ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
-GROQ_MODEL=llama-3.3-70b-versatile
+SARVAM_FILLER_SPEAKER=shubh
+ELEVENLABS_VOICE_ID=EXAVITQu4vr4xnSDxMaL
+GROQ_MODEL=openai/gpt-oss-120b
 ```
 
 ---
@@ -217,8 +218,7 @@ uv venv .venv
 source .venv/bin/activate
 
 # Install dependencies
-uv pip install -e .
-uv pip install sounddevice numpy scipy httpx python-dotenv
+uv pip install -r requirements.txt
 
 # Run the FastAPI server
 python main.py
@@ -239,16 +239,56 @@ npm run compile
 
 1. Open `neurocode-extension` in VS Code (`code neurocode-extension`).
 2. Press **`F5`** to launch the **Extension Development Host**.
-3. In the new window, open the Command Palette (`Ctrl+Shift+P`) and run **`NeuroCode: Start Voice Input`**.
+3. In the new window, open the Command Palette (`Ctrl+Shift+P`) and run **`Angizo: Start Voice Input`**.
 
 ---
 
-## 🛠️ Verification & Testing
+## 🧪 Automated Tests
 
-1. **Test Voice Command**: Click 🎙️ or press `Alt+M` and speak: *"What is my git status?"*.
-2. **Test Copilot Streaming**: Trigger Copilot inline completion or Copilot Chat edit. Observe the Web Audio earcon chime, floating HUD banner, and Groq architectural narration.
-3. **Test Manual Assistance**: Type code with a syntax error and move off the line (`Alt+M` enabled). Observe the instant error chime and line-exit narration.
-4. **Test Sensitive File Guard**: Open a `.env` file in the editor to trigger the screen reader security warning.
+Two suites, both offline: no API keys, no network, no real repository touched.
+
+### Backend: 67 pytest tests
+
+```bash
+cd backend
+uv pip install -r requirements-dev.txt   # or: pip install -r requirements-dev.txt
+python -m pytest
+```
+
+The LLM (Groq/Gemini) and the voices (Sarvam/ElevenLabs) are replaced by fakes, and every git command runs in a throwaway repository. `ANGIZO_SKIP_DOTENV=1` is set by the tests so `backend/.env` is never read.
+
+| File | What it proves |
+|---|---|
+| `tests/test_git_tool.py` | Status finds modified, staged and untracked files but never `.gitignore`d ones; a commit contains exactly the approved files, never files that appeared later; deletions, empty commits and repos without commits are handled |
+| `tests/test_agent_graph.py` | Read-only commands never ask; commit and push stop for confirmation and change nothing; "yes" commits the exact message and files that were read out; empty or broken LLM plans fall back to rules; unknown tools are skipped |
+| `tests/test_ws_api.py` | The WebSocket API end to end: Alt+Y commits, Alt+N cancels, a new command drops a pending commit, gibberish and null bytes are rejected, syntax/runtime/Copilot/new-file events are narrated, spoken yes/no match whole words ("look" is not "ok") |
+| `tests/test_tools.py` | `.env` files never reach the LLM; the code index refreshes; a rejected Gemini key is dropped; Sarvam caching, key rotation on 429, bulbul v3 → v2 fallback and the ElevenLabs fallback |
+
+### VS Code extension: end-to-end
+
+```bash
+cd neurocode-extension
+npm install
+npm run test:e2e
+```
+
+Starts a fake backend, opens the VS Code installed on your machine with the extension loaded (a window shows for about a minute), and checks what the extension sends while it makes real edits:
+
+1. Connects and sends the workspace path.
+2. A syntax error is reported only when the cursor leaves the line, then "resolved" after the fix.
+3. Fast multi-line inserts (like Copilot) send the inserted code and the real error count.
+4. A file you create is announced once, and not credited to Copilot.
+5. A command that crashes in the terminal (`node -e "null.x"`) is caught through terminal shell integration; a successful command is not.
+6. Alt+Y / Alt+N send the confirmation answer; muting the observer silences it.
+
+Set `VSCODE_PATH` if VS Code is not in its default install location.
+
+### Manual checks (need real API keys)
+
+1. **Voice command**: run *Angizo: Start Voice Input*, type *"review my git diff"* in the panel and press Run.
+2. **Commit**: type *"commit my changes"*, listen to the files and message, then press `Alt+Y` (or `Alt+N`).
+3. **Copilot**: accept a Copilot completion and listen for the one-sentence summary.
+4. **Sensitive file guard**: with a screen reader on (or `neurocode.simulateBlindMode`), open a `.env` file.
 
 ---
 

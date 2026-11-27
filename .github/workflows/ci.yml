@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend tests (pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - name: Install
+        run: pip install -r requirements-dev.txt
+      - name: Run tests (offline: LLM, voices and git are faked or sandboxed)
+        run: python -m pytest -p no:cacheprovider
+
+  extension:
+    name: Extension build and end-to-end test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: neurocode-extension
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: neurocode-extension/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Type-check and compile
+        run: npm run compile
+      - name: Install VS Code for the end-to-end test
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq wget gpg xvfb
+          wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+          sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+          sudo apt-get update -q
+          sudo apt-get install -yq code
+      - name: End-to-end test (real VS Code, fake backend)
+        run: xvfb-run -a node test/e2e/run.js
+        env:
+          VSCODE_PATH: /usr/share/code/code
