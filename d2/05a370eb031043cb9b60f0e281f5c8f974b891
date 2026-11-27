@@ -1,0 +1,50 @@
+.github/workflows/ci.yml
+  s_ef7ee9b0f2f917::t_1fab94152a6cb4 23,52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "autter_version": "3.9.1",
+  "base_commit_sha": "d205a370eb031043cb9b60f0e281f5c8f974b891",
+  "branch": "v1",
+  "prompts": {
+    "s_ef7ee9b0f2f917": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e2db2d1-cd31-4836-aebf-25b9e070f387",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:8ab04cef07f1806499601bbaf6523b5d78d7d74c05f4037c0a29f7ae4462d9f9",
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_ef7ee9b0f2f917": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e2db2d1-cd31-4836-aebf-25b9e070f387",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:8ab04cef07f1806499601bbaf6523b5d78d7d74c05f4037c0a29f7ae4462d9f9",
+      "stats": {
+        "total_additions": 2,
+        "total_deletions": 2,
+        "accepted_lines": 2,
+        "overriden_lines": 0,
+        "files": {
+          ".github/workflows/ci.yml": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          }
+        }
+      }
+    }
+  },
+  "integrity": {"v":1,"commit":"d205a370eb031043cb9b60f0e281f5c8f974b891","tree":"3e4fddf33d71a3a66b40cdaa976ac49d156b16ba","files":{".github/workflows/ci.yml":"f5fca3e2f2d04986c4bf5daa4a278dbcef591620"},"digest":"40920c69c509ab5f3a30e04cc7f98ba663dfe161c5ef1b1d17e9aa5179c04498"}
+}
