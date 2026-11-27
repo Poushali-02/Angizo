@@ -2,6 +2,44 @@
 
 All notable changes to Angizo, newest first. Everything below is on the `v1` branch and not yet in `main`.
 
+## 2026-11-28: Structured outputs, interrupt(), the recovery loop, measurements and the demo
+
+### Added
+- **Structured output for the planner** (`agent/plan_schema.py`). The LLM's JSON plan must match a Pydantic schema:
+  - only the six real tools (`Literal`), each with only its own typed arguments, and 1–4 steps
+  - safe branch names: no `+main` (a force push in a git refspec), no `main:production`, no `--force`
+  - an invalid plan gets one retry that says what was wrong, including the bad value; then safe keyword rules
+  - every plan records its source: `fast_path`, `llm`, `llm_retry` or `rules`
+- **LangGraph `interrupt()` with a checkpointer.** `confirm` pauses the graph and the in-memory checkpointer keeps the state. Alt+Y, Alt+N or a spoken yes/no resumes it with `Command(resume=...)`. Each command runs in its own thread. This replaces the hand-written resume in `api/ws.py`, which skipped the graph's edges.
+- **The agentic loop: verify → recover → confirm.**
+  - `verify` classifies a failure: remote ahead, merge conflict, local changes in the way, sign-in, nothing to commit, or unknown.
+  - A push rejected because the remote is ahead becomes "Should I pull them and push again?" (at most one retry).
+  - Pull merges (never rebases or force-pushes). A merge conflict is aborted, so nothing is left half-merged, and the conflicting files are named.
+  - Every failure is spoken in plain words instead of raw git output.
+- `.env` access now uses the same pause: after the yes, the graph goes back to `reason` to answer the real question.
+- **Measurements** (`backend/evals/measure.py` → `reports/measurements.md` and `.json`):
+  - a 32-command planner eval over 3 runs
+  - per-node timing of 5 real scenarios (including the recovery loop)
+  - code-search hit rate, LLM tokens and rate limits, speech latency
+- **"Angizo: Run a Command…"** in the Command Palette: type a request in an accessible input box. Scripts can call it too.
+- **Demo:** `docs/DEMO.md` (the pipeline, a step-by-step live demo, how to test everything). `scripts/record_demo.py` records the demo video against the real backend. `ANGIZO_SPEECH_LOG` saves spoken clips for its soundtrack.
+- Groq call stats (`diff_intelligence.calls`): model, status, latency, tokens, fallback.
+
+### Fixed
+- **A rejected push was classified as a merge conflict** whenever the repository path contained the word "conflict". Failure patterns are now specific phrases.
+- **A retired Gemini model (404) was retried on every planner call.** It's now dropped for the session, like a rejected key. Planner LLM median latency fell from 2.46 s to 0.85 s.
+- **"Get my teammates' latest work" was never planned as a pull,** and the guard would have removed a correct plan anyway. Fixed in both the prompt and the guard.
+- "Yes" with nothing waiting no longer re-runs the last command; it says "Nothing is waiting for a yes or no."
+
+### Measured (`reports/measurements.md`)
+| Measure | Result |
+|---|---|
+| Planner accuracy, 32 commands × 3 runs | 97% (97%, 97%, 97%) |
+| Unsafe actions planned | 0 of 68 plans |
+| Agent scenarios correct | 10 of 10, including the rejected-push recovery |
+| Plans valid on the first try | 54 of 54 LLM plans |
+| Code search, right file in top 3 | 8 of 8 |
+
 ## 2026-11-28: Groq free-tier rate limits
 
 ### Fixed

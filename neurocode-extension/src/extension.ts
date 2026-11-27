@@ -96,6 +96,27 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // --- Run a Command: type a request without the panel's text box ---
+  // From the Command Palette it asks in an input box (screen-reader friendly); scripts and
+  // the demo pass the text directly: executeCommand("neurocode.runCommand", "review my diff").
+  const runCommandCmd = vscode.commands.registerCommand(
+    "neurocode.runCommand",
+    async (text?: string) => {
+      const command =
+        typeof text === "string" && text.trim()
+          ? text.trim()
+          : (await vscode.window.showInputBox({
+              prompt: "What should Angizo do?",
+              placeHolder: "e.g. review my diff, commit my changes, push my branch",
+            }))?.trim();
+      if (!command) return;
+      const currentPanel = ensureWebviewPanel();
+      currentPanel.webview.postMessage({ type: "command_sent", text: command });
+      wsClient?.sendTextCommand(command);
+    }
+  );
+  context.subscriptions.push(runCommandCmd);
+
   // --- Stop Voice Input command ---
   const stopCmd = vscode.commands.registerCommand(
     "neurocode.stopVoiceInput",

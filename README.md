@@ -81,9 +81,11 @@ Voice-first repository management and intelligent Git diff analysis:
 
 * **Voice & Text Command Execution**:
   * Execute natural language commands (e.g., *"Commit my changes with message update auth"*, *"What files did I modify?"*, *"Review my git diff"*, *"Push to origin main"*).
-* **7-Node LangGraph StateMachine Architecture**:
-  * `context` → `understand` → `reason` → `confirm` → `execute` → `verify` → `narrate`.
-  * Evaluates repository status, working tree diffs, and RAG context before taking action.
+* **LangGraph agent with a human-in-the-loop pause and a recovery loop** (`backend/agent/graph.py`):
+  * `context` → `understand` → `reason` → `confirm` → `execute` → `verify` → `narrate`, plus `recover`.
+  * **Structured output**: the planner's JSON must match a Pydantic schema (`agent/plan_schema.py`): only the six real tools, typed arguments, safe branch names (no `+main` force push, no `main:prod` refspecs). An invalid plan gets one retry with the error, then safe keyword rules.
+  * **`interrupt()`**: commit, push and pull pause in `confirm`; a checkpointer keeps the state until the spoken "yes" resumes it with `Command(resume=...)`.
+  * **Agentic loop**: `verify` classifies a failure; a push rejected because the remote is ahead goes `verify → recover → confirm` ("Should I pull them and push again?"), at most once. Conflicts are undone and explained, never left half-merged.
 * **Guarded `.env` File Access Security**:
   * When a screen-reader or blind-mode developer attempts to open a sensitive `.env` file, NeuroCode intercepts access and prompts an auditory confirmation: *"Warning: You are trying to access a dot env file containing sensitive credentials. Press Alt+Y to confirm or Alt+N to reject."*
 * **Spoken Confirmation Flow**:
@@ -114,8 +116,9 @@ NeuroCode exposes native VS Code commands and accessible keyboard shortcuts:
 angizo/
 ├── backend/                          # Python FastAPI Backend Engine
 │   ├── agent/                        # LangGraph Agent State Machine
-│   │   ├── graph.py                  # 7-Node StateGraph definition
+│   │   ├── graph.py                  # StateGraph: nodes, interrupt, recovery loop
 │   │   ├── state.py                  # AgentState TypedDict schema
+│   │   ├── plan_schema.py            # Pydantic schema for the planner's JSON
 │   │   ├── registry.py               # Tool registry
 │   │   └── nodes/                    # understand, context, reason, confirm, execute, verify, narrate
 │   ├── api/
@@ -242,6 +245,12 @@ npm run compile
 3. In the new window, open the Command Palette (`Ctrl+Shift+P`) and run **`Angizo: Start Voice Input`**.
 
 ---
+
+## 🎬 Demo, measurements and changelog
+
+- **[docs/DEMO.md](docs/DEMO.md)**: the pipeline in one picture, a step-by-step live demo, how to record the demo video (`scripts/record_demo.py`), and how to test every layer.
+- **[reports/measurements.md](reports/measurements.md)**: planner accuracy (97% over 3 runs, 0 unsafe actions), time per graph node, code-search hit rate, LLM usage and speech latency. Reproduce with `backend/evals/measure.py`.
+- **[CHANGELOG.md](CHANGELOG.md)**: every change, newest first.
 
 ## 🧪 Automated Tests
 

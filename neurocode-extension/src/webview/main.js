@@ -401,6 +401,10 @@
       playEarcon(msg.earconType);
     } else if (msg.type === 'speak_text') {
       speakText(msg.text);
+    } else if (msg.type === 'command_sent') {
+      // A command sent from the Command Palette (Angizo: Run a Command…) or a script
+      log('Sent text: ' + msg.text);
+      startProcessingAudio();
     } else if (msg.type === 'observer_status') {
       const extra = msg.state === 'complete' ? msg.linesAdded : msg.file;
       updateObserverStrip(msg.state, extra);

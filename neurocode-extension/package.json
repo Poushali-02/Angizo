@@ -17,6 +17,10 @@
   "contributes": {
     "commands": [
       {
+        "command": "neurocode.runCommand",
+        "title": "Angizo: Run a Command…"
+      },
+      {
         "command": "neurocode.startVoiceInput",
         "title": "Angizo: Start Voice Input"
       },
