@@ -23,10 +23,21 @@ def ws(git_repo, fake_llm, fake_voice):
 
 
 def next_result(socket) -> dict:
+    """The next main message, skipping acknowledgements and the second half of spoken replies."""
     while True:
         msg = socket.receive_json()
-        if msg["type"] in RESULT_TYPES:
+        if msg["type"] in RESULT_TYPES and msg.get("channel") != "agent_continuation":
             return msg
+
+
+def collect_until_result(socket) -> list:
+    """Every message up to and including the next main result (acknowledgements included)."""
+    seen = []
+    while True:
+        msg = socket.receive_json()
+        seen.append(msg)
+        if msg["type"] in RESULT_TYPES and msg.get("channel") != "agent_continuation":
+            return seen
 
 
 def test_health_endpoint():
@@ -209,3 +220,61 @@ def test_several_errors_at_once_become_one_summary(ws):
                   "line": 12, "error_message": "';' expected.", "is_resolved": False,
                   "error_count": 3, "is_summary": True})
     assert next_result(ws)["narration"] == "3 syntax errors in app.ts, first on line 12."
+
+
+
+# ── Speaking sooner: acknowledgement first, then the reply first sentence first ─
+
+def test_every_command_is_acknowledged_before_the_answer(ws, git_repo, monkeypatch):
+    from tools.sarvam_tts import sarvam_tts_client
+    monkeypatch.setattr(sarvam_tts_client, "cached", lambda text: "CACHED_" + text)
+    (git_repo / "auth.py").write_text("changed\n")
+    ws.send_json({"type": "text_command", "text": "review my diff"})
+
+    msgs = collect_until_result(ws)
+
+    assert msgs[0] == {"type": "ack", "text": "Reading your changes.", "audio_base64": "CACHED_Reading your changes."}
+    assert msgs[-1]["type"] == "action_result"
+
+
+def test_alt_y_is_acknowledged_too(ws, git_repo):
+    (git_repo / "auth.py").write_text("changed\n")
+    ws.send_json({"type": "text_command", "text": "commit my changes"})
+    next_result(ws)
+    ws.send_json({"type": "confirm_response", "confirmed": True})
+
+    msgs = collect_until_result(ws)
+
+    acks = [m for m in msgs if m["type"] == "ack"]
+    assert acks and acks[-1]["text"] == "Working on it."
+
+
+def test_long_reply_is_spoken_first_sentence_first(ws, git_repo):
+    (git_repo / "auth.py").write_text("changed\n")
+    ws.send_json({"type": "text_command", "text": "review my diff"})
+
+    result = next_result(ws)
+    rest = ws.receive_json()
+
+    assert result["spoken_text"] == "On main, 1 changed file: auth.py."
+    assert result["audio_base64"] == FAKE_AUDIO
+    assert rest["type"] == "audio_narration" and rest["channel"] == "agent_continuation"
+    assert rest["narration"] == "The login function now retries three times before failing."
+    assert result["detail"] == result["spoken_text"] + " " + rest["narration"]  # the feed shows it all
+
+
+def test_clear_commands_skip_the_planner_llm(ws, git_repo, fake_llm):
+    (git_repo / "auth.py").write_text("changed\n")
+    for command in ["what is my git status", "please review my diff", "commit and push my changes"]:
+        ws.send_json({"type": "text_command", "text": command})
+        msg = next_result(ws)
+        if msg["type"] == "confirmation_request":
+            ws.send_json({"type": "confirm_response", "confirmed": False})
+            next_result(ws)
+    assert not any("AI Planner" in p for p in fake_llm.prompts)
+
+
+def test_unclear_commands_still_go_to_the_planner(ws, fake_llm):
+    ws.send_json({"type": "text_command", "text": "summarise what my teammate worked on"})
+    next_result(ws)
+    assert any("AI Planner" in p for p in fake_llm.prompts)

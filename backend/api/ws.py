@@ -24,6 +24,7 @@ from agent.graph import agent_graph
 from agent.state import AgentState
 from tools.diff_intelligence import diff_intelligence
 from tools.sarvam_tts import sarvam_tts_client
+from tools.speech import ack_phrase, split_for_speech, ACK_PHRASES
 
 logger = logging.getLogger("neurocode.ws")
 router = APIRouter()
@@ -154,6 +155,38 @@ session_audio_buffers = {}
 # Per-session active workspace paths set by client
 session_workspaces = {}
 
+async def send_ack(ws: WebSocket, phrase: str):
+    """
+    Say something the moment a command arrives, before any LLM call. The phrases are cached
+    at startup, so this is instant; if one is not cached yet, the text goes alone (the panel
+    reads it with the system voice) and its audio is cached in the background for next time.
+    """
+    audio = sarvam_tts_client.cached(phrase)
+    await ws.send_json({"type": "ack", "text": phrase, "audio_base64": audio})
+    if not audio:
+        asyncio.create_task(sarvam_tts_client.generate_filler_audio_base64(phrase))
+
+
+async def send_spoken(ws: WebSocket, message: dict, text: str):
+    """
+    Send `message` with audio for the first sentence of `text`, then the rest of the text as a
+    separate audio_narration. Both are synthesised at once, but the first (short) one is sent
+    as soon as it is ready, so speech starts several seconds earlier for long replies.
+    """
+    first, rest = split_for_speech(text)
+    rest_task = asyncio.create_task(sarvam_tts_client.generate_filler_audio_base64(rest)) if rest else None
+    first_audio = await sarvam_tts_client.generate_filler_audio_base64(first) if first else ""
+    await ws.send_json({**message, "audio_base64": first_audio, "spoken_text": first})
+    if rest_task:
+        rest_audio = await rest_task
+        await ws.send_json({
+            "type": "audio_narration",
+            "channel": "agent_continuation",  # the panel plays it without adding a new feed entry
+            "narration": rest,
+            "audio_base64": rest_audio,
+        })
+
+
 async def run_agent_graph(ws: WebSocket, session_id: str):
     """Runs the LangGraph agent and handles messaging with the client."""
     state = session_states.get(session_id)
@@ -169,6 +202,7 @@ async def run_agent_graph(ws: WebSocket, session_id: str):
     # Check if we are resuming from a confirmation
     if state.get("confirmation_required") and state.get("confirmed"):
         logger.info("[WS] Resuming agent after confirmation.")
+        await send_ack(ws, ACK_PHRASES["confirm"])
 
         transcript = state.get("transcript", "")
         if ".env" in transcript.lower() or "dotenv" in transcript.lower():
@@ -196,16 +230,15 @@ async def run_agent_graph(ws: WebSocket, session_id: str):
         state["confirmed"] = False
         state["env_confirmations_received"] = 0
         
-        act_res = state.get("action_result", {})
-        await ws.send_json({
-            "type": "action_result",
-            "status": state.get("verification_status", "success"),
-            "detail": state.get("narration", ""),
-            "audio_base64": act_res.get("audio_base64", "") if isinstance(act_res, dict) else ""
-        })
+        narration = state.get("narration", "")
+        await send_spoken(
+            ws,
+            {"type": "action_result", "status": state.get("verification_status", "success"), "detail": narration},
+            narration,
+        )
         return
 
-    # Filler audio is now handled instantly on the client webview side to avoid network latency.
+    await send_ack(ws, ack_phrase(state.get("transcript", "")))
 
     # Otherwise, it's a new command. Run the graph from the start.
     logger.info(f"[WS] Invoking agent graph for transcript: '{state['transcript']}'")
@@ -213,24 +246,18 @@ async def run_agent_graph(ws: WebSocket, session_id: str):
         final_state = await agent_graph.ainvoke(state)
         session_states[session_id] = final_state
 
-        act_res = final_state.get("action_result", {})
-        audio_b64 = act_res.get("audio_base64", "") if isinstance(act_res, dict) else ""
-
         if final_state.get("confirmation_required") and not final_state.get("confirmed"):
             logger.info("[WS] Agent paused for confirmation.")
-            await ws.send_json({
-                "type": "confirmation_request",
-                "prompt": final_state.get("confirmation_message", "Continue?"),
-                "audio_base64": audio_b64
-            })
+            prompt = final_state.get("confirmation_message") or "Continue?"
+            await send_spoken(ws, {"type": "confirmation_request", "prompt": prompt}, prompt)
         else:
             logger.info("[WS] Agent completed run.")
-            await ws.send_json({
-                "type": "action_result",
-                "status": final_state.get("verification_status", "success"),
-                "detail": final_state.get("narration", ""),
-                "audio_base64": audio_b64
-            })
+            narration = final_state.get("narration", "")
+            await send_spoken(
+                ws,
+                {"type": "action_result", "status": final_state.get("verification_status", "success"), "detail": narration},
+                narration,
+            )
 
     except Exception as e:
         logger.error(f"[WS] Graph execution failed: {e}")

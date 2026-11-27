@@ -9,7 +9,9 @@ ElevenLabs TTS Integration with:
 - Risk-band voice tuning: safe / caution / high-risk
 """
 
+import asyncio
 import logging
+import time
 import hashlib
 import httpx
 import base64
@@ -41,16 +43,22 @@ class ElevenLabsTTS:
     def __init__(self, api_key: str = None):
         self.api_key = api_key or config.ELEVENLABS_API_KEY
         self.voice_id = getattr(config, "ELEVENLABS_VOICE_ID", BELLA_VOICE_ID)
-        # Persistent HTTP client (reused across requests)
+        # Persistent HTTP client (reused across requests on the same event loop)
         self._client: httpx.AsyncClient | None = None
+        self._client_loop = None
+        # After the key is rejected (401/403: wrong key or missing text_to_speech permission),
+        # stop calling for a while instead of paying a round trip on every sentence.
+        self._disabled_until = 0.0
 
     def _get_client(self) -> httpx.AsyncClient:
-        """Return or create a persistent AsyncClient with connection pooling."""
-        if self._client is None or self._client.is_closed:
+        """Return a pooled AsyncClient for the running event loop (a new loop gets a new client)."""
+        loop = asyncio.get_running_loop()
+        if self._client is None or self._client.is_closed or self._client_loop is not loop:
             self._client = httpx.AsyncClient(
                 timeout=httpx.Timeout(connect=2.0, read=8.0, write=3.0, pool=1.0),
                 limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
             )
+            self._client_loop = loop
         return self._client
 
     async def close(self) -> None:
@@ -71,6 +79,8 @@ class ElevenLabsTTS:
         if not api_key:
             logger.debug("[ElevenLabsTTS] ELEVENLABS_API_KEY not set. Narration skipped.")
             return ""
+        if time.monotonic() < self._disabled_until:
+            return ""  # key recently rejected: the panel's system voice reads the text instead
 
         # Resolve voice ID — redirect known library voices to free-tier Bella
         voice_id = getattr(config, "ELEVENLABS_VOICE_ID", None) or BELLA_VOICE_ID
@@ -123,6 +133,10 @@ class ElevenLabsTTS:
                     _tts_cache[key] = audio_b64
                     logger.debug(f"[ElevenLabsTTS] Cached audio (model={model_id}, cache size: {len(_tts_cache)})")
                     return audio_b64
+                elif res.status_code == 401:
+                    logger.warning(f"[ElevenLabsTTS] Key rejected (401); not retrying for 10 minutes: {res.text[:160]}")
+                    self._disabled_until = time.monotonic() + 600
+                    break
                 elif res.status_code in (402, 403) and model_id == FLASH_MODEL:
                     logger.warning(f"[ElevenLabsTTS] {model_id} not available, trying {MULTILINGUAL_MODEL}")
                     continue

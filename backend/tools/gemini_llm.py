@@ -8,6 +8,7 @@ Gemini LLM Integration (with Groq LLM Fallback):
 """
 
 import json
+import re
 import logging
 import httpx
 import config
@@ -72,6 +73,13 @@ class GeminiLLM:
         Returns structured JSON plan containing tool_calls, reasoning, and confirmation requirements.
         """
         status_info = status_info or {}
+
+        # Clear, common commands skip the LLM entirely (about 2 s faster); anything else is planned by it
+        quick = fast_plan(transcript)
+        if quick is not None:
+            logger.info(f"[Planner] Fast path for '{transcript}': {[c['tool'] for c in quick['tool_calls']]}")
+            return quick
+
         prompt = f"""You are the AI Planner for NeuroCode accessibility development agent.
 Analyze the user command and select atomic tools to execute:
 
@@ -196,6 +204,69 @@ Answer requirement:
         if rag_context:
             return "Based on your codebase files, this project uses Python with FastAPI for the backend and a VS Code TypeScript extension."
         return "Processed your codebase query successfully."
+
+# ── Fast path: unambiguous commands are planned without an LLM call ────────
+# Each pattern must match the WHOLE command (after removing politeness words), so anything
+# with extra detail ("commit with message ...", "push to staging") still goes to the LLM.
+
+_FILLER_WORDS = re.compile(
+    r"\b(please|hey|hi|angizo|neurocode|can you|could you|would you|kindly|now|for me|just)\b"
+)
+_FAST_PATTERNS = [
+    (r"(commit|save) (my |all |the )?(changes|work|files|code)( and push( (it|them|to origin))?)?",
+     None),  # tools decided below: push is added only if the command says so
+    (r"commit( everything)?( and push( (it|them|to origin))?)?", None),
+    (r"(commit|save) and push( my| the| all)?( changes| work| code| files)?", None),
+    (r"(what is |what's |whats |show |show me |check )?(my |the )?(git )?status",
+     ["get_git_status", "get_git_diff"]),
+    (r"(what|which) files (did i|have i) (change|changed|modify|modified)",
+     ["get_git_status", "get_git_diff"]),
+    (r"(review|show|show me|read|explain) (my |the )?(git )?(diff|changes)",
+     ["get_git_diff"]),
+    (r"what (did i change|changed|has changed)", ["get_git_diff"]),
+    (r"push( my| the)?( branch| changes| commits| code)?( to origin| to remote)?", ["push_to_remote"]),
+    (r"pull( the)?( latest)?( changes| code)?( from origin| from remote)?", ["pull_from_remote"]),
+]
+
+
+def fast_plan(transcript: str):
+    """A plan for a clear, common command, or None when the LLM should decide."""
+    text = transcript.lower().strip()
+    text = _FILLER_WORDS.sub(" ", text)
+    text = re.sub(r"[^a-z' ]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    if not text:
+        return None
+    if not _is_question_or_negated(text):
+        for pattern, tools in _FAST_PATTERNS:
+            if re.fullmatch(pattern, text):
+                if tools is None:  # a commit, with push only when asked
+                    tools = ["get_git_diff", "commit_changes"] + (["push_to_remote"] if "push" in text else [])
+                return _fast(text, tools)
+    # A question about the code that mentions no git action: straight to code search.
+    # ("is it safe to push?" or "what would happen if I committed?" still go to the LLM.)
+    negated = any(n in text for n in _NEGATIONS)
+    if not negated and text.startswith(_CODE_QUESTION_STARTS) and not any(w in text for w in _GIT_WORDS):
+        plan = _fast(text, ["query_codebase_rag"])
+        plan["tool_calls"][0]["args"] = {"query": transcript}
+        return plan
+    return None
+
+
+_CODE_QUESTION_STARTS = ("what", "how", "why", "which", "where", "explain", "describe", "tell me", "does", "is there")
+_GIT_WORDS = ("commit", "push", "pull", "merge", "branch", "stash", "staged", "diff", "status", "git",
+              "change", "rebase", "remote", "origin", "repo")
+
+
+def _fast(text: str, tools: list) -> dict:
+    return {
+        "reasoning": f"Fast path: '{text}'",
+        "tool_calls": [{"tool": t, "args": {}} for t in tools],
+        "requires_confirm": any(t in _ACTION_WORDS for t in tools),
+        "risk_band": "caution" if "push_to_remote" in tools else "safe",
+        "fast_path": True,
+    }
+
 
 # ── Plan guard: the LLM proposes, this code decides ─────────────────────────
 # A tool that changes the repository stays in a plan only if the user's own words asked for it.

@@ -5,6 +5,7 @@ Atomic Tool Registry & Executor for Dynamic ReAct Planning.
 Eliminates static intent taxonomy enums completely.
 """
 
+import asyncio
 import logging
 from tools.git_tool import (
     status as git_status_tool,
@@ -76,26 +77,26 @@ async def execute_tool_call(tool_name: str, args: dict = None, context: dict = N
 
     try:
         if tool_name == "get_git_status":
-            return git_status_tool()
+            return await asyncio.to_thread(git_status_tool)
 
         elif tool_name == "get_git_diff":
-            diff_text = git_diff_tool()
+            diff_text = await asyncio.to_thread(git_diff_tool)
             return {"diff_text": diff_text, "diff_len": len(diff_text)}
 
         elif tool_name == "commit_changes":
             msg = args.get("message")
             if not msg:
-                diff_text = context.get("diff_text", git_diff_tool())
+                diff_text = context.get("diff_text") or await asyncio.to_thread(git_diff_tool)
                 msg = await diff_intelligence.draft_commit_message(diff_text)
-            return git_commit_tool(msg, files=args.get("files"))
+            return await asyncio.to_thread(git_commit_tool, msg, files=args.get("files"))
 
         elif tool_name == "push_to_remote":
             branch = args.get("branch") or context.get("git_status", {}).get("branch", "main")
-            return git_push_tool(branch)
+            return await asyncio.to_thread(git_push_tool, branch)
 
         elif tool_name == "pull_from_remote":
             branch = args.get("branch") or context.get("git_status", {}).get("branch", "main")
-            return git_pull_tool(branch)
+            return await asyncio.to_thread(git_pull_tool, branch)
 
         elif tool_name == "query_codebase_rag":
             return {"status": "success", "rag_retrieved": True}

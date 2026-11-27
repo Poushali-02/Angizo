@@ -123,7 +123,6 @@ def test_diff_review_describes_the_real_change(playground, report):
     text = final["narration"].lower()
     assert final["confirmation_required"] is False
     assert "retr" in text, "the review should mention the new retries"
-    assert final["action_result"]["audio_base64"], "no audio for the narration"
 
 
 def test_commit_flow_end_to_end(playground, report):

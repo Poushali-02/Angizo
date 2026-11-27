@@ -76,7 +76,8 @@ def test_gemini_answer_is_used_when_it_works(monkeypatch, fake_llm):
 
 
 def test_planner_prompt_requires_a_commit_tool_and_no_empty_plans(fake_llm):
-    asyncio.run(GeminiLLM().plan_actions("commit my changes", {"branch": "main", "changed_files": ["a.py"]}))
+    # (a command the fast path does not handle, so the LLM is asked)
+    asyncio.run(GeminiLLM().plan_actions("commit with the message fix login", {"branch": "main", "changed_files": ["a.py"]}))
     prompt = fake_llm.prompts[-1]
     assert "include commit_changes even when they gave no message" in prompt
     assert "Never return an empty tool_calls list" in prompt
@@ -231,7 +232,7 @@ def test_rule_fallback_planner(command, expected):
 
 def test_llm_plan_with_an_unrequested_commit_is_cut_back(fake_llm):
     fake_llm.plan = _plan("commit_changes", "pull_from_remote")
-    plan = asyncio.run(_Planner().plan_actions("pull the latest changes", {}))
+    plan = asyncio.run(_Planner().plan_actions("pull the latest changes from upstream", {}))
     assert _tools(plan) == ["pull_from_remote"]
     assert plan["dropped_actions"] == ["commit_changes"]
 
@@ -246,3 +247,131 @@ def test_groq_client_survives_a_new_event_loop(monkeypatch):
     assert asyncio.run(diff_intelligence._call_groq("b")) == "hi"
     assert len(seen) == 2
     assert json.loads(seen[0].content).get("reasoning_effort") in (None, "low")
+
+
+
+# ── Speech helpers and the planner fast path ─────────────────────────────────
+
+from tools.speech import ACK_PHRASES, ack_phrase, prewarm_acks, split_for_speech  # noqa: E402
+from tools.gemini_llm import fast_plan  # noqa: E402
+
+
+@pytest.mark.parametrize("text, first, rest", [
+    ("On main, 1 changed file: auth.py. The login function now retries.",
+     "On main, 1 changed file: auth.py.", "The login function now retries."),
+    ("Committed 2 files with message: fix: v1.2 login.", "Committed 2 files with message: fix: v1.2 login.", ""),
+    ("Done. The push reached origin. Nothing else changed.", "Done. The push reached origin.", "Nothing else changed."),
+    ("Is it safe? Yes, nothing is staged.", "Is it safe? Yes, nothing is staged.", ""),
+    ("", "", ""),
+])
+def test_split_for_speech(text, first, rest):
+    assert split_for_speech(text) == (first, rest)
+
+
+@pytest.mark.parametrize("command, phrase", [
+    ("commit and push my changes", "Preparing a commit."),
+    ("push my branch", "Getting ready to push."),
+    ("pull the latest changes", "Checking the remote."),
+    ("review my diff", "Reading your changes."),
+    ("what is my git status", "Checking your status."),
+    ("what does charge do", "Looking into it."),
+])
+def test_ack_phrase(command, phrase):
+    assert ack_phrase(command) == phrase
+
+
+def test_prewarm_caches_every_ack_phrase(monkeypatch, sarvam_keys):
+    calls = mock_httpx(monkeypatch, sarvam_module, lambda req: httpx.Response(200, json={"audios": ["A"]}))
+    tts = SarvamFillerTTS()
+    assert asyncio.run(prewarm_acks(tts)) == len(ACK_PHRASES)
+    assert all(tts.cached(p) == "A" for p in ACK_PHRASES.values())
+    asyncio.run(tts.generate_filler_audio_base64("Reading your changes."))
+    assert len(calls) == len(ACK_PHRASES)  # the repeat came from the cache
+
+
+@pytest.mark.parametrize("command, tools", [
+    ("commit my changes", ["get_git_diff", "commit_changes"]),
+    ("Please commit my changes.", ["get_git_diff", "commit_changes"]),
+    ("commit and push my changes", ["get_git_diff", "commit_changes", "push_to_remote"]),
+    ("save my work", ["get_git_diff", "commit_changes"]),
+    ("what is my git status", ["get_git_status", "get_git_diff"]),
+    ("which files did I change", ["get_git_status", "get_git_diff"]),
+    ("hey angizo, review my diff", ["get_git_diff"]),
+    ("push to origin", ["push_to_remote"]),
+    ("pull the latest changes", ["pull_from_remote"]),
+])
+def test_fast_path_plans_clear_commands(command, tools):
+    assert [c["tool"] for c in fast_plan(command)["tool_calls"]] == tools
+
+
+@pytest.mark.parametrize("command", [
+    "commit with the message fix login",  # the message has to be extracted
+    "push to staging",  # unusual target
+    "don't commit, show me the diff",  # negation
+    "is it safe to push?",  # question about an action
+    "what would happen if I committed now?",
+    "why is my push failing",  # a code-style question, but about git
+    "commit my changes and then tell me a joke",
+    "delete all my files",
+])
+def test_anything_else_goes_to_the_llm(command):
+    assert fast_plan(command) is None
+
+
+@pytest.mark.parametrize("command", [
+    "what does the charge function do",
+    "which language is this project written in",
+    "how does login work",
+    "explain the payment module",
+])
+def test_code_questions_go_straight_to_code_search(command):
+    plan = fast_plan(command)
+    assert [c["tool"] for c in plan["tool_calls"]] == ["query_codebase_rag"]
+    assert plan["tool_calls"][0]["args"]["query"] == command
+
+
+def test_the_same_sentence_is_synthesised_once_even_when_asked_twice_at_once(monkeypatch, sarvam_keys):
+    """prefetch_speech and the reply can ask for the same sentence; only one request is sent."""
+    calls = mock_httpx(monkeypatch, sarvam_module, lambda req: httpx.Response(200, json={"audios": ["A"]}))
+    tts = SarvamFillerTTS()
+
+    async def both():
+        return await asyncio.gather(tts.generate_filler_audio_base64("On main, 1 changed file: auth.py."),
+                                    tts.generate_filler_audio_base64("On main, 1 changed file: auth.py."))
+
+    assert asyncio.run(both()) == ["A", "A"]
+    assert len(calls) == 1
+
+
+def test_out_of_credits_key_rotates_and_rests_for_an_hour(monkeypatch, sarvam_keys):
+    def handler(req):
+        if req.headers["api-subscription-key"] == "key-a":
+            return httpx.Response(402, json={"error": {"message": "No credits available."}})
+        return httpx.Response(200, json={"audios": ["FROM_B"]})
+
+    mock_httpx(monkeypatch, sarvam_module, handler)
+
+    assert asyncio.run(SarvamFillerTTS().generate_filler_audio_base64("hello")) == "FROM_B"
+    import time
+    assert sarvam_key_manager.key_status["key-a"]["cooldown_until"] > time.time() + 3000
+
+
+def test_when_every_key_is_out_of_credits_no_request_is_made(monkeypatch, sarvam_keys):
+    import time
+    for status in sarvam_key_manager.key_status.values():
+        status["cooldown_until"] = time.time() + 3600
+    calls = mock_httpx(monkeypatch, sarvam_module, lambda req: httpx.Response(200, json={"audios": ["X"]}))
+    monkeypatch.setattr(elevenlabs_module.elevenlabs_tts_client, "api_key", "")
+
+    assert asyncio.run(SarvamFillerTTS().generate_filler_audio_base64("hello")) == ""
+    assert calls == []  # the panel's system voice reads the text instead
+
+
+def test_rejected_elevenlabs_key_is_not_retried(monkeypatch):
+    calls = mock_httpx(monkeypatch, elevenlabs_module, lambda req: httpx.Response(
+        401, json={"detail": {"message": "missing the permission text_to_speech"}}))
+    client = elevenlabs_module.ElevenLabsTTS(api_key="bad")
+
+    assert asyncio.run(client.generate_narration_audio_base64("one")) == ""
+    assert asyncio.run(client.generate_narration_audio_base64("two")) == ""
+    assert len(calls) == 1

@@ -1,6 +1,7 @@
 """
 neurocode-backend/agent/nodes/understand.py
 """
+import asyncio
 import logging
 from agent.state import AgentState
 from tools.gemini_llm import gemini_llm
@@ -18,7 +19,7 @@ async def understand_intent(state: AgentState) -> AgentState:
 
     ctx = state.get("context", {})
     try:
-        git_status = ctx.get("git_status") or git_status_tool()
+        git_status = ctx.get("git_status") or await asyncio.to_thread(git_status_tool)
         plan_data = await gemini_llm.plan_actions(transcript, status_info=git_status)
     except Exception as e:
         logger.error(f"[Understand] Planning failed: {e}")

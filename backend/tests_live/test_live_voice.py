@@ -21,8 +21,18 @@ def _speak(text: str) -> bytes:
     """Real Sarvam TTS (no cache) -> WAV bytes."""
     from tools.sarvam_tts import SarvamFillerTTS
     b64 = asyncio.run(SarvamFillerTTS().generate_filler_audio_base64(text))
+    if not b64 and sarvam_out_of_credits():
+        pytest.skip("Sarvam account has no credits left (402): top up to run the voice tests")
     assert b64, "no audio from Sarvam (or the ElevenLabs fallback)"
     return base64.b64decode(b64)
+
+
+def sarvam_out_of_credits() -> bool:
+    """True when every Sarvam key is resting for the hour a 402 (no credits) causes."""
+    import time
+    from tools.sarvam_key_manager import sarvam_key_manager
+    statuses = list(sarvam_key_manager.key_status.values())
+    return bool(statuses) and all(s.get("cooldown_until", 0) > time.time() + 1800 for s in statuses)
 
 
 def test_sarvam_speech_returns_playable_audio(report):
@@ -37,7 +47,8 @@ def test_sarvam_speech_returns_playable_audio(report):
 def test_repeated_phrase_comes_from_the_cache(report):
     from tools.sarvam_tts import SarvamFillerTTS
     tts = SarvamFillerTTS()
-    asyncio.run(tts.generate_filler_audio_base64("Syntax error resolved in main.py."))
+    if not asyncio.run(tts.generate_filler_audio_base64("Syntax error resolved in main.py.")) and sarvam_out_of_credits():
+        pytest.skip("Sarvam account has no credits left (402)")
     start = time.perf_counter()
     asyncio.run(tts.generate_filler_audio_base64("Syntax error resolved in main.py."))
     elapsed = time.perf_counter() - start

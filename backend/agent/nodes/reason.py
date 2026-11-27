@@ -5,6 +5,7 @@ import logging
 from agent.state import AgentState
 from tools.diff_intelligence import diff_intelligence
 from tools.gemini_llm import gemini_llm
+from tools.speech import prefetch_speech
 
 logger = logging.getLogger("neurocode.agent.reason")
 
@@ -43,10 +44,11 @@ async def reason_plan(state: AgentState) -> AgentState:
 
     if "commit_changes" in tool_names:
         changed_files = list(git_status.get("changed_files", []))
+        files_spoken = _speak_files(changed_files)
+        prefetch_speech(f"Found {files_spoken}.")  # synthesised while the LLM drafts the message
         draft_msg = await diff_intelligence.draft_commit_message(diff_text)
         # Pin what the user approves: the commit later uses exactly this message and file list
         plan_data = _pin_commit_args(plan_data, draft_msg, changed_files)
-        files_spoken = _speak_files(changed_files)
         if "push_to_remote" in tool_names:
             branch = git_status.get("branch", "main")
             reasoning = f"Found {files_spoken}. Suggested commit: '{draft_msg}'. Should I commit and push to origin/{branch}?"
@@ -70,8 +72,10 @@ async def reason_plan(state: AgentState) -> AgentState:
         branch = git_status.get("branch", "unknown")
         changed = len(git_status.get("changed_files", []))
         if diff_text.strip():
+            preamble = f"On {branch}, {_speak_files(git_status.get('changed_files', []))}."
+            prefetch_speech(preamble)  # synthesised while the LLM writes the review
             prose_review = await diff_intelligence.review_before_commit(diff_text)
-            reasoning = f"On {branch}, {_speak_files(git_status.get('changed_files', []))}. {prose_review}"
+            reasoning = f"{preamble} {prose_review}"
         else:
             reasoning = f"On {branch}, no uncommitted changes."
         confirmation_required = False

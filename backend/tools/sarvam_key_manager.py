@@ -80,10 +80,10 @@ class SarvamKeyManager:
                 status["total_requests"] = status.get("total_requests", 0) + 1
                 return key
 
-        # If all keys are cooling down, select key with earliest cooldown expiration
-        earliest_key = min(self.keys, key=lambda k: self.key_status.get(k, {}).get("cooldown_until", 0))
-        logger.warning(f"[SarvamKeyManager] All {len(self.keys)} keys cooling down. Using earliest key.")
-        return earliest_key
+        # Every key is resting (rate-limited, rejected or out of credits): retrying one now would
+        # only fail again after a network round trip, so report none and let the caller fall back.
+        logger.warning(f"[SarvamKeyManager] All {len(self.keys)} keys cooling down; skipping Sarvam for now.")
+        return ""
 
     def report_key_failure(self, key: str, status_code: int = 429) -> None:
         """Puts a failed key into cooldown (60s for 429 rate limits, 300s for auth errors)."""
@@ -93,8 +93,9 @@ class SarvamKeyManager:
         status = self.key_status[key]
         status["consecutive_errors"] = status.get("consecutive_errors", 0) + 1
         
-        # Cooldown duration: 60s for 429 / 503, 300s for 401/403
-        cooldown_sec = 300 if status_code in (401, 403) else 60
+        # Cooldown: 1 hour when out of credits (402), 5 minutes for a rejected key (401/403),
+        # 1 minute for rate limits and outages (429/503)
+        cooldown_sec = 3600 if status_code == 402 else 300 if status_code in (401, 403) else 60
         status["cooldown_until"] = time.time() + cooldown_sec
 
         logger.warning(

@@ -8,6 +8,7 @@ Sarvam TTS (bulbul) for every spoken line, with:
 - ElevenLabs as the last fallback when every Sarvam attempt fails.
 """
 
+import asyncio
 import hashlib
 import logging
 
@@ -52,6 +53,7 @@ class SarvamFillerTTS:
         self.endpoint = SARVAM_TTS_ENDPOINT
         self._audio_cache: dict[str, str] = {}
         self._max_cache_size = max_cache_size
+        self._inflight: dict[str, asyncio.Task] = {}  # cache key -> request already running
 
     @staticmethod
     def _cache_key(text: str, model: str, speaker: str) -> str:
@@ -61,6 +63,12 @@ class SarvamFillerTTS:
         if len(self._audio_cache) >= self._max_cache_size:
             self._audio_cache.pop(next(iter(self._audio_cache)), None)  # evict the oldest entry
         self._audio_cache[key] = audio_b64
+
+    def cached(self, text: str) -> str:
+        """Audio already in the cache for `text` (as the default voice would say it), or ""."""
+        model = getattr(config, "SARVAM_TTS_MODEL", "bulbul:v3")
+        speaker = pick_speaker(model, getattr(config, "SARVAM_FILLER_SPEAKER", "shubh"))
+        return self._audio_cache.get(self._cache_key(truncate_for_tts(text), model, speaker), "")
 
     async def generate_filler_audio_base64(self, text: str) -> str:
         """Returns base64 audio for `text`, or "" if every Sarvam attempt and ElevenLabs fail."""
@@ -77,6 +85,21 @@ class SarvamFillerTTS:
             logger.info(f"[SarvamTTS Cache HIT] '{clean_text[:40]}...'")
             return self._audio_cache[cache_key]
 
+        # The same sentence may already be on its way (prefetch_speech started it while the LLM
+        # was thinking): wait for that request instead of paying for a second one.
+        loop = asyncio.get_running_loop()
+        pending = self._inflight.get(cache_key)
+        if pending is not None and pending.get_loop() is loop and not pending.done():
+            return await asyncio.shield(pending)
+        task = loop.create_task(self._synthesize(clean_text, model, speaker, cache_enabled, cache_key))
+        self._inflight[cache_key] = task
+        try:
+            return await asyncio.shield(task)
+        finally:
+            if self._inflight.get(cache_key) is task and task.done():
+                self._inflight.pop(cache_key, None)
+
+    async def _synthesize(self, clean_text: str, model: str, speaker: str, cache_enabled: bool, cache_key: str) -> str:
         # One attempt per key, plus one extra for the v3 -> v2 model fallback
         attempts = max(1, len(sarvam_key_manager.keys)) + 1
         for attempt in range(attempts):
@@ -115,7 +138,7 @@ class SarvamFillerTTS:
                 if audios and audios[0]:
                     sarvam_key_manager.report_key_success(api_key)
                     if cache_enabled:
-                        self._remember(self._cache_key(clean_text, model, speaker), audios[0])
+                        self._remember(cache_key, audios[0])  # under the requested voice, even after a v2 fallback
                     return audios[0]
                 logger.warning("[SarvamTTS] 200 response without audio.")
                 break
@@ -126,7 +149,7 @@ class SarvamFillerTTS:
                 speaker = pick_speaker(model, getattr(config, "SARVAM_FILLER_SPEAKER", "karun"))
                 continue
 
-            if res.status_code in (401, 403, 429, 503):
+            if res.status_code in (401, 402, 403, 429, 503):  # 402 = this key is out of credits
                 logger.warning(f"[SarvamTTS] Key failed with {res.status_code}; rotating (attempt {attempt + 1}).")
                 sarvam_key_manager.report_key_failure(api_key, res.status_code)
                 continue

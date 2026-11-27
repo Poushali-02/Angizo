@@ -42,6 +42,11 @@ async def on_startup():
     logger.info(
         f"NeuroCode backend starting on {config.HOST}:{config.PORT}"
     )
+    # Synthesise the acknowledgement phrases once, so every "Reading your changes." is instant
+    import asyncio
+    from tools.sarvam_tts import sarvam_tts_client
+    from tools.speech import prewarm_acks
+    asyncio.create_task(prewarm_acks(sarvam_tts_client))
 
 
 if __name__ == "__main__":

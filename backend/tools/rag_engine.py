@@ -106,7 +106,7 @@ class RAGEngine:
         age = time.monotonic() - self._indexed_at.get(target_path, float("-inf"))
         if target_path not in self._index_cache or age > self.max_index_age_s:
             logger.info(f"[RAG] Indexing workspace at: {target_path}")
-            self._index_cache[target_path] = self._scan_and_chunk(target_path)
+            self._index_cache[target_path] = await asyncio.to_thread(self._scan_and_chunk, target_path)
             self._indexed_at[target_path] = time.monotonic()
 
         chunks = self._index_cache[target_path]

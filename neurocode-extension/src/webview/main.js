@@ -88,7 +88,8 @@
   function startProcessingAudio() {
     stopProcessingAudio();
     playEarcon('start');
-    speakText('Processing your request...');
+    // No spoken filler here: the backend answers every command at once with a short
+    // acknowledgement in the Sarvam voice ("Reading your changes."), see the 'ack' message.
     
     // Continuous tick chime sound every 1.8s while waiting for backend LLM response
     pendingRequestTicker = setInterval(() => {
@@ -443,7 +444,8 @@
       } else if (payload.type === 'action_result') {
         stopProcessingAudio();
         log('Backend: ' + payload.detail);
-        playAudioNarration(payload.audio_base64, payload.detail);
+        // audio_base64 holds the first sentence; the rest follows as 'agent_continuation'
+        playAudioNarration(payload.audio_base64, payload.spoken_text || payload.detail);
       } else if (payload.type === 'confirmation_request') {
         stopProcessingAudio();
         if (payload.prompt) {
@@ -453,7 +455,16 @@
           confirmPrompt.textContent = payload.prompt;
           confirmArea.style.display = 'block';
         }
-        playAudioNarration(payload.audio_base64, payload.prompt);
+        playAudioNarration(payload.audio_base64, payload.spoken_text || payload.prompt);
+      } else if (payload.type === 'ack') {
+        // Instant acknowledgement of a command, then keep ticking until the answer arrives
+        playAudioNarration(payload.audio_base64, payload.text);
+        if (!pendingRequestTicker) {
+          pendingRequestTicker = setInterval(() => playEarcon('tick'), 1800);
+        }
+      } else if (payload.type === 'audio_narration' && payload.channel === 'agent_continuation') {
+        // The rest of a reply whose text is already in the feed: just play it
+        playAudioNarration(payload.audio_base64, payload.narration);
       } else if (payload.type === 'audio_narration') {
         stopProcessingAudio();
         const channelLabel = payload.channel === 'manual_observer' ? 'ERROR ANALYSIS' : 'OBSERVER NARRATION';

@@ -1,6 +1,7 @@
 """
 neurocode-backend/agent/nodes/context.py
 """
+import asyncio
 import logging
 from agent.state import AgentState
 from tools.git_tool import status as git_status_tool, diff as git_diff_tool
@@ -18,8 +19,8 @@ async def gather_context(state: AgentState) -> AgentState:
     context_data = {}
 
     try:
-        status = git_status_tool()
-        diff_text = git_diff_tool()
+        status = await asyncio.to_thread(git_status_tool)  # git is slow: keep the event loop free
+        diff_text = await asyncio.to_thread(git_diff_tool)
         context_data["git_status"] = status
         context_data["diff_text"] = diff_text
         logger.info(f"[Context] Gathered git status: branch={status.get('branch')}, changed_files={len(status.get('changed_files', []))}, diff_len={len(diff_text)}")

@@ -32,8 +32,7 @@ def test_status_question_never_asks_for_confirmation(git_repo, fake_llm, fake_vo
     assert final["intent"] == "git_status"
     assert final["confirmation_required"] is False
     assert final["verification_status"] == "skipped"  # read-only tools change nothing
-    assert "1 changed file" in final["narration"]
-    assert final["action_result"]["audio_base64"]
+    assert "1 changed file" in final["narration"]  # speech is added by api/ws.py, not the graph
 
 
 def test_diff_review_reads_the_real_diff(git_repo, fake_llm, fake_voice):
@@ -143,4 +142,3 @@ def test_spoken_review_has_no_markdown(git_repo, fake_llm, fake_voice):
     final = run_graph("review my diff")
 
     assert final["narration"] == "On main, 1 changed file: auth.py. The login function is now simpler."
-    assert fake_voice.spoken[-1] == final["narration"]  # exactly this text was sent to the voice
