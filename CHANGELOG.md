@@ -2,6 +2,18 @@
 
 All notable changes to Angizo, newest first. Everything below is on the `v1` branch and not yet in `main`.
 
+## 2026-11-28: Groq free-tier rate limits
+
+### Fixed
+- **A rate-limited Groq call returned nothing.** That produced a made-up answer ("this project uses FastAPI…") and the commit message "Update workspace changes". The free tier allows about 8,000 tokens a minute per model. Now a 429 switches at once to `GROQ_FALLBACK_MODEL` (`openai/gpt-oss-20b`), which has its own limit. Without a fallback model it waits as long as Groq says (8 s at most) and retries once.
+- When no LLM answer is available, Angizo says so ("I couldn't get an answer just now. Please try again in a moment.") instead of a generic canned answer.
+- The commit message without an LLM is still a conventional commit naming the files: `chore: update auth.py and notes.md`.
+- The live planner report marks fast-path plans as "fast path (no LLM)" instead of "via LLM".
+
+### Verified live
+- New `SARVAM_API_KEY` works: speech, cache, three transcription round trips and the latency test pass. Keys 2 and 3 are still out of credits and are skipped.
+- 26/26 live LLM tests pass: 10 of 16 planner commands take the fast path, 6 use the LLM, all correct.
+
 ## 2026-11-28: Speaking sooner
 
 ### Added
@@ -63,6 +75,7 @@ All notable changes to Angizo, newest first. Everything below is on the `v1` bra
 - The Sarvam API key is no longer printed to the console.
 
 ## Known issues
-- Sarvam's free credits are used up: speech falls back to the system voice until the account is topped up.
-- ElevenLabs key lacks the `text_to_speech` permission; Gemini key or model is rejected.
+- `SARVAM_API_KEY2` and `SARVAM_API_KEY3` are out of credits (the new `SARVAM_API_KEY` works).
+- ElevenLabs key lacks the `text_to_speech` permission. Gemini's `gemini-2.0-flash` has been retired (404); planning uses Groq.
+- Sarvam heard the synthetic "review my diff" as "Review my description" once: unusual words can be misheard.
 - A pasted block looks the same as a Copilot insertion.

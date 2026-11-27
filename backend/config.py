@@ -44,6 +44,7 @@ GITHUB_PAT: str = os.getenv("GITHUB_PAT", "")
 MONGODB_URI: str = os.getenv("MONGODB_URI", "")
 GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+GROQ_FALLBACK_MODEL: str = os.getenv("GROQ_FALLBACK_MODEL", "openai/gpt-oss-20b")  # used when GROQ_MODEL is rate-limited
 
 # Voice / Audio Settings
 SARVAM_STT_ENDPOINT: str = os.getenv("SARVAM_STT_ENDPOINT", "https://api.sarvam.ai/speech-to-text")

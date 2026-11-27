@@ -200,10 +200,9 @@ Answer requirement:
         if response_clean and len(response_clean) > 5:
             return response_clean
         
-        # Smart fallback if LLM response is empty or uninformative
-        if rag_context:
-            return "Based on your codebase files, this project uses Python with FastAPI for the backend and a VS Code TypeScript extension."
-        return "Processed your codebase query successfully."
+        # No answer (LLM unavailable or rate-limited). Say so: a made-up generic answer
+        # ("this project uses FastAPI...") would sound like a real one.
+        return "I couldn't get an answer just now. Please try again in a moment."
 
 # ── Fast path: unambiguous commands are planned without an LLM call ────────
 # Each pattern must match the WHOLE command (after removing politeness words), so anything

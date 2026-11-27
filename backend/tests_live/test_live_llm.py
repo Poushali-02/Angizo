@@ -70,7 +70,8 @@ def test_planner_picks_the_right_tools(command, must, must_not, report):
     with report.timed("planner", command) as t:
         plan = asyncio.run(gemini_llm.plan_actions(command, {"branch": "main", "changed_files": ["auth.py"]}))
         tools = [tc.get("tool") for tc in plan.get("tool_calls", [])]
-        source = "rules fallback" if plan.get("reasoning", "").startswith("Planned tools for") else "LLM"
+        source = ("fast path (no LLM)" if plan.get("fast_path")
+                  else "rules fallback" if plan.get("reasoning", "").startswith("Planned tools for") else "LLM")
         missing, forbidden = must - set(tools), must_not & set(tools)
         verdict = "ok" if not missing and not forbidden else f"FAIL missing={sorted(missing)} forbidden={sorted(forbidden)}"
         t.done(f"{tools} via {source}", verdict)

@@ -12,6 +12,7 @@ Gemini AI Integration for Diff Intelligence & Intent Classification:
 import asyncio
 import logging
 import json
+import re
 import httpx
 import config
 
@@ -25,6 +26,8 @@ class DiffIntelligence:
         self.endpoint = "https://api.groq.com/openai/v1/chat/completions"
         # Model name (default from config)
         self.model = config.GROQ_MODEL if hasattr(config, "GROQ_MODEL") else "openai/gpt-oss-120b"
+        # Used at once when the main model is rate-limited (each Groq model has its own free limit)
+        self.fallback_model = getattr(config, "GROQ_FALLBACK_MODEL", "openai/gpt-oss-20b")
         # Persistent HTTP client — reused across requests to avoid TCP/TLS handshake overhead
         self._client: httpx.AsyncClient | None = None
 
@@ -52,24 +55,36 @@ class DiffIntelligence:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
-        payload = {
-            "model": self.model,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.0,
-        }
-        if "gpt-oss" in self.model:
-            # Short spoken answers need little reasoning: about half the tokens and latency
-            payload["reasoning_effort"] = "low"
+        # Free tier: about 8,000 tokens a minute per model. When the main model is rate-limited,
+        # ask the fallback model at once (it has its own limit); without one, wait as long as
+        # Groq says (capped) and ask again. Either way there is exactly one retry.
+        fallback = self.fallback_model if self.fallback_model and self.fallback_model != self.model else ""
+        plan = [(self.model, 0.0), (fallback, 0.0)] if fallback else [(self.model, 0.0), (self.model, None)]
         try:
             client = self._get_client()
-            res = await client.post(self.endpoint, json=payload, headers=headers)
-            if res.status_code == 200:
-                data = res.json()
-                choices = data.get("choices", [])
-                if choices:
-                    return choices[0].get("message", {}).get("content", "").strip()
-            else:
-                logger.warning(f"[Groq] API error {res.status_code}: {res.text}")
+            for attempt, (model, wait) in enumerate(plan):
+                if wait is None:  # same model again: wait for the limit first
+                    wait = _retry_after_seconds(res.headers)
+                    logger.warning(f"[Groq] Rate limited; retrying {model} in {wait:.1f}s")
+                    await asyncio.sleep(wait)
+                payload = {
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.0,
+                }
+                if "gpt-oss" in model:
+                    # Short spoken answers need little reasoning: about half the tokens and latency
+                    payload["reasoning_effort"] = "low"
+                res = await client.post(self.endpoint, json=payload, headers=headers)
+                if res.status_code == 200:
+                    choices = res.json().get("choices", [])
+                    return choices[0].get("message", {}).get("content", "").strip() if choices else ""
+                if res.status_code == 429 and attempt == 0:
+                    if fallback:
+                        logger.warning(f"[Groq] {model} rate limited; asking {fallback} instead")
+                    continue
+                logger.warning(f"[Groq] API error {res.status_code} from {model}: {res.text[:300]}")
+                break
         except Exception as e:
             logger.error(f"[Groq] Exception during API call: {e}")
         return ""
@@ -181,7 +196,7 @@ Respond with JSON only:
     async def draft_commit_message(self, diff_text: str) -> str:
         """Drafts a concise conventional commit message from diff."""
         if not diff_text.strip():
-            return "Update workspace files"
+            return "chore: update workspace files"
 
         prompt = f"""Draft a single-line conventional commit message for this git diff:
 {diff_text[:2000]}
@@ -189,8 +204,9 @@ Respond with JSON only:
 Return ONLY the commit message string without quotes or extra text."""
         msg = await self._call_groq(prompt)
         if msg:
-            return msg.strip().replace('"', '')
-        return "Update workspace changes"
+            return msg.strip().splitlines()[0].replace('"', '').replace("`", "")
+        # No LLM (rate-limited or down): still a conventional message, naming what changed
+        return _fallback_commit_message(diff_text)
 
     async def review_before_commit(self, diff_text: str) -> str:
         """Generates concise prose code review for voice narration."""
@@ -350,6 +366,39 @@ def _clean_spoken(text: str) -> str:
         return ""
     cleaned = text.strip().strip('"').strip("'").replace("`", "").replace("**", "").replace("*", "")
     return cleaned if len(cleaned) > 5 else ""
+
+
+def _fallback_commit_message(diff_text: str) -> str:
+    """'chore: update auth.py and notes.md' from the file names in a diff (up to 3 named)."""
+    names = []
+    for match in re.finditer(r"^diff --git a/\S+ b/(\S+)", diff_text, flags=re.MULTILINE):
+        name = _short_name(match.group(1))
+        if name not in names:
+            names.append(name)
+    if not names:
+        return "chore: update workspace files"
+    if len(names) > 3:
+        return f"chore: update {len(names)} files"
+    listed = names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+    return f"chore: update {listed}"
+
+
+MAX_RATE_LIMIT_WAIT_S = 8.0
+
+
+def _retry_after_seconds(headers) -> float:
+    """
+    Seconds to wait after a 429, from Groq's headers: retry-after ("3") or
+    x-ratelimit-reset-tokens ("2.19s", "1m3.5s"). Capped, so a voice reply never stalls long.
+    """
+    raw = headers.get("retry-after") or headers.get("x-ratelimit-reset-tokens") or "2"
+    seconds = 0.0
+    try:
+        seconds = float(raw)
+    except ValueError:
+        for amount, unit in re.findall(r"([0-9.]+)(ms|m|s|h)", raw):
+            seconds += float(amount) * {"ms": 0.001, "s": 1, "m": 60, "h": 3600}[unit]
+    return max(0.0, min(seconds, MAX_RATE_LIMIT_WAIT_S))
 
 
 diff_intelligence = DiffIntelligence()

@@ -375,3 +375,89 @@ def test_rejected_elevenlabs_key_is_not_retried(monkeypatch):
     assert asyncio.run(client.generate_narration_audio_base64("one")) == ""
     assert asyncio.run(client.generate_narration_audio_base64("two")) == ""
     assert len(calls) == 1
+
+
+# ── Groq free-tier rate limit ────────────────────────────────────────────────
+
+import tools.diff_intelligence as diff_module  # noqa: E402
+
+
+def test_rate_limited_groq_call_waits_and_retries_once(monkeypatch):
+    replies = iter([
+        httpx.Response(429, headers={"retry-after": "0.01"}, json={"error": {"message": "rate limit"}}),
+        httpx.Response(200, json={"choices": [{"message": {"content": "second try"}}]}),
+    ])
+    calls = mock_httpx(monkeypatch, diff_module, lambda req: next(replies))
+    monkeypatch.setattr(diff_intelligence, "api_key", "test-key")
+    monkeypatch.setattr(diff_intelligence, "_client", None)
+
+    assert asyncio.run(diff_intelligence._call_groq("hi")) == "second try"
+    assert len(calls) == 2
+
+
+def test_still_rate_limited_after_the_retry_returns_nothing(monkeypatch):
+    calls = mock_httpx(monkeypatch, diff_module, lambda req: httpx.Response(429, headers={"retry-after": "0.01"}, json={}))
+    monkeypatch.setattr(diff_intelligence, "api_key", "test-key")
+    monkeypatch.setattr(diff_intelligence, "_client", None)
+
+    assert asyncio.run(diff_intelligence._call_groq("hi")) == ""
+    assert len(calls) == 2  # one retry, not a loop
+
+
+@pytest.mark.parametrize("headers, seconds", [
+    ({"retry-after": "3"}, 3.0),
+    ({"x-ratelimit-reset-tokens": "2.19s"}, 2.19),
+    ({"x-ratelimit-reset-tokens": "1m3.5s"}, 8.0),  # capped: a voice reply never stalls long
+    ({"x-ratelimit-reset-tokens": "250ms"}, 0.25),
+    ({}, 2.0),
+])
+def test_retry_wait_is_read_from_groq_headers(headers, seconds):
+    assert diff_module._retry_after_seconds(httpx.Headers(headers)) == pytest.approx(seconds)
+
+
+def test_no_llm_answer_is_said_honestly(fake_llm):
+    fake_llm.answer = ""
+    answer = asyncio.run(_Planner().generate_reasoning("what is the PAYMENT_API_KEY", rag_context="some code"))
+    assert answer == "I couldn't get an answer just now. Please try again in a moment."
+
+
+@pytest.mark.parametrize("diff, message", [
+    ("diff --git a/src/auth.py b/src/auth.py\n+x\ndiff --git a/notes.md b/notes.md\n+y", "chore: update auth.py and notes.md"),
+    ("diff --git a/a.py b/a.py\ndiff --git a/b.py b/b.py\ndiff --git a/c.py b/c.py\ndiff --git a/d.py b/d.py", "chore: update 4 files"),
+    ("something without headers", "chore: update workspace files"),
+])
+def test_commit_message_without_the_llm_is_still_conventional(fake_llm, diff, message):
+    fake_llm.commit_message = ""
+    assert asyncio.run(diff_intelligence.draft_commit_message(diff)) == message
+
+
+def test_rate_limited_main_model_switches_to_the_fallback_model_at_once(monkeypatch):
+    replies = iter([
+        httpx.Response(429, headers={"retry-after": "5"}, json={}),
+        httpx.Response(200, json={"choices": [{"message": {"content": "from 20b"}}]}),
+    ])
+    calls = mock_httpx(monkeypatch, diff_module, lambda req: next(replies))
+    monkeypatch.setattr(diff_intelligence, "api_key", "test-key")
+    monkeypatch.setattr(diff_intelligence, "_client", None)
+    monkeypatch.setattr(diff_intelligence, "model", "openai/gpt-oss-120b")
+    monkeypatch.setattr(diff_intelligence, "fallback_model", "openai/gpt-oss-20b")
+
+    import time
+    start = time.perf_counter()
+    assert asyncio.run(diff_intelligence._call_groq("hi")) == "from 20b"
+    assert time.perf_counter() - start < 1  # no 5-second wait
+    assert [json.loads(c.content)["model"] for c in calls] == ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]
+
+
+def test_without_a_fallback_model_it_waits_and_retries_the_same_model(monkeypatch):
+    replies = iter([
+        httpx.Response(429, headers={"retry-after": "0.01"}, json={}),
+        httpx.Response(200, json={"choices": [{"message": {"content": "same model"}}]}),
+    ])
+    calls = mock_httpx(monkeypatch, diff_module, lambda req: next(replies))
+    monkeypatch.setattr(diff_intelligence, "api_key", "test-key")
+    monkeypatch.setattr(diff_intelligence, "_client", None)
+    monkeypatch.setattr(diff_intelligence, "fallback_model", "")
+
+    assert asyncio.run(diff_intelligence._call_groq("hi")) == "same model"
+    assert json.loads(calls[0].content)["model"] == json.loads(calls[1].content)["model"]
