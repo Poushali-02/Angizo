@@ -20,7 +20,7 @@ jobs:
           cache-dependency-path: backend/requirements*.txt
       - name: Install
         run: pip install -r requirements-dev.txt
-      - name: Run tests (offline: LLM, voices and git are faked or sandboxed)
+      - name: "Run tests (offline: LLM, voices and git are faked or sandboxed)"
         run: python -m pytest -p no:cacheprovider
 
   extension:
@@ -49,7 +49,7 @@ jobs:
           echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
           sudo apt-get update -q
           sudo apt-get install -yq code
-      - name: End-to-end test (real VS Code, fake backend)
+      - name: "End-to-end test (real VS Code, fake backend)"
         run: xvfb-run -a node test/e2e/run.js
         env:
           VSCODE_PATH: /usr/share/code/code
