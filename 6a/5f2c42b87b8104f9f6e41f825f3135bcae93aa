@@ -1,0 +1,246 @@
+backend/agent/nodes/reason.py
+  s_ef7ee9b0f2f917::t_8ac11806ee1fd0 44-45,47-55,92-114
+backend/agent/nodes/understand.py
+  s_ef7ee9b0f2f917::t_b8358a449e849d 33-45
+backend/agent/registry.py
+  s_ef7ee9b0f2f917::t_8ac11806ee1fd0 90
+backend/api/ws.py
+  s_ef7ee9b0f2f917::t_8fb88872bcacc2 17
+  s_ef7ee9b0f2f917::t_42712518318a81 110-113,124-128
+backend/config.py
+  s_ef7ee9b0f2f917::t_489ec442e8bcd5 5-6,17,30,46,50,53-54
+backend/main.py
+  s_ef7ee9b0f2f917::t_5879fdda638ef0 9,11-12
+backend/requirements.txt
+  s_ef7ee9b0f2f917::t_5879fdda638ef0 7-9
+backend/tools/diff_intelligence.py
+  s_ef7ee9b0f2f917::t_214b75ddd880d0 26
+backend/tools/gemini_llm.py
+  s_ef7ee9b0f2f917::t_214b75ddd880d0 6,61
+  s_ef7ee9b0f2f917::t_fee7642b62019c 52-55
+  s_ef7ee9b0f2f917::t_11b89b1728588a 81
+  s_ef7ee9b0f2f917::t_c4f56dc67cbe8c 91-94
+  s_ef7ee9b0f2f917::t_6d8ea8db2dd5d4 109-110
+backend/tools/git_tool.py
+  s_ef7ee9b0f2f917::t_7afd9926a3b9c3 32-46,48,59-60,63-65,67,72-84,92-97,103-115
+  s_ef7ee9b0f2f917::t_19525329707d52 85-87
+backend/tools/rag_engine.py
+  s_ef7ee9b0f2f917::t_489ec442e8bcd5 14,23,29-31,49-50,106-107,110
+backend/tools/sarvam_tts.py
+  s_ef7ee9b0f2f917::t_eac0b082514a4c 4-8,12-13,15,21-24,28,32-47,51-52,54,56-58,60-63,66-67,70,72,74-75,77,80-82,95,97,103-107,109,111-135,139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "autter_version": "3.9.1",
+  "base_commit_sha": "6a5f2c42b87b8104f9f6e41f825f3135bcae93aa",
+  "branch": "v1",
+  "prompts": {
+    "s_ef7ee9b0f2f917": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e2db2d1-cd31-4836-aebf-25b9e070f387",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:f94ebeef2ec04b83b7961aa7f6aefd5d1182e83e5ab46a386536b38ab0fea462",
+      "total_additions": 1673,
+      "total_deletions": 361,
+      "accepted_lines": 236,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_ef7ee9b0f2f917": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e2db2d1-cd31-4836-aebf-25b9e070f387",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:f94ebeef2ec04b83b7961aa7f6aefd5d1182e83e5ab46a386536b38ab0fea462",
+      "stats": {
+        "total_additions": 1673,
+        "total_deletions": 361,
+        "accepted_lines": 236,
+        "overriden_lines": 0,
+        "files": {
+          ".github/workflows/ci.yml": {
+            "total_additions": 55,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "README.md": {
+            "total_additions": 66,
+            "total_deletions": 26,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/reason.py": {
+            "total_additions": 34,
+            "total_deletions": 11,
+            "accepted_lines": 34,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/understand.py": {
+            "total_additions": 13,
+            "total_deletions": 9,
+            "accepted_lines": 13,
+            "overriden_lines": 0
+          },
+          "backend/agent/registry.py": {
+            "total_additions": 1,
+            "total_deletions": 1,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "backend/api/ws.py": {
+            "total_additions": 18,
+            "total_deletions": 17,
+            "accepted_lines": 10,
+            "overriden_lines": 0
+          },
+          "backend/config.py": {
+            "total_additions": 8,
+            "total_deletions": 11,
+            "accepted_lines": 8,
+            "overriden_lines": 0
+          },
+          "backend/main.py": {
+            "total_additions": 3,
+            "total_deletions": 2,
+            "accepted_lines": 3,
+            "overriden_lines": 0
+          },
+          "backend/pyproject.toml": {
+            "total_additions": 8,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "backend/requirements-dev.txt": {
+            "total_additions": 2,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "backend/requirements.txt": {
+            "total_additions": 3,
+            "total_deletions": 0,
+            "accepted_lines": 3,
+            "overriden_lines": 0
+          },
+          "backend/tests/conftest.py": {
+            "total_additions": 190,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "backend/tests/test_agent_graph.py": {
+            "total_additions": 136,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "backend/tests/test_git_tool.py": {
+            "total_additions": 111,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "backend/tests/test_tools.py": {
+            "total_additions": 188,
+            "total_deletions": 2,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "backend/tests/test_ws_api.py": {
+            "total_additions": 204,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "backend/tools/diff_intelligence.py": {
+            "total_additions": 1,
+            "total_deletions": 1,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "backend/tools/gemini_llm.py": {
+            "total_additions": 13,
+            "total_deletions": 4,
+            "accepted_lines": 13,
+            "overriden_lines": 0
+          },
+          "backend/tools/git_tool.py": {
+            "total_additions": 66,
+            "total_deletions": 30,
+            "accepted_lines": 57,
+            "overriden_lines": 0
+          },
+          "backend/tools/rag_engine.py": {
+            "total_additions": 10,
+            "total_deletions": 4,
+            "accepted_lines": 10,
+            "overriden_lines": 0
+          },
+          "backend/tools/sarvam_tts.py": {
+            "total_additions": 83,
+            "total_deletions": 138,
+            "accepted_lines": 83,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/package.json": {
+            "total_additions": 18,
+            "total_deletions": 13,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/src/extension.ts": {
+            "total_additions": 29,
+            "total_deletions": 24,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/src/observer/copilot-watcher.ts": {
+            "total_additions": 41,
+            "total_deletions": 7,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/src/observer/observer-status-bar.ts": {
+            "total_additions": 7,
+            "total_deletions": 7,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/src/observer/terminal-watcher.ts": {
+            "total_additions": 62,
+            "total_deletions": 49,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/src/ws-client.ts": {
+            "total_additions": 2,
+            "total_deletions": 4,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/test/e2e/run.js": {
+            "total_additions": 129,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/test/e2e/suite.js": {
+            "total_additions": 172,
+            "total_deletions": 1,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          }
+        }
+      }
+    }
+  },
+  "integrity": {"v":1,"commit":"6a5f2c42b87b8104f9f6e41f825f3135bcae93aa","tree":"ccb3fa3f768a6894894b074cc61c609978498a98","files":{"backend/agent/nodes/reason.py":"2e7a53c22b11b9f1df9288c1a6fc3d26ef7af0cc","backend/agent/nodes/understand.py":"d9853160cd7a195b250672f8bcd5ee9c33737c15","backend/agent/registry.py":"a3e7deb370836e09ae5097b9a659949ae39ac35e","backend/api/ws.py":"8cbb7879a205099dc673a84bb4b5ead30801387a","backend/config.py":"95771102fa21933e917e292f4f63991aec64e3bb","backend/main.py":"ba753b1603424e0e1800fdd7e35036f45c7a1986","backend/requirements.txt":"47e0d3edbe7d3511a59e0eef2ab277469c27cea4","backend/tools/diff_intelligence.py":"4e8ad9f4ece5720c76cd5adc40dadba423cfbfed","backend/tools/gemini_llm.py":"32014d6262c961f9d1cf544163e3fb7785420af6","backend/tools/git_tool.py":"d469a1c24f2a0ecefd56633fa8b9c85551b81414","backend/tools/rag_engine.py":"c9ea6b85942097886489e3a3759bd2ac62b48a33","backend/tools/sarvam_tts.py":"697c1431ff38c6747b67e343f64f6a0d692cdbb0"},"digest":"d7afe3546bb56ee7b6f2b01905c1d9c39704998d3093713704d32a0075130c94"}
+}
