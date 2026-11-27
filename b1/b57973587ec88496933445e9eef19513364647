@@ -1,0 +1,107 @@
+README.md
+  s_ef7ee9b0f2f917::t_bd5d858ca0f3dc 278
+backend/api/ws.py
+  s_ef7ee9b0f2f917::t_a91eacf0cf5bd7 371-374
+backend/tests/test_ws_api.py
+  s_ef7ee9b0f2f917::t_a91eacf0cf5bd7 205-211
+backend/tools/diff_intelligence.py
+  s_ef7ee9b0f2f917::t_a91eacf0cf5bd7 328-330,334-335
+neurocode-extension/src/observer/manual-watcher.ts
+  s_ef7ee9b0f2f917::t_0f901c9d719d53 30-31,205,387-388
+  s_ef7ee9b0f2f917::t_a780f1a6a3593f 59-66,68
+  s_ef7ee9b0f2f917::t_ffc0408d3af72c 67
+  s_ef7ee9b0f2f917::t_dce8535b767632 109-114
+  s_ef7ee9b0f2f917::t_d6717a98eda343 196,206-217,223-224
+  s_ef7ee9b0f2f917::t_88151c99fad4c2 277,279-280,283,286,293-331,336-386
+  s_ef7ee9b0f2f917::t_9cc282583174a8 332-335
+  s_ef7ee9b0f2f917::t_3a20bad3d8e571 396-397
+neurocode-extension/src/ws-client.ts
+  s_ef7ee9b0f2f917::t_0c6eadd4260667 173
+neurocode-extension/test/e2e/suite.js
+  s_ef7ee9b0f2f917::t_672717c1926c40 92-103,105-125
+  s_ef7ee9b0f2f917::t_fee435f66a8b36 104
+  s_ef7ee9b0f2f917::t_d591914237b114 138-142
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "autter_version": "3.9.1",
+  "base_commit_sha": "b1b57973587ec88496933445e9eef19513364647",
+  "branch": "v1",
+  "prompts": {
+    "s_ef7ee9b0f2f917": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e2db2d1-cd31-4836-aebf-25b9e070f387",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:4c25032207ea9387ebc7795a79e55c417e33995fc0564d28f29f042085c41165",
+      "total_additions": 196,
+      "total_deletions": 14,
+      "accepted_lines": 194,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_ef7ee9b0f2f917": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e2db2d1-cd31-4836-aebf-25b9e070f387",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:4c25032207ea9387ebc7795a79e55c417e33995fc0564d28f29f042085c41165",
+      "stats": {
+        "total_additions": 196,
+        "total_deletions": 14,
+        "accepted_lines": 194,
+        "overriden_lines": 0,
+        "files": {
+          "README.md": {
+            "total_additions": 1,
+            "total_deletions": 1,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "backend/api/ws.py": {
+            "total_additions": 4,
+            "total_deletions": 1,
+            "accepted_lines": 4,
+            "overriden_lines": 0
+          },
+          "backend/tests/test_ws_api.py": {
+            "total_additions": 7,
+            "total_deletions": 0,
+            "accepted_lines": 7,
+            "overriden_lines": 0
+          },
+          "backend/tools/diff_intelligence.py": {
+            "total_additions": 5,
+            "total_deletions": 1,
+            "accepted_lines": 5,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/src/observer/manual-watcher.ts": {
+            "total_additions": 138,
+            "total_deletions": 9,
+            "accepted_lines": 137,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/src/ws-client.ts": {
+            "total_additions": 1,
+            "total_deletions": 0,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/test/e2e/suite.js": {
+            "total_additions": 40,
+            "total_deletions": 2,
+            "accepted_lines": 39,
+            "overriden_lines": 0
+          }
+        }
+      }
+    }
+  },
+  "integrity": {"v":1,"commit":"b1b57973587ec88496933445e9eef19513364647","tree":"4d7c18d4e6c693396104cb3c9487d35db2294ba1","files":{"README.md":"f2550d99d6dec9716b91559ff52818bc269ae18c","backend/api/ws.py":"3919db1e451f0d77eb4d9b26b482df4d2a0cb48a","backend/tests/test_ws_api.py":"1a0cabcf2d0b3eb7dd90d1a021db3221d5dd7a59","backend/tools/diff_intelligence.py":"a93b5567035d8aac392a8b6c0d2b2bdc4125a745","neurocode-extension/src/observer/manual-watcher.ts":"fb7c148621f59329fed96645b7fb0f874c8c171f","neurocode-extension/src/ws-client.ts":"108f9bc9a5838ea67c29a73868ea154d053b5483","neurocode-extension/test/e2e/suite.js":"8eeb96a736c5dacf50d6e5c28775634fa7631caf"},"digest":"02efa4c0122250167b560e3bcf787a06d5a6622ba671cf07e868824d39bbe52c"}
+}
