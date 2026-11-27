@@ -325,10 +325,14 @@ Do NOT use code formatting, quotes, or markdown. Return only the plain spoken pr
 
         return f"Runtime {err_name} occurred on line {line} in {file_name}. Triggered by {err_msg}."
 
-    def format_syntax_error_narration(self, file_name: str, line: int, error_msg: str, is_resolved: bool) -> str:
+    def format_syntax_error_narration(
+        self, file_name: str, line: int, error_msg: str, is_resolved: bool, count: int = 1
+    ) -> str:
         short_file = _short_name(file_name) if file_name else "file"
         if is_resolved:
             return f"Syntax error resolved in {short_file}."
+        if count > 1:  # several new errors at once: one summary instead of a list
+            return f"{count} syntax errors in {short_file}, first on line {line}."
         detail = (error_msg or "").strip().rstrip(".")
         if detail:
             return f"Syntax error detected in {short_file} on line {line}: {detail}."

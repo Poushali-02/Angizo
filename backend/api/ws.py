@@ -368,7 +368,10 @@ async def handle_manual_observer_event(ws: WebSocket, session_id: int, msg: dict
             is_resolved = msg.get("is_resolved", False)
             line = msg.get("line", 1)
             err_msg = msg.get("error_message", "")
-            narration = diff_intelligence.format_syntax_error_narration(target_file, line, err_msg, is_resolved)
+            count = int(msg.get("error_count") or 1) if msg.get("is_summary") else 1
+            narration = diff_intelligence.format_syntax_error_narration(
+                target_file, line, err_msg, is_resolved, count=count
+            )
         else:
             # Stage 2: Runtime Exception / Compilation Error
             narration = await diff_intelligence.generate_runtime_error_summary(msg)

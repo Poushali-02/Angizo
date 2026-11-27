@@ -275,7 +275,7 @@ npm run test:e2e
 Starts a fake backend, opens the VS Code installed on your machine with the extension loaded (a window shows for about a minute), and checks what the extension sends while it makes real edits:
 
 1. Connects and sends the workspace path.
-2. A syntax error is reported only when the cursor leaves the line, then "resolved" after the fix.
+2. A syntax error on the line you are typing is reported only when the cursor leaves it, then "resolved" after the fix. An error on another line (reported late, or caused elsewhere) is announced after 1.5 s of quiet; several at once become one summary ("3 syntax errors in many.ts, first on line 3"); each is said once, and again only if it comes back after a fix.
 3. Fast multi-line inserts (like Copilot) send the inserted code and the real error count.
 4. A file you create is announced once, and not credited to Copilot.
 5. A command that crashes in the terminal (`node -e "null.x"`) is caught through terminal shell integration; a successful command is not.

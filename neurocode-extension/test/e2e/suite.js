@@ -89,6 +89,40 @@ exports.run = async function run() {
     await waitFor("resolved syntax_error", (m) => m.event_type === "syntax_error" && m.is_resolved === true);
   });
 
+  await check("manual stream: an error on a line you are not on is announced after a pause", async () => {
+    // The cursor opens on line 1; the language server flags line 3 later. Nobody leaves line 3.
+    fs.writeFileSync(path.join(root.fsPath, "late.ts"), "const fine = 1;\n\nconst broken = ;\n");
+    const doc = await vscode.workspace.openTextDocument(file("late.ts"));
+    await vscode.window.showTextDocument(doc);
+    const msg = await waitFor("late syntax_error", (m) => m.event_type === "syntax_error" && m.file === "late.ts", 30000);
+    assert.strictEqual(msg.line, 3);
+    assert.ok(!msg.is_summary);
+    assert.match(msg.error_message, /Expression expected/);
+  });
+
+  await check("manual stream: several new errors become one summary, said once", async () => {
+    fs.writeFileSync(path.join(root.fsPath, "many.ts"), "const m1 = 1;\n\nconst m2 = ;\n\nconst m3 = ;\n\nconst m4 = ;\n");
+    const doc = await vscode.workspace.openTextDocument(file("many.ts"));
+    await vscode.window.showTextDocument(doc);
+    const msg = await waitFor("summary syntax_error", (m) => m.event_type === "syntax_error" && m.file === "many.ts", 30000);
+    assert.strictEqual(msg.is_summary, true);
+    assert.strictEqual(msg.error_count, 3);
+    assert.strictEqual(msg.line, 3);
+    await sleep(4000); // nothing changed: it must not be repeated
+    assert.strictEqual(countWhere((m) => m.event_type === "syntax_error" && m.file === "many.ts" && !m.is_resolved), 1);
+  });
+
+  await check("manual stream: a fixed error that comes back is announced again", async () => {
+    const editor = await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(file("late.ts")));
+    const broken = editor.document.lineAt(2).range;
+    await editor.edit((e) => e.replace(broken, "const broken = 2;"));
+    await waitFor("late.ts resolved", (m) => m.file === "late.ts" && m.is_resolved === true, 20000);
+    await editor.edit((e) => e.replace(editor.document.lineAt(2).range, "const broken = ;"));
+    editor.selection = new vscode.Selection(0, 0, 0, 0);
+    await waitFor("late.ts error again", () =>
+      countWhere((m) => m.event_type === "syntax_error" && m.file === "late.ts" && !m.is_resolved) === 2, 30000);
+  });
+
   await check("Copilot stream: fast multi-line inserts send the code and the error count", async () => {
     const doc = await vscode.workspace.openTextDocument(file("generated.ts"));
     const editor = await vscode.window.showTextDocument(doc);
@@ -101,7 +135,11 @@ exports.run = async function run() {
       await editor.edit((e) => e.insert(doc.lineAt(doc.lineCount - 1).range.end, c));
       await sleep(300);
     }
-    const msg = await waitFor("copilot_complete", (m) => m.event_type === "copilot_complete", 20000);
+    const msg = await waitFor(
+      "copilot_complete for generated.ts",
+      (m) => m.event_type === "copilot_complete" && m.file === "generated.ts",
+      20000
+    );
     assert.strictEqual(msg.file, "generated.ts");
     assert.match(msg.code_snippet, /export function charge/);
     assert.ok(msg.lines_added >= 3, `lines_added was ${msg.lines_added}`);

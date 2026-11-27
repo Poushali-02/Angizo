@@ -27,6 +27,8 @@ export interface ManualSyntaxErrorEvent {
 interface LineErrorEntry {
   payload: ManualSyntaxErrorEvent;
   wsPayload: object;
+  /** Identifies the error across line shifts: message + the text of its line */
+  key: string;
 }
 
 export class ManualWatcher {
@@ -53,6 +55,16 @@ export class ManualWatcher {
 
   // Active cursor line per file (0-indexed)
   private currentLinePerFile: Map<string, number> = new Map();
+
+  // Errors already spoken, per file, so each error is announced once until it is fixed
+  private announced: Map<string, Set<string>> = new Map();
+
+  // Errors on lines the cursor is NOT on (late LSP reports, errors an edit caused elsewhere)
+  // are announced after this much quiet: no new diagnostics and no edits to the file.
+  private offLineTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  private lastEditAt: Map<string, number> = new Map();
+  static OFF_LINE_QUIET_MS = 1500;
+  static ACTIVE_EDIT_MS = 10000;
 
   private enabled = true;
 
@@ -94,7 +106,12 @@ export class ManualWatcher {
       }
     });
 
-    this.disposables.push(diagWatcher, cursorWatcher);
+    const editWatcher = vscode.workspace.onDidChangeTextDocument((event) => {
+      if (event.contentChanges.length === 0) return;
+      this.lastEditAt.set(vscode.workspace.asRelativePath(event.document.uri), Date.now());
+    });
+
+    this.disposables.push(diagWatcher, cursorWatcher, editWatcher);
     context.subscriptions.push(...this.disposables);
     console.log("[ManualWatcher] Stage 1 Syntax Interceptor activated.");
   }
@@ -176,7 +193,7 @@ export class ManualWatcher {
           error_count: currentCount,
         };
 
-        fileMap.set(lineIdx, { payload, wsPayload });
+        fileMap.set(lineIdx, { payload, wsPayload, key: this.errorKey(uri, diag) });
       }
 
       // Clean up line entries that no longer have errors (fixed)
@@ -185,14 +202,26 @@ export class ManualWatcher {
           fileMap.delete(existingLineIdx);
         }
       }
-      
-      // Removed instant earcon & websocket narration here.
-      // Errors will now only trigger when the user exits the line with an error (handled in firePendingNarration).
+
+      // Forget announced errors that are gone, so one that comes back is announced again
+      const liveKeys = new Set(syntaxErrors.map((d) => this.errorKey(uri, d)));
+      const spoken = this.announced.get(relPath);
+      if (spoken) {
+        for (const key of Array.from(spoken)) {
+          if (!liveKeys.has(key)) spoken.delete(key);
+        }
+      }
+
+      // The line being typed on waits for a line exit (firePendingNarration); errors on
+      // other lines are announced once things are quiet (announceOffLineErrors).
+      this.scheduleOffLineCheck(uri, relPath);
 
     } else if (hadErrors && !nowHasErrors) {
       // ── Errors just cleared (or still 0 from previous LSP pass) ────────
       // Clear pending narrations IMMEDIATELY so stale entries don't fire.
       fileMap.clear();
+      this.announced.delete(relPath);
+      this.clearOffLineTimer(relPath);
       this.fileHasErrors.set(relPath, false);
 
       // Always restart the debounce timer here — even if LSP fires multiple
@@ -245,18 +274,116 @@ export class ManualWatcher {
 
   /** Fire the queued voice narration WebSocket event when user exits a specific line */
   private firePendingNarration(relPath: string, entry: LineErrorEntry): void {
+    if (this.wasAnnounced(relPath, entry.key)) return; // already spoken, e.g. by the off-line check
     console.log(`[ManualWatcher] User exited line ${entry.payload.line} — firing voice for ${relPath}`);
-    
+    this.markAnnounced(relPath, entry.key);
+
     // Mark that we actually announced an error to the user for this file
     this.hasAnnouncedError.set(relPath, true);
-    
+
     // Trigger Earcon and HUD
     this.onEvent(entry.payload);
-    
+
     // Trigger backend voice narration
     if (this.wsClient && this.wsClient.isConnected) {
       this.wsClient.sendManualObserverEvent(entry.wsPayload as any);
     }
+  }
+
+  // ── Errors on lines the cursor is not on ────────────────────────────────────
+
+  private scheduleOffLineCheck(uri: vscode.Uri, relPath: string): void {
+    this.clearOffLineTimer(relPath);
+    this.offLineTimers.set(
+      relPath,
+      setTimeout(() => this.announceOffLineErrors(uri, relPath), ManualWatcher.OFF_LINE_QUIET_MS)
+    );
+  }
+
+  private clearOffLineTimer(relPath: string): void {
+    const timer = this.offLineTimers.get(relPath);
+    if (timer) clearTimeout(timer);
+    this.offLineTimers.delete(relPath);
+  }
+
+  /**
+   * Announce errors on lines the cursor is not on, once the file has been quiet for
+   * OFF_LINE_QUIET_MS. Covers errors the language server reports late (after the user left
+   * the line) and errors an edit causes elsewhere. One error is read in full; several become
+   * one summary. Nothing is said while the cursor's own line has an error (still typing).
+   */
+  private announceOffLineErrors(uri: vscode.Uri, relPath: string): void {
+    this.offLineTimers.delete(relPath);
+    if (!this.enabled) return;
+
+    const sinceEdit = Date.now() - (this.lastEditAt.get(relPath) ?? 0);
+    if (sinceEdit < ManualWatcher.OFF_LINE_QUIET_MS) {
+      this.scheduleOffLineCheck(uri, relPath); // still typing: wait for a real pause
+      return;
+    }
+
+    const errors = vscode.languages
+      .getDiagnostics(uri)
+      .filter((d) => d.severity === vscode.DiagnosticSeverity.Error)
+      .sort((a, b) => a.range.start.line - b.range.start.line);
+    const active = vscode.window.activeTextEditor;
+    const cursorLine =
+      active && active.document.uri.toString() === uri.toString() ? active.selection.active.line : undefined;
+    // Mid-edit (the cursor's own line is broken and the file changed recently): the other
+    // errors are probably caused by the unfinished line, so wait for the line exit instead.
+    const editingRecently = sinceEdit < ManualWatcher.ACTIVE_EDIT_MS;
+    if (editingRecently && cursorLine !== undefined && errors.some((d) => d.range.start.line === cursorLine)) return;
+
+    const fresh = errors.filter(
+      (d) => d.range.start.line !== cursorLine && !this.wasAnnounced(relPath, this.errorKey(uri, d))
+    );
+    if (fresh.length === 0) return;
+
+    for (const d of fresh) this.markAnnounced(relPath, this.errorKey(uri, d));
+    this.hasAnnouncedError.set(relPath, true);
+
+    const first = fresh[0];
+    const line = first.range.start.line + 1;
+    const isSummary = fresh.length > 1;
+    console.log(`[ManualWatcher] ${fresh.length} error(s) away from the cursor in ${relPath} — announcing`);
+
+    this.onEvent({
+      type: "syntax_error",
+      file: relPath,
+      line,
+      column: first.range.start.character + 1,
+      message: isSummary ? `${fresh.length} syntax errors, first on line ${line}` : first.message,
+      isResolved: false,
+      errorCount: errors.length,
+    });
+    if (this.wsClient && this.wsClient.isConnected) {
+      this.wsClient.sendManualObserverEvent({
+        event_type: "syntax_error",
+        file: relPath,
+        line,
+        column: first.range.start.character + 1,
+        error_message: first.message,
+        is_resolved: false,
+        error_count: fresh.length,
+        is_summary: isSummary,
+      });
+    }
+  }
+
+  private errorKey(uri: vscode.Uri, diag: vscode.Diagnostic): string {
+    const doc = vscode.workspace.textDocuments.find((d) => d.uri.toString() === uri.toString());
+    const lineText =
+      doc && diag.range.start.line < doc.lineCount ? doc.lineAt(diag.range.start.line).text.trim() : "";
+    return `${diag.message}|${lineText || diag.range.start.line}`;
+  }
+
+  private wasAnnounced(relPath: string, key: string): boolean {
+    return this.announced.get(relPath)?.has(key) ?? false;
+  }
+
+  private markAnnounced(relPath: string, key: string): void {
+    if (!this.announced.has(relPath)) this.announced.set(relPath, new Set());
+    this.announced.get(relPath)!.add(key);
   }
 
   dispose(): void {
@@ -266,5 +393,7 @@ export class ManualWatcher {
     this.pendingLineErrors.clear();
     this.resolvedDebounceTimers.forEach((t) => clearTimeout(t));
     this.resolvedDebounceTimers.clear();
+    this.offLineTimers.forEach((t) => clearTimeout(t));
+    this.offLineTimers.clear();
   }
 }

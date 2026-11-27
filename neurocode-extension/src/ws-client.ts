@@ -170,6 +170,7 @@ export class NeurocodeWsClient extends EventEmitter {
     error_count?: number;
     error_name?: string;
     stack_trace?: string;
+    is_summary?: boolean;
   }): void {
     console.log(`[ws-client] Sending manual observer event: ${event.event_type}`);
     this.send({ type: "manual_observer_event", ...event });

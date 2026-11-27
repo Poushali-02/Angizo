@@ -202,3 +202,10 @@ def test_spoken_confirmation_matches_whole_words(monkeypatch, heard, outcome):
             assert not any(m.get("status") == "cancelled" for m in socket.sent)
     finally:
         ws_module.session_states.pop(sid, None)
+
+
+def test_several_errors_at_once_become_one_summary(ws):
+    ws.send_json({"type": "manual_observer_event", "event_type": "syntax_error", "file": "src/app.ts",
+                  "line": 12, "error_message": "';' expected.", "is_resolved": False,
+                  "error_count": 3, "is_summary": True})
+    assert next_result(ws)["narration"] == "3 syntax errors in app.ts, first on line 12."
