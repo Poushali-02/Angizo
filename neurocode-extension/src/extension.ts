@@ -34,11 +34,14 @@ let observerStatusBar: ObserverStatusBar | undefined;
 let observerHud: ObserverHud | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log("NeuroCode extension activating");
-  vscode.window.showInformationMessage("⚡ NeuroCode Extension Activated & Listening!");
+  console.log("Angizo extension activating");
+  vscode.window.showInformationMessage("Angizo is listening.");
 
   // Create persistent WebSocket client immediately on extension startup
-  const wsPort = "7001";
+  // Backend port: ANGIZO_WS_PORT (used by the end-to-end tests), then the angizo setting, then 7001
+  const wsPort =
+    process.env.ANGIZO_WS_PORT ||
+    String(vscode.workspace.getConfiguration("neurocode").get<number>("backendPort", 7001));
   wsClient = new NeurocodeWsClient(`ws://localhost:${wsPort}/ws/session`);
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (workspaceFolders && workspaceFolders.length > 0) {
@@ -53,7 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
     } else {
       panel = vscode.window.createWebviewPanel(
         "neurocodePanel",
-        "NeuroCode",
+        "Angizo",
         { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
         {
           enableScripts: true,
@@ -99,7 +102,7 @@ export function activate(context: vscode.ExtensionContext) {
     () => {
       if (panel) {
         panel.webview.postMessage({ type: "stop_mic" });
-        vscode.window.showInformationMessage("NeuroCode: Voice input stopped");
+        vscode.window.showInformationMessage("Angizo: Voice input stopped");
       }
     }
   );
@@ -110,9 +113,9 @@ export function activate(context: vscode.ExtensionContext) {
     () => {
       if (wsClient && wsClient.isConnected) {
         wsClient.sendConfirmResponse(true);
-        vscode.window.showInformationMessage("NeuroCode: Action confirmed");
+        vscode.window.showInformationMessage("Angizo: Action confirmed");
       } else {
-        vscode.window.showWarningMessage("NeuroCode: WebSocket is not connected");
+        vscode.window.showWarningMessage("Angizo: WebSocket is not connected");
       }
     }
   );
@@ -123,9 +126,9 @@ export function activate(context: vscode.ExtensionContext) {
     () => {
       if (wsClient && wsClient.isConnected) {
         wsClient.sendConfirmResponse(false);
-        vscode.window.showInformationMessage("NeuroCode: Action cancelled");
+        vscode.window.showInformationMessage("Angizo: Action cancelled");
       } else {
-        vscode.window.showWarningMessage("NeuroCode: WebSocket is not connected");
+        vscode.window.showWarningMessage("Angizo: WebSocket is not connected");
       }
     }
   );
@@ -139,7 +142,7 @@ export function activate(context: vscode.ExtensionContext) {
         manualWatcher.setEnabled(newState);
         terminalWatcher?.setEnabled(newState);
         vscode.window.showInformationMessage(
-          `NeuroCode: Manual Coding Stream ${newState ? "ENABLED ⚡" : "DISABLED ⏸️"}`
+          `Angizo: Manual Coding Stream ${newState ? "ENABLED ⚡" : "DISABLED ⏸️"}`
         );
       }
     }
@@ -160,13 +163,13 @@ export function activate(context: vscode.ExtensionContext) {
       observerEarcon?.play("complete", currentPanel);
       observerStatusBar?.setComplete(0, 0, event.file, "Manual");
       observerHud?.clearInlineError();
-      observerHud?.show(`NeuroCode: Syntax error resolved in ${event.file}`);
+      observerHud?.show(`Angizo: Syntax error resolved in ${event.file}`);
       observerHud?.scheduleHide();
     } else {
       observerEarcon?.play("error", currentPanel);
       observerStatusBar?.setError(event.errorCount, "Manual");
       observerHud?.showInlineError(event.line);
-      observerHud?.show(`NeuroCode extension found error: Syntax error detected in ${event.file}`);
+      observerHud?.show(`Angizo extension found error: Syntax error detected in ${event.file}`);
     }
   }, wsClient);
   manualWatcher.activate(context);
@@ -175,7 +178,7 @@ export function activate(context: vscode.ExtensionContext) {
     const currentPanel = ensureWebviewPanel();
     observerEarcon?.play("error", currentPanel);
     observerStatusBar?.setError(1, "Runtime");
-    observerHud?.show(`NeuroCode Intercept: Runtime ${event.errorName} in ${event.file}`);
+    observerHud?.show(`Angizo Intercept: Runtime ${event.errorName} in ${event.file}`);
   }, wsClient);
   terminalWatcher.activate(context);
 
@@ -189,7 +192,7 @@ export function activate(context: vscode.ExtensionContext) {
         observerEarcon?.play("start", currentPanel);
         observerEarcon?.startTick(currentPanel);
         observerStatusBar?.setGenerating(event.file || "unknown file");
-        observerHud?.show(`NeuroCode Observer: Copilot generating in ${event.file}... `);
+        observerHud?.show(`Angizo Observer: Copilot generating in ${event.file}... `);
         currentPanel.webview.postMessage({
           type: "observer_status",
           state: "generating",
@@ -207,7 +210,7 @@ export function activate(context: vscode.ExtensionContext) {
           event.file ?? "unknown"
         );
         observerHud?.show(
-          `NeuroCode Observer: Copilot done — ${lines} lines added`
+          `Angizo Observer: Copilot done — ${lines} lines added`
         );
         observerHud?.scheduleHide();
         currentPanel.webview.postMessage({
@@ -221,7 +224,9 @@ export function activate(context: vscode.ExtensionContext) {
       case "file_created": {
         observerEarcon?.play("start", currentPanel);
         observerStatusBar?.setGenerating(`New file: ${event.file}`);
-        observerHud?.show(`NeuroCode Observer: Copilot created ${event.file}`);
+        observerHud?.show(
+          event.byAi ? `Angizo Observer: Copilot created ${event.file}` : `Angizo Observer: New file ${event.file}`
+        );
         observerHud?.scheduleHide();
         currentPanel.webview.postMessage({
           type: "observer_status",
@@ -233,7 +238,7 @@ export function activate(context: vscode.ExtensionContext) {
       case "dependency_updated": {
         observerEarcon?.play("tick", currentPanel);
         observerStatusBar?.setGenerating(`Dependency updated: ${event.dependencyFile}`);
-        observerHud?.show(`NeuroCode Observer: Dependency file updated — ${event.dependencyFile}`);
+        observerHud?.show(`Angizo Observer: Dependency file updated — ${event.dependencyFile}`);
         observerHud?.scheduleHide();
         break;
       }
@@ -263,10 +268,10 @@ export function activate(context: vscode.ExtensionContext) {
       if (nowMuted) {
         observerStatusBar.setMuted();
         observerHud?.hide();
-        vscode.window.showInformationMessage("NeuroCode Observer: Muted");
+        vscode.window.showInformationMessage("Angizo Observer: Muted");
       } else {
         observerStatusBar.setIdle();
-        vscode.window.showInformationMessage("NeuroCode Observer: Active");
+        vscode.window.showInformationMessage("Angizo Observer: Active");
       }
     }
   );
@@ -277,7 +282,7 @@ export function activate(context: vscode.ExtensionContext) {
     () => {
       if (!observerStatusBar) return;
       const label = observerStatusBar.getAccessibleLabel();
-      vscode.window.showInformationMessage(`NeuroCode: ${label}`);
+      vscode.window.showInformationMessage(`Angizo: ${label}`);
       if (panel) {
         panel.webview.postMessage({
           type: "speak_text",
@@ -413,7 +418,7 @@ function getWebviewContent(
     "
   >
 
-  <title>NeuroCode AI Assistant</title>
+  <title>Angizo AI Assistant</title>
 
   <link
     rel="preconnect"
@@ -1761,7 +1766,7 @@ function getWebviewContent(
           <div class="brand-title-row">
 
             <span class="brand-name">
-              NeuroCode
+              Angizo
             </span>
 
           </div>
@@ -2126,7 +2131,7 @@ function getWebviewContent(
 
         <span>
 
-          NeuroCode Engine v0.1
+          Angizo Engine v0.1
 
         </span>
 

@@ -1,11 +1,11 @@
 {
   "name": "neurocode",
-  "displayName": "NeuroCode",
+  "displayName": "Angizo",
   "description": "AI Accessibility Agent — voice-driven code review, Git workflows, and diff intelligence for blind and low-vision developers.",
   "version": "0.1.0",
   "publisher": "neurocode-team",
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.93.0"
   },
   "categories": [
     "Other"
@@ -18,31 +18,31 @@
     "commands": [
       {
         "command": "neurocode.startVoiceInput",
-        "title": "NeuroCode: Start Voice Input"
+        "title": "Angizo: Start Voice Input"
       },
       {
         "command": "neurocode.stopVoiceInput",
-        "title": "NeuroCode: Stop Voice Input"
+        "title": "Angizo: Stop Voice Input"
       },
       {
         "command": "neurocode.toggleObserver",
-        "title": "NeuroCode: Toggle Copilot Observer (Mute/Unmute)"
+        "title": "Angizo: Toggle Copilot Observer (Mute/Unmute)"
       },
       {
         "command": "neurocode.announceStatus",
-        "title": "NeuroCode: Announce Copilot Observer Status (Screen Reader Hotkey)"
+        "title": "Angizo: Announce Copilot Observer Status (Screen Reader Hotkey)"
       },
       {
         "command": "neurocode.confirm",
-        "title": "NeuroCode: Confirm Action (Yes)"
+        "title": "Angizo: Confirm Action (Yes)"
       },
       {
         "command": "neurocode.cancel",
-        "title": "NeuroCode: Cancel Action (No)"
+        "title": "Angizo: Cancel Action (No)"
       },
       {
         "command": "neurocode.toggleManualStream",
-        "title": "NeuroCode: Toggle Manual Coding Stream"
+        "title": "Angizo: Toggle Manual Coding Stream"
       }
     ],
     "keybindings": [
@@ -68,12 +68,17 @@
       }
     ],
     "configuration": {
-      "title": "NeuroCode Configuration",
+      "title": "Angizo Configuration",
       "properties": {
         "neurocode.simulateBlindMode": {
           "type": "boolean",
           "default": false,
           "description": "Simulates blind/screen-reader mode for testing .env file access warnings and speech alerts."
+        },
+        "neurocode.backendPort": {
+          "type": "number",
+          "default": 7001,
+          "description": "Port of the Angizo Python backend (ws://localhost:<port>/ws/session)."
         }
       }
     }
@@ -81,13 +86,13 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "test:e2e": "npm run compile && node test/e2e/run.js"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/vscode": "^1.85.0",
+    "@types/vscode": "^1.93.0",
     "@types/ws": "^8.18.1",
-
     "typescript": "^5.3.0"
   },
   "dependencies": {

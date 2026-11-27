@@ -7,11 +7,11 @@
  * via standard shortcuts (Ctrl+Shift+S / Insert+F12).
  *
  * States:
- *   idle        - "$(pulse) NeuroCode Observer"
+ *   idle        - "$(pulse) Angizo Observer"
  *   generating  - "$(loading~spin) Copilot generating in {file}..."
  *   complete    - "$(check) Copilot: {lines} lines added · {errors} errors"
  *   error       - "$(warning) Copilot: {errors} errors introduced"
- *   muted       - "$(mute) NeuroCode Observer [Muted]"
+ *   muted       - "$(mute) Angizo Observer [Muted]"
  */
 
 import * as vscode from "vscode";
@@ -25,16 +25,16 @@ export class ObserverStatusBar {
       100
     );
     this.item.command = "neurocode.toggleObserver";
-    this.item.tooltip = "NeuroCode Copilot Observer — click to toggle mute";
+    this.item.tooltip = "Angizo Copilot Observer — click to toggle mute";
     this.setIdle();
     this.item.show();
   }
 
   setIdle(): void {
-    this.item.text = "$(pulse) NeuroCode Observer";
+    this.item.text = "$(pulse) Angizo Observer";
     this.item.backgroundColor = undefined;
     this.item.accessibilityInformation = {
-      label: "NeuroCode Observer idle",
+      label: "Angizo Observer idle",
       role: "button",
     };
   }
@@ -83,10 +83,10 @@ export class ObserverStatusBar {
   }
 
   setMuted(): void {
-    this.item.text = "$(mute) NeuroCode Observer [Muted]";
+    this.item.text = "$(mute) Angizo Observer [Muted]";
     this.item.backgroundColor = undefined;
     this.item.accessibilityInformation = {
-      label: "NeuroCode Observer is muted. Click to unmute.",
+      label: "Angizo Observer is muted. Click to unmute.",
       role: "button",
     };
   }

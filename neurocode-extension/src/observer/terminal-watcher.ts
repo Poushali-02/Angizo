@@ -4,8 +4,9 @@
  * Stage 2 Runtime & Compilation Error Interceptor.
  *
  * Dual detection strategy:
- *   1. vscode.window.onDidWriteTerminalData — captures terminal stdout/stderr text (requires VS Code 1.93+)
- *   2. vscode.debug events — captures debugger exception events
+ *   1. Terminal shell integration (onDidStart/EndTerminalShellExecution, stable since VS Code 1.93):
+ *      reads each command's output and scans it when the command fails.
+ *   2. vscode.debug events — captures debugger stderr.
  *
  * Intercepts unhandled exceptions, crash stack traces, and compilation failures.
  * Sends stack trace + file/line numbers over WebSocket to Python backend for Groq LLM trigger cause analysis.
@@ -22,6 +23,10 @@ export interface TerminalRuntimeErrorEvent {
   errorMessage: string;
   stackTraceSnippet: string;
 }
+
+// Colour codes, cursor moves and VS Code's own shell-integration markers (OSC 633)
+// OSC sequences end with BEL (\x07) or ESC + backslash; CSI sequences are ESC [ ... letter
+const ANSI_ESCAPES = /\x1B\][^\x07\x1B]*(?:\x07|\x1B\x5C)|\x1B\[[0-?]*[ -/]*[@-~]/g;
 
 export class TerminalWatcher {
   private disposables: vscode.Disposable[] = [];
@@ -42,36 +47,29 @@ export class TerminalWatcher {
   }
 
   activate(context: vscode.ExtensionContext): void {
-    // ── Strategy 1: Terminal data stream ────────────────────────────────────
-    // Wrapped in try/catch because accessing onDidWriteTerminalData throws a strict
-    // "CANNOT use API proposal" error in standard VS Code unless --enable-proposed-api is used.
-    try {
-      if ("onDidWriteTerminalData" in vscode.window) {
-        const termWatcher = (vscode.window as any).onDidWriteTerminalData((e: any) => {
-          if (!this.enabled) return;
-          // Strip ANSI escape codes before buffering
-          const cleanData = (e.data as string).replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
-          this.terminalBuffer += cleanData;
+    // ── Strategy 1: terminal shell integration (stable API since VS Code 1.93) ──
+    // Each command's output is read as it runs; when it ends with a non-zero exit code
+    // the output is scanned for a stack trace. (The old onDidWriteTerminalData is a
+    // proposed API that normal VS Code never enables, so it caught nothing.)
+    const pendingReads = new Map<vscode.TerminalShellExecution, Promise<string>>();
 
-          // Keep buffer manageable (last 8,000 chars)
-          if (this.terminalBuffer.length > 8000) {
-            this.terminalBuffer = this.terminalBuffer.slice(-8000);
-          }
+    const startWatcher = vscode.window.onDidStartTerminalShellExecution((e) => {
+      if (!this.enabled) return;
+      pendingReads.set(e.execution, this.readExecution(e.execution));
+    });
 
-          // Debounce: analyse 900ms after last data arrives
-          if (this.debounceTimer) clearTimeout(this.debounceTimer);
-          this.debounceTimer = setTimeout(() => {
-            this.analyzeTerminalOutput();
-          }, 900);
-        });
-        this.disposables.push(termWatcher);
-        console.log("[TerminalWatcher] onDidWriteTerminalData hooked.");
-      }
-    } catch (err) {
-      console.log("[TerminalWatcher] Proposed API 'onDidWriteTerminalData' not available, skipping Strategy 1.");
-    }
+    const endWatcher = vscode.window.onDidEndTerminalShellExecution(async (e) => {
+      const reading = pendingReads.get(e.execution);
+      pendingReads.delete(e.execution);
+      if (!this.enabled || !reading) return;
+      const output = await reading;
+      if (e.exitCode === 0) return; // a successful command is never a crash
+      this.terminalBuffer = output;
+      this.analyzeTerminalOutput();
+    });
+    this.disposables.push(startWatcher, endWatcher);
 
-    // ── Strategy 2: Debug session exception events ───────────────────────────
+    // ── Strategy 2: debugger stderr ─────────────────────────────────────────────
     const debugWatcher = vscode.debug.onDidReceiveDebugSessionCustomEvent((e) => {
       if (!this.enabled) return;
       if (e.event === "output" && e.body?.category === "stderr") {
@@ -84,7 +82,21 @@ export class TerminalWatcher {
     this.disposables.push(debugWatcher);
 
     context.subscriptions.push(...this.disposables);
-    console.log("[TerminalWatcher] Stage 2 Runtime Interceptor activated.");
+    console.log("[TerminalWatcher] Runtime interceptor activated (shell integration + debugger).");
+  }
+
+  /** Collects a command's output, without ANSI colour codes, keeping the last 8,000 characters. */
+  private async readExecution(execution: vscode.TerminalShellExecution): Promise<string> {
+    let output = "";
+    try {
+      for await (const chunk of execution.read()) {
+        output += chunk.replace(ANSI_ESCAPES, "");
+        if (output.length > 8000) output = output.slice(-8000);
+      }
+    } catch (err) {
+      console.log("[TerminalWatcher] Could not read terminal output:", err);
+    }
+    return output;
   }
 
   setEnabled(enabled: boolean): void {
@@ -113,23 +125,9 @@ export class TerminalWatcher {
       );
     }
 
-    // ── Python simple exception (no traceback header) ────────────────────────
-    const pySimple = /([A-Za-z][A-Za-z0-9_.]*(?:Error|Exception)): (.+)/.exec(text);
-    if (pySimple) {
-      // Try to extract file & line from context
-      const lineHint = /line (\d+)/.exec(text);
-      const fileHint = /"([^"]+\.py)"/.exec(text);
-      return this.triggerRuntimeError(
-        fileHint ? vscode.workspace.asRelativePath(fileHint[1]) : "python script",
-        lineHint ? parseInt(lineHint[1], 10) : 1,
-        pySimple[1],
-        `${pySimple[1]}: ${pySimple[2]}`,
-        text.slice(0, 1500)
-      );
-    }
-
     // ── JavaScript / Node / TypeScript ──────────────────────────────────────
-    const jsRegex = /([A-Za-z][A-Za-z0-9]*Error): ([^\n]+)\n\s+at [^\n]*\(?([^\s:)]+):(\d+):\d+\)?/;
+    // First stack frame: "at fn (C:\app\x.js:3:5)" or "at [eval]:1:23" or "at /srv/x.js:3:5"
+    const jsRegex = /([A-Za-z][A-Za-z0-9]*Error): ([^\n]+)\n\s+at (?:[^\n(]*\()?([^\s()]+?):(\d+):\d+\)?/;
     const jsMatch = jsRegex.exec(text);
     if (jsMatch) {
       return this.triggerRuntimeError(
@@ -150,6 +148,21 @@ export class TerminalWatcher {
         parseInt(compileMatch[2], 10),
         "CompileError",
         `Compile error: ${compileMatch[4]}`,
+        text.slice(0, 1500)
+      );
+    }
+
+    // ── Python simple exception (no traceback header) ────────────────────────
+    const pySimple = /([A-Za-z][A-Za-z0-9_.]*(?:Error|Exception)): (.+)/.exec(text);
+    if (pySimple) {
+      // Try to extract file & line from context
+      const lineHint = /line (\d+)/.exec(text);
+      const fileHint = /"([^"]+\.py)"/.exec(text);
+      return this.triggerRuntimeError(
+        fileHint ? vscode.workspace.asRelativePath(fileHint[1]) : "your program",
+        lineHint ? parseInt(lineHint[1], 10) : 1,
+        pySimple[1],
+        `${pySimple[1]}: ${pySimple[2]}`,
         text.slice(0, 1500)
       );
     }

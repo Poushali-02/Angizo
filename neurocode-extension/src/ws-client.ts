@@ -149,11 +149,9 @@ export class NeurocodeWsClient extends EventEmitter {
     error_count?: number;
     warning_count?: number;
     code_snippet?: string;
+    by_ai?: boolean;
   }): void {
-    try {
-      const vscode = require("vscode");
-      vscode.window.showInformationMessage(`[WS Client] Sending ${event.event_type} for ${event.file || "file"}`);
-    } catch (e) {}
+    // No pop-up here: a screen reader would read every debug notification aloud
     console.log(`[ws-client] Sending observer event: ${event.event_type}`);
     this.send({ type: "copilot_observer_event", ...event });
   }
