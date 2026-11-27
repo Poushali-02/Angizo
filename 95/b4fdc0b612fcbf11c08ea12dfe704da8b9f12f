@@ -1,0 +1,99 @@
+CHANGELOG.md
+  s_ef7ee9b0f2f917::t_c6d844dccafd89 5-16
+  s_ef7ee9b0f2f917::t_2282071ea8eb0c 78-80
+backend/config.py
+  s_ef7ee9b0f2f917::t_2bedca1a94904a 47
+backend/tests/test_tools.py
+  s_ef7ee9b0f2f917::t_b782a0c7f3d95f 378-421
+  s_ef7ee9b0f2f917::t_5dfd77180552f9 422-431
+  s_ef7ee9b0f2f917::t_eb2b05629023f4 432-463
+backend/tests_live/test_live_llm.py
+  s_ef7ee9b0f2f917::t_867a6077294b2a 73-74
+backend/tools/diff_intelligence.py
+  s_ef7ee9b0f2f917::t_c462e788205b0d 15
+  s_ef7ee9b0f2f917::t_8cd07d3d29a5b4 29-30
+  s_ef7ee9b0f2f917::t_d17bf1f21ef929 58-62,65-77,83-84,86
+  s_ef7ee9b0f2f917::t_fb3a747bf4d664 78-82,85,87
+  s_ef7ee9b0f2f917::t_99b7cf641c4095 199,207-209
+  s_ef7ee9b0f2f917::t_b643d2a9e0f5cc 371-385
+  s_ef7ee9b0f2f917::t_f03379d192273e 386-403
+backend/tools/gemini_llm.py
+  s_ef7ee9b0f2f917::t_732debd047e390 203-205
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "autter_version": "3.9.1",
+  "base_commit_sha": "95b4fdc0b612fcbf11c08ea12dfe704da8b9f12f",
+  "branch": "v1",
+  "prompts": {
+    "s_ef7ee9b0f2f917": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e2db2d1-cd31-4836-aebf-25b9e070f387",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:38c357819f7a01444b1c2b0bd50291d11b0b7d5f36f703eb4a27fa225b92350d",
+      "total_additions": 182,
+      "total_deletions": 33,
+      "accepted_lines": 175,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_ef7ee9b0f2f917": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e2db2d1-cd31-4836-aebf-25b9e070f387",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:38c357819f7a01444b1c2b0bd50291d11b0b7d5f36f703eb4a27fa225b92350d",
+      "stats": {
+        "total_additions": 182,
+        "total_deletions": 33,
+        "accepted_lines": 175,
+        "overriden_lines": 0,
+        "files": {
+          "CHANGELOG.md": {
+            "total_additions": 15,
+            "total_deletions": 2,
+            "accepted_lines": 15,
+            "overriden_lines": 0
+          },
+          "backend/config.py": {
+            "total_additions": 1,
+            "total_deletions": 0,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "backend/tests/test_tools.py": {
+            "total_additions": 86,
+            "total_deletions": 0,
+            "accepted_lines": 86,
+            "overriden_lines": 0
+          },
+          "backend/tests_live/test_live_llm.py": {
+            "total_additions": 2,
+            "total_deletions": 1,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/tools/diff_intelligence.py": {
+            "total_additions": 75,
+            "total_deletions": 26,
+            "accepted_lines": 68,
+            "overriden_lines": 0
+          },
+          "backend/tools/gemini_llm.py": {
+            "total_additions": 3,
+            "total_deletions": 4,
+            "accepted_lines": 3,
+            "overriden_lines": 0
+          }
+        }
+      }
+    }
+  },
+  "integrity": {"v":1,"commit":"95b4fdc0b612fcbf11c08ea12dfe704da8b9f12f","tree":"1204dd04a5c9dcb57b4822440f42b37a8a0fb838","files":{"CHANGELOG.md":"e74c5cd849b6ffffa1a941d5ed14ea1163c83a19","backend/config.py":"3c0ec335f0cc30fafedba1f068e63e0e6412e326","backend/tests/test_tools.py":"932ad9be6e4353e5b66e88867c0f624db2c2667e","backend/tests_live/test_live_llm.py":"6264b60aaf928a1475b8c0012d70f5dba5ff6bfa","backend/tools/diff_intelligence.py":"634bc265b20c636e9a45514d94f6b629019d21e8","backend/tools/gemini_llm.py":"f6ce0aae4784b97833fe413bbca52c806e130aaf"},"digest":"d36c8d74ab761d206a06563addbd1b3759faecce8fd6a676dfd1cfe040d782b8"}
+}
