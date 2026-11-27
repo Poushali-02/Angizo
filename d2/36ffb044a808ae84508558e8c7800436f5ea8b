@@ -1,0 +1,98 @@
+README.md
+  s_ef7ee9b0f2f917::t_b225ade622605f 286-313
+backend/tests/conftest.py
+  s_ef7ee9b0f2f917::t_edef3fad63fae3 37-43
+backend/tests_live/conftest.py
+  s_ef7ee9b0f2f917::t_c622d3c8f4faa1 1-13,15-37,48-65,68-76,78-130
+  s_ef7ee9b0f2f917::t_4d26e0eb86fdd1 14,38-47,66-67,77
+backend/tests_live/test_live_llm.py
+  s_ef7ee9b0f2f917::t_98db912de7c7bd 1-228
+  s_ef7ee9b0f2f917::t_10f6f784bd5a0a 229
+backend/tests_live/test_live_voice.py
+  s_ef7ee9b0f2f917::t_975dbe5781b2c1 1-143
+neurocode-extension/test/e2e/run.js
+  s_ef7ee9b0f2f917::t_3c76128bf1f1fb 86-94
+scripts/make_sandbox.py
+  s_ef7ee9b0f2f917::t_299bc967a54712 1-147
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "autter_version": "3.9.1",
+  "base_commit_sha": "d236ffb044a808ae84508558e8c7800436f5ea8b",
+  "branch": "v1",
+  "prompts": {
+    "s_ef7ee9b0f2f917": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e2db2d1-cd31-4836-aebf-25b9e070f387",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 693,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_ef7ee9b0f2f917": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7e2db2d1-cd31-4836-aebf-25b9e070f387",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "stats": {
+        "total_additions": 0,
+        "total_deletions": 0,
+        "accepted_lines": 693,
+        "overriden_lines": 0,
+        "files": {
+          "README.md": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 28,
+            "overriden_lines": 0
+          },
+          "backend/tests/conftest.py": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 7,
+            "overriden_lines": 0
+          },
+          "backend/tests_live/conftest.py": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 130,
+            "overriden_lines": 0
+          },
+          "backend/tests_live/test_live_llm.py": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 229,
+            "overriden_lines": 0
+          },
+          "backend/tests_live/test_live_voice.py": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 143,
+            "overriden_lines": 0
+          },
+          "neurocode-extension/test/e2e/run.js": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 9,
+            "overriden_lines": 0
+          },
+          "scripts/make_sandbox.py": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 147,
+            "overriden_lines": 0
+          }
+        }
+      }
+    }
+  },
+  "integrity": {"v":1,"commit":"d236ffb044a808ae84508558e8c7800436f5ea8b","tree":"d468e62c2be942c7d145366596a0c128e7467a9d","files":{"README.md":"b51d6c134498d31037f71da4472f57d5bda8e60c","backend/tests/conftest.py":"43af8e6b295d376a42c8a79ed07434c241a900cd","backend/tests_live/conftest.py":"ca59aa06849f861dde4e4f63cc8382d4af88c4b5","backend/tests_live/test_live_llm.py":"d1f7394bca8c189c11f57101369dec9d28628e07","backend/tests_live/test_live_voice.py":"9640151a77223b3e6dc6301b396ce4454d4a5c8f","neurocode-extension/test/e2e/run.js":"2c0faad194a015a08065c43f5742aba667839ed4","scripts/make_sandbox.py":"9ca8c403cdbc5ae8ddd15fff3d1b42c893cef11f"},"digest":"12f813913f927d908182a1275135bf74e356719dc16c4eba8f54a0b23b006d6d"}
+}
