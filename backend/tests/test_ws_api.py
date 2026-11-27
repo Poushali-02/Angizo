@@ -186,33 +186,59 @@ class _FakeSocket:
     ("tokens", "new command"),
 ])
 def test_spoken_confirmation_matches_whole_words(monkeypatch, heard, outcome):
-    ran = []
+    answers, commands = [], []
 
-    async def fake_run(socket, session_id):
-        ran.append(ws_module.session_states[session_id].get("confirmed"))
+    async def fake_answer(socket, session_id, yes):
+        answers.append(yes)
 
-    monkeypatch.setattr(ws_module, "run_agent_graph", fake_run)
+    async def fake_start(socket, session_id, transcript):
+        commands.append(transcript)
+
+    monkeypatch.setattr(ws_module, "answer_confirmation", fake_answer)
+    monkeypatch.setattr(ws_module, "start_command", fake_start)
     sid = "voice-test"
-    ws_module.session_states[sid] = dict(new_state("commit my changes"), confirmation_required=True)
-    socket = _FakeSocket()
+    ws_module.session_states[sid] = {"thread_id": "t", "awaiting_answer": True, "commands": 1}
 
     async def scenario():
-        await ws_module.handle_voice_transcript(socket, sid, heard)
+        await ws_module.handle_voice_transcript(_FakeSocket(), sid, heard)
         await asyncio.sleep(0.01)  # let the scheduled task run
 
     asyncio.run(scenario())
     try:
-        if outcome == "cancel":
-            assert socket.sent[-1]["status"] == "cancelled"
-            assert ran == []
-        elif outcome == "confirm":
-            assert ran == [True]
-        else:
-            # Treated as a new command: the pending commit is dropped, never confirmed
-            assert True not in ran
-            assert not any(m.get("status") == "cancelled" for m in socket.sent)
+        expected = {"confirm": ([True], []), "cancel": ([False], []), "new command": ([], [heard])}[outcome]
+        assert (answers, commands) == expected
     finally:
         ws_module.session_states.pop(sid, None)
+
+
+def test_a_yes_with_nothing_pending_does_nothing(ws, git_repo):
+    (git_repo / "auth.py").write_text("changed\n")
+    ws.send_json({"type": "confirm_response", "confirmed": True})
+
+    msg = next_result(ws)
+
+    assert msg["detail"] == "Nothing is waiting for a yes or no."
+    assert run_git(git_repo, "rev-list", "--count", "HEAD") == "1"
+
+
+def test_rejected_push_recovery_over_the_websocket(team_repos, fake_llm, fake_voice):
+    """The full loop through the real API: two spoken questions, then success."""
+    me, teammate, remote = team_repos
+    with TestClient(app) as client, client.websocket_connect("/ws/session") as socket:
+        socket.send_json({"type": "set_workspace", "workspace_path": str(me)})
+        socket.receive_json()
+        socket.send_json({"type": "text_command", "text": "push my branch"})
+        first = next_result(socket)
+        assert first["type"] == "confirmation_request" and "push branch 'main'" in first["prompt"]
+
+        socket.send_json({"type": "confirm_response", "confirmed": True})
+        second = next_result(socket)
+        assert second["type"] == "confirmation_request" and "pull them and push again" in second["prompt"]
+
+        socket.send_json({"type": "confirm_response", "confirmed": True})
+        done = next_result(socket)
+        assert done["type"] == "action_result" and done["status"] == "success"
+    assert "my work" in run_git(me, "log", "origin/main", "--format=%s")
 
 
 def test_several_errors_at_once_become_one_summary(ws):

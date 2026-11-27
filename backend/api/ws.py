@@ -14,6 +14,8 @@ Matches DESIGN.md API contract:
 """
 
 import json
+import time
+import os
 import re
 import base64
 import logging
@@ -22,6 +24,7 @@ import asyncio
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from agent.graph import agent_graph
 from agent.state import AgentState
+from langgraph.types import Command
 from tools.diff_intelligence import diff_intelligence
 from tools.sarvam_tts import sarvam_tts_client
 from tools.speech import ack_phrase, split_for_speech, ACK_PHRASES
@@ -100,35 +103,25 @@ def is_gibberish(text: str) -> bool:
 
 
 async def handle_voice_transcript(ws: WebSocket, session_id: str, transcript: str):
-    """Processes transcribed voice text, handling verbal confirmations if active."""
-    state = session_states.get(session_id)
-    if not state:
+    """A spoken yes/no answers a pending question; anything else is a new command."""
+    session = session_states.get(session_id)
+    if not session:
         return
-
     logger.info(f"[Voice] Processing transcript: '{transcript}'")
-    
-    if state.get("confirmation_required"):
+
+    if session.get("awaiting_answer"):
         # Match whole words: a substring check heard "ok" in "look" and confirmed a commit.
         words = set(re.findall(r"[a-z]+", transcript.lower()))
         # Cancel wins when both appear ("no, don't confirm"), since it is the safe choice.
         if words & {"no", "cancel", "deny", "stop", "don"}:
             logger.info("[Voice] Verbal cancellation detected.")
-            state["confirmed"] = False
-            state["confirmation_required"] = False
-            state["env_confirmations_received"] = 0
-            await ws.send_json({
-                "type": "action_result",
-                "status": "cancelled",
-                "detail": "Action cancelled by user."
-            })
+            asyncio.create_task(answer_confirmation(ws, session_id, False))
             return
-        elif words & {"yes", "confirm", "proceed", "ok", "okay", "permit"}:
+        if words & {"yes", "confirm", "proceed", "ok", "okay", "permit"}:
             logger.info("[Voice] Verbal confirmation detected.")
-            state["confirmed"] = True
-            asyncio.create_task(run_agent_graph(ws, session_id))
+            asyncio.create_task(answer_confirmation(ws, session_id, True))
             return
 
-    # Not in confirmation or not a confirmation keyword; treat as new text command
     if "\x00" in transcript or is_gibberish(transcript):
         logger.warning(f"[WS Voice] Rejecting invalid/irrelevant voice transcript: {transcript}")
         await ws.send_json({
@@ -138,11 +131,7 @@ async def handle_voice_transcript(ws: WebSocket, session_id: str, transcript: st
         })
         return
 
-    state["transcript"] = transcript
-    state["confirmation_required"] = False
-    state["confirmed"] = False
-    state["env_confirmations_received"] = 0
-    asyncio.create_task(run_agent_graph(ws, session_id))
+    asyncio.create_task(start_command(ws, session_id, transcript))
 
 
 # In-memory session state for the hackathon (Step 2)
@@ -155,6 +144,26 @@ session_audio_buffers = {}
 # Per-session active workspace paths set by client
 session_workspaces = {}
 
+def _log_speech(audio_b64: str, text: str) -> None:
+    """
+    With ANGIZO_SPEECH_LOG=<folder>, save every clip sent to the panel with the time it was
+    sent (scripts/record_demo.py builds a demo video's soundtrack from these). Off by default.
+    """
+    folder = os.environ.get("ANGIZO_SPEECH_LOG")
+    if not folder or not audio_b64:
+        return
+    try:
+        os.makedirs(folder, exist_ok=True)
+        stamp = time.time()
+        name = f"{int(stamp * 1000)}-{len(os.listdir(folder))}.wav"
+        with open(os.path.join(folder, name), "wb") as f:
+            f.write(base64.b64decode(audio_b64))
+        with open(os.path.join(folder, "index.jsonl"), "a", encoding="utf-8") as f:
+            f.write(json.dumps({"t": stamp, "file": name, "text": text}) + "\n")
+    except Exception as e:  # logging must never break speech
+        logger.warning(f"[SpeechLog] Could not save clip: {e}")
+
+
 async def send_ack(ws: WebSocket, phrase: str):
     """
     Say something the moment a command arrives, before any LLM call. The phrases are cached
@@ -163,6 +172,7 @@ async def send_ack(ws: WebSocket, phrase: str):
     """
     audio = sarvam_tts_client.cached(phrase)
     await ws.send_json({"type": "ack", "text": phrase, "audio_base64": audio})
+    _log_speech(audio, phrase)
     if not audio:
         asyncio.create_task(sarvam_tts_client.generate_filler_audio_base64(phrase))
 
@@ -177,6 +187,7 @@ async def send_spoken(ws: WebSocket, message: dict, text: str):
     rest_task = asyncio.create_task(sarvam_tts_client.generate_filler_audio_base64(rest)) if rest else None
     first_audio = await sarvam_tts_client.generate_filler_audio_base64(first) if first else ""
     await ws.send_json({**message, "audio_base64": first_audio, "spoken_text": first})
+    _log_speech(first_audio, first)
     if rest_task:
         rest_audio = await rest_task
         await ws.send_json({
@@ -185,87 +196,101 @@ async def send_spoken(ws: WebSocket, message: dict, text: str):
             "narration": rest,
             "audio_base64": rest_audio,
         })
+        _log_speech(rest_audio, rest)
 
 
-async def run_agent_graph(ws: WebSocket, session_id: str):
-    """Runs the LangGraph agent and handles messaging with the client."""
-    state = session_states.get(session_id)
-    if not state:
-        return
+def _new_session() -> dict:
+    # Each command runs in its own checkpointed thread, so no state leaks between commands.
+    return {"thread_id": None, "awaiting_answer": False, "commands": 0}
 
-    # Set the workspace path for this session in git_tool
+
+def _forget_thread(thread_id):
+    """Drop a finished or abandoned run from the in-memory checkpointer."""
+    if thread_id:
+        try:
+            agent_graph.checkpointer.delete_thread(thread_id)
+        except Exception:
+            pass
+
+
+def _bind_workspace(session_id):
     workspace_path = session_workspaces.get(session_id)
     if workspace_path:
         import tools.git_tool as git_tool
         git_tool._set_repo_path(workspace_path)
 
-    # Check if we are resuming from a confirmation
-    if state.get("confirmation_required") and state.get("confirmed"):
-        logger.info("[WS] Resuming agent after confirmation.")
+
+async def start_command(ws: WebSocket, session_id, transcript: str):
+    """Run a new command from the start of the graph (a pending question is dropped)."""
+    session = session_states.setdefault(session_id, _new_session())
+    _forget_thread(session.get("thread_id"))
+    session["commands"] += 1
+    session["thread_id"] = f"{session_id}-{session['commands']}"
+    session["awaiting_answer"] = False
+    _bind_workspace(session_id)
+    await send_ack(ws, ack_phrase(transcript))
+    logger.info(f"[WS] Invoking agent graph for transcript: '{transcript}'")
+    await _drive_graph(ws, session_id, {
+        "transcript": transcript,
+        "context": {},
+        "confirmation_required": False,
+        "confirmed": False,
+        "cancelled": False,
+        "env_confirmations_received": 0,
+        "attempts": 0,
+        "verification_status": "pending",
+    })
+
+
+async def answer_confirmation(ws: WebSocket, session_id, yes: bool):
+    """Resume the paused graph with the user's answer (Alt+Y / Alt+N or a spoken yes/no)."""
+    session = session_states.get(session_id)
+    if not session or not session.get("awaiting_answer"):
+        await ws.send_json({"type": "action_result", "status": "skipped",
+                            "detail": "Nothing is waiting for a yes or no."})
+        return
+    session["awaiting_answer"] = False
+    if yes:
         await send_ack(ws, ACK_PHRASES["confirm"])
+    _bind_workspace(session_id)
+    logger.info(f"[WS] Resuming the graph with answer: {'yes' if yes else 'no'}")
+    await _drive_graph(ws, session_id, Command(resume=yes))
 
-        transcript = state.get("transcript", "")
-        if ".env" in transcript.lower() or "dotenv" in transcript.lower():
-            # We have the user's confirmation! Regenerate actual reasoning from RAG context
-            from tools.gemini_llm import gemini_llm
-            ctx = state.get("context", {})
-            git_status = ctx.get("git_status", {})
-            diff_text = ctx.get("diff_text", "")
-            rag_context = ctx.get("rag_context", "")
-            git_combined_info = f"Git Status: {git_status}\n\nWorking Tree Git Diff:\n{diff_text[:3000]}"
-            logger.info("[WS] Generating actual reasoning for .env access...")
-            reasoning = await gemini_llm.generate_reasoning(transcript, rag_context=rag_context, git_info=git_combined_info)
-            state["reasoning"] = reasoning
 
-        from agent.nodes import execute_action, verify_action, narrate_response
-        result = await execute_action(state)
-        state.update(result)
-        result = verify_action(state)
-        state.update(result)
-        result = await narrate_response(state)
-        state.update(result)
+async def _drive_graph(ws: WebSocket, session_id, graph_input):
+    """
+    Run the graph until it finishes or pauses at confirm's interrupt(). A pause sends a
+    confirmation_request (it can happen twice: again after verify -> recover -> confirm).
+    """
+    session = session_states[session_id]
+    config = {"configurable": {"thread_id": session["thread_id"]}}
+    try:
+        result = await agent_graph.ainvoke(graph_input, config)
+    except Exception as e:
+        logger.error(f"[WS] Graph execution failed: {e}")
+        _forget_thread(session["thread_id"])
+        await ws.send_json({"type": "action_result", "status": "failure", "detail": str(e)})
+        return
 
-        # Reset confirmation state
-        state["confirmation_required"] = False
-        state["confirmed"] = False
-        state["env_confirmations_received"] = 0
-        
-        narration = state.get("narration", "")
+    interrupts = result.get("__interrupt__") or []
+    if interrupts:
+        question = interrupts[0].value or {}
+        prompt = question.get("prompt") or "Continue?"
+        session["awaiting_answer"] = True
+        logger.info("[WS] Agent paused for confirmation.")
         await send_spoken(
-            ws,
-            {"type": "action_result", "status": state.get("verification_status", "success"), "detail": narration},
-            narration,
+            ws, {"type": "confirmation_request", "prompt": prompt, "risk_band": question.get("risk_band")}, prompt
         )
         return
 
-    await send_ack(ws, ack_phrase(state.get("transcript", "")))
-
-    # Otherwise, it's a new command. Run the graph from the start.
-    logger.info(f"[WS] Invoking agent graph for transcript: '{state['transcript']}'")
-    try:
-        final_state = await agent_graph.ainvoke(state)
-        session_states[session_id] = final_state
-
-        if final_state.get("confirmation_required") and not final_state.get("confirmed"):
-            logger.info("[WS] Agent paused for confirmation.")
-            prompt = final_state.get("confirmation_message") or "Continue?"
-            await send_spoken(ws, {"type": "confirmation_request", "prompt": prompt}, prompt)
-        else:
-            logger.info("[WS] Agent completed run.")
-            narration = final_state.get("narration", "")
-            await send_spoken(
-                ws,
-                {"type": "action_result", "status": final_state.get("verification_status", "success"), "detail": narration},
-                narration,
-            )
-
-    except Exception as e:
-        logger.error(f"[WS] Graph execution failed: {e}")
-        await ws.send_json({
-            "type": "action_result",
-            "status": "failure",
-            "detail": str(e)
-        })
+    logger.info("[WS] Agent completed run.")
+    _forget_thread(session["thread_id"])
+    narration = result.get("narration", "")
+    await send_spoken(
+        ws,
+        {"type": "action_result", "status": result.get("verification_status", "success"), "detail": narration},
+        narration,
+    )
 
 
 # Active backend recording tasks per session
@@ -364,6 +389,7 @@ async def handle_observer_event(ws: WebSocket, session_id: int, msg: dict):
         audio_b64 = await sarvam_tts_client.generate_filler_audio_base64(narration)
 
         # Send to webview UI
+        _log_speech(audio_b64, narration)
         if audio_b64:
             await ws.send_json({
                 "type": "audio_narration",
@@ -408,6 +434,7 @@ async def handle_manual_observer_event(ws: WebSocket, session_id: int, msg: dict
         # Convert to audio via Sarvam TTS
         audio_b64 = await sarvam_tts_client.generate_filler_audio_base64(narration)
 
+        _log_speech(audio_b64, narration)
         if audio_b64:
             await ws.send_json({
                 "type": "audio_narration",
@@ -430,19 +457,7 @@ async def handle_manual_observer_event(ws: WebSocket, session_id: int, msg: dict
 async def ws_session(ws: WebSocket):
     await ws.accept()
     session_id = id(ws)
-    session_states[session_id] = {
-        "transcript": "",
-        "intent": None,
-        "plan_data": None,
-        "context": {},
-        "reasoning": None,
-        "confirmation_required": False,
-        "confirmed": False,
-        "action_result": None,
-        "verification_status": "pending",
-        "narration": None,
-        "earcon": None
-    }
+    session_states[session_id] = _new_session()
     session_audio_buffers[session_id] = bytearray()
     
     logger.info(f"WebSocket client connected (session: {session_id})")
@@ -518,34 +533,13 @@ async def ws_session(ws: WebSocket):
                     })
                     continue
 
-                # Update state and run agent
-                session_states[session_id]["transcript"] = text
-                session_states[session_id]["env_confirmations_received"] = 0
-                # Reset previous command state
-                session_states[session_id]["confirmation_required"] = False
-                session_states[session_id]["confirmed"] = False
-
-                # Run graph in background task so we don't block the websocket receive loop
-                asyncio.create_task(run_agent_graph(ws, session_id))
+                # Run in a background task so the receive loop stays free (e.g. for Alt+N)
+                asyncio.create_task(start_command(ws, session_id, text))
 
             elif msg_type == "confirm_response":
-                confirmed = msg.get("confirmed", False)
+                confirmed = bool(msg.get("confirmed", False))
                 logger.info(f"confirm_response received: {confirmed}")
-                
-                session_states[session_id]["confirmed"] = confirmed
-                
-                if not confirmed:
-                    # Cancelled by user
-                    session_states[session_id]["confirmation_required"] = False
-                    session_states[session_id]["env_confirmations_received"] = 0
-                    await ws.send_json({
-                        "type": "action_result",
-                        "status": "cancelled",
-                        "detail": "Action cancelled by user."
-                    })
-                else:
-                    # Resume graph
-                    asyncio.create_task(run_agent_graph(ws, session_id))
+                asyncio.create_task(answer_confirmation(ws, session_id, confirmed))
 
             elif msg_type == "interrupt":
                 logger.info("interrupt received")
@@ -564,7 +558,7 @@ async def ws_session(ws: WebSocket):
         if session_id in active_mic_tasks:
             active_mic_tasks[session_id]["recording"] = False
         active_mic_tasks.pop(session_id, None)
-        session_states.pop(session_id, None)
+        _forget_thread((session_states.pop(session_id, None) or {}).get("thread_id"))
         session_audio_buffers.pop(session_id, None)
         session_workspaces.pop(session_id, None)
 

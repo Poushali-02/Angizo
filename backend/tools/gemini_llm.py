@@ -12,6 +12,7 @@ import re
 import logging
 import httpx
 import config
+from agent.plan_schema import parse_plan
 from tools.diff_intelligence import diff_intelligence, _clean_spoken
 
 logger = logging.getLogger("neurocode.gemini_llm")
@@ -50,9 +51,12 @@ class GeminiLLM:
                                 response_text = parts[0].get("text", "").strip()
                                 logger.info("[GeminiLLM] Response generated via Gemini API")
                                 return response_text
-                    elif res.status_code in (400, 401, 403) and "API key" in res.text:
-                        # A rejected key won't start working mid-session: stop paying the round trip
-                        logger.warning(f"[GeminiLLM] API key rejected ({res.status_code}). Using Groq only until restart.")
+                    elif (res.status_code in (400, 401, 403) and "API key" in res.text) or res.status_code == 404:
+                        # A rejected key or a retired model won't start working mid-session:
+                        # stop paying the round trip on every call
+                        logger.warning(f"[GeminiLLM] Gemini unavailable ({res.status_code}: "
+                                       f"{'model not found' if res.status_code == 404 else 'key rejected'}). "
+                                       "Using Groq only until restart.")
                         self.api_key = ""
                     else:
                         logger.warning(f"[GeminiLLM] API error {res.status_code}: {res.text}. Falling back to Groq.")
@@ -88,8 +92,8 @@ Available Atomic Tools:
 - get_git_diff: Get working tree git diff for modified files.
 - commit_changes: Stage and commit changes (args: {{"message": "conventional commit msg"}}, optional: leave it out and the system drafts one from the diff).
 - push_to_remote: Push commits to remote origin (args: {{"branch": "branch_name"}}).
-- pull_from_remote: Fetch and pull remote changes (args: {{"branch": "branch_name"}}).
-- query_codebase_rag: Search codebase files to answer user questions (args: {{"query": "search text"}}).
+- pull_from_remote: Bring in commits from the remote: teammates' or other people's latest work (args: {{"branch": "branch_name"}}).
+- query_codebase_rag: Search THIS project's code to answer questions about how the code works (args: {{"query": "search text"}}).
 
 User Command: "{transcript}"
 
@@ -114,17 +118,24 @@ Return JSON ONLY in this format:
   "risk_band": "safe" | "caution" | "high-risk"
 }}
 """
+        # Structured output: the plan must match agent/plan_schema.Plan. If it does not, the LLM
+        # gets one retry with the validation error; after that the keyword rules take over.
         response = await self.generate(prompt)
-        try:
-            clean_json = response.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-            data = json.loads(clean_json)
-            # An empty plan falls through to the rule-based planner below
-            if isinstance(data.get("tool_calls"), list) and data["tool_calls"]:
-                return guard_plan(transcript, data)
-        except Exception:
-            pass
+        plan, error = parse_plan(response)
+        source = "llm"
+        if plan is None:
+            logger.warning(f"[Planner] Invalid plan ({error}); asking the LLM to fix it")
+            retry_prompt = (
+                f"{prompt}\nYour previous answer was rejected: {error}.\n"
+                "Answer again with ONLY the JSON object, using only the tools and arguments listed above."
+            )
+            plan, error = parse_plan(await self.generate(retry_prompt))
+            source = "llm_retry"
+        if plan is not None:
+            return guard_plan(transcript, {**plan.model_dump(), "source": source})
 
-        return guard_plan(transcript, self._rule_plan(transcript))
+        logger.warning(f"[Planner] Still invalid after a retry ({error}); using the keyword rules")
+        return guard_plan(transcript, {**self._rule_plan(transcript), "source": "rules", "schema_error": error})
 
     @staticmethod
     def _rule_plan(transcript: str) -> dict:
@@ -264,6 +275,7 @@ def _fast(text: str, tools: list) -> dict:
         "requires_confirm": any(t in _ACTION_WORDS for t in tools),
         "risk_band": "caution" if "push_to_remote" in tools else "safe",
         "fast_path": True,
+        "source": "fast_path",
     }
 
 
@@ -273,7 +285,8 @@ def _fast(text: str, tools: list) -> dict:
 _ACTION_WORDS = {
     "commit_changes": ("commit", "save"),
     "push_to_remote": ("push", "publish", "upload"),
-    "pull_from_remote": ("pull", "sync", "fetch", "update from", "get the latest", "latest changes"),
+    "pull_from_remote": ("pull", "sync", "fetch", "update from", "get the latest", "latest changes",
+                         "latest work", "teammates' work", "teammate's work", "bring in", "other people's work"),
 }
 _NEGATIONS = ("don't", "dont", "do not", "never", "without", "no need to", "instead of", "not yet")
 _QUESTION_STARTS = ("what would", "what happens", "what if", "is it safe", "should i", "can i safely",

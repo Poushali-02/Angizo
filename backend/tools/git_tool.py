@@ -116,67 +116,74 @@ def commit(message: str, files: list = None) -> dict:
     except Exception as e:
         return {"status": "failure", "detail": str(e)}
 
+def _safe_branch(branch: str) -> bool:
+    """A plain branch name: no refspec tricks ("+main" force-pushes, "a:b" pushes elsewhere)."""
+    return (
+        bool(branch)
+        and not branch.startswith(("-", "+", "."))
+        and ":" not in branch
+        and ".." not in branch
+        and all(c.isalnum() or c in "._/-" for c in branch)
+    )
+
+
 def push(branch: str) -> dict:
-    """Runs git push origin <branch>. Raises on conflict/rejection."""
+    """git push origin <branch>. Never forces; a rejection comes back as a failure with git's reason."""
     repo = _get_repo()
     if not repo:
         return {"status": "failure", "detail": "Not a git repository"}
-
+    if not _safe_branch(branch):
+        return {"status": "failure", "detail": f"Refused to push unsafe branch name {branch!r}"}
     try:
-        remote = repo.remote(name='origin')
-        push_info = remote.push(branch)
-        
-        # Check if push failed
-        for info in push_info:
-            if info.flags & git.remote.PushInfo.ERROR:
-                return {"status": "failure", "detail": info.summary}
-                
-        return {"status": "success"}
+        repo.git.push("origin", branch)
+        return {"status": "success", "branch": branch}
+    except git.GitCommandError as e:
+        return {"status": "failure", "detail": (e.stderr or str(e)).strip()}
     except Exception as e:
         return {"status": "failure", "detail": str(e)}
+
 
 def pull(branch: str = None) -> dict:
     """
-    Executes git fetch + git pull origin <branch>.
-    Extracts incoming commit messages and diff summaries for accessibility narration.
+    git pull --no-rebase origin <branch>: merges the remote's commits, never rewrites history.
+    On a merge conflict the merge is aborted, so the working tree is left exactly as it was,
+    and the failure names the conflicting files.
     """
     repo = _get_repo()
     if not repo:
         return {"status": "failure", "detail": "Not a git repository"}
 
+    current_branch = branch or (repo.active_branch.name if not repo.head.is_detached else "main")
+    if not _safe_branch(current_branch):
+        return {"status": "failure", "detail": f"Refused to pull unsafe branch name {current_branch!r}"}
     try:
-        current_branch = branch or (repo.active_branch.name if not repo.head.is_detached else "main")
-        
-        # 1. Fetch remote changes and compute incoming diff/commit log before pull
-        try:
-            repo.git.fetch()
-        except Exception:
-            pass
-
-        incoming_diff = ""
-        try:
-            incoming_diff = repo.git.diff(f"HEAD..origin/{current_branch}")
-        except Exception:
-            pass
-
-        # 2. Execute git pull
-        remote = repo.remote(name='origin')
-        pull_info = remote.pull(current_branch)
-        
-        # 3. Extract incoming commit messages
-        incoming_commits = []
-        try:
-            incoming_commits = [c.message.strip() for c in repo.iter_commits("ORIG_HEAD..HEAD")]
-        except Exception:
-            pass
-
-        return {
-            "status": "success",
-            "branch": current_branch,
-            "incoming_diff": incoming_diff[:2500],
-            "incoming_commits": incoming_commits[:5],
-            "detail": f"Successfully pulled latest changes from origin/{current_branch}."
-        }
+        before = repo.head.commit.hexsha
+    except ValueError:
+        before = None
+    try:
+        repo.git.pull("--no-rebase", "--no-edit", "origin", current_branch)
+    except git.GitCommandError as e:
+        message = "\n".join(part for part in (e.stdout, e.stderr) if part).strip() or str(e)
+        conflicted = [f for f in repo.git.diff("--name-only", "--diff-filter=U").split() if f]
+        if conflicted or "CONFLICT" in message:
+            try:
+                repo.git.merge("--abort")
+            except git.GitCommandError:
+                pass
+            files = ", ".join(conflicted) or "some files"
+            return {"status": "failure", "detail": f"Merge conflict in {files}; the merge was aborted."}
+        logger.error(f"[git_tool] Failed to pull: {message}")
+        return {"status": "failure", "detail": message}
     except Exception as e:
         logger.error(f"[git_tool] Failed to pull: {e}")
         return {"status": "failure", "detail": str(e)}
+
+    incoming = []
+    if before:
+        incoming = [c.message.strip() for c in repo.iter_commits(f"{before}..HEAD")][:5]
+    return {
+        "status": "success",
+        "branch": current_branch,
+        "incoming_commits": incoming,
+        "detail": f"Pulled {len(incoming)} new commit(s) from origin/{current_branch}.",
+    }

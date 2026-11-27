@@ -10,6 +10,8 @@ Gemini AI Integration for Diff Intelligence & Intent Classification:
 """
 
 import asyncio
+import time
+from collections import deque
 import logging
 import json
 import re
@@ -30,6 +32,9 @@ class DiffIntelligence:
         self.fallback_model = getattr(config, "GROQ_FALLBACK_MODEL", "openai/gpt-oss-20b")
         # Persistent HTTP client — reused across requests to avoid TCP/TLS handshake overhead
         self._client: httpx.AsyncClient | None = None
+        # The last 500 calls: model, HTTP status, seconds, tokens, whether it was a fallback.
+        # Read by evals/measure.py; cheap enough to keep in production for debugging.
+        self.calls: deque = deque(maxlen=500)
 
     def _get_client(self) -> httpx.AsyncClient:
         """
@@ -75,7 +80,17 @@ class DiffIntelligence:
                 if "gpt-oss" in model:
                     # Short spoken answers need little reasoning: about half the tokens and latency
                     payload["reasoning_effort"] = "low"
+                started = time.perf_counter()
                 res = await client.post(self.endpoint, json=payload, headers=headers)
+                usage = res.json().get("usage", {}) if res.status_code == 200 else {}
+                self.calls.append({
+                    "model": model,
+                    "status": res.status_code,
+                    "seconds": round(time.perf_counter() - started, 3),
+                    "prompt_tokens": usage.get("prompt_tokens", 0),
+                    "completion_tokens": usage.get("completion_tokens", 0),
+                    "fallback": attempt > 0,
+                })
                 if res.status_code == 200:
                     choices = res.json().get("choices", [])
                     return choices[0].get("message", {}).get("content", "").strip() if choices else ""

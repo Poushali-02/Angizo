@@ -67,6 +67,60 @@ def git_repo(tmp_path, monkeypatch):
     return repo
 
 
+def _configure(repo, hooks):
+    run_git(repo, "config", "user.name", "Angizo Test")
+    run_git(repo, "config", "user.email", "test@example.com")
+    run_git(repo, "config", "core.hooksPath", str(hooks))
+    run_git(repo, "config", "core.autocrlf", "false")
+
+
+def _team(tmp_path, monkeypatch, teammate_edits_auth: bool):
+    """
+    A shared bare "origin", my clone and a teammate's clone. The teammate pushes first, and I
+    have a local commit of my own, so my next push is rejected (origin is ahead). With
+    teammate_edits_auth both of us changed the same line of auth.py: pulling conflicts.
+    """
+    hooks = tmp_path / "no-hooks"
+    hooks.mkdir()
+    remote = tmp_path / "origin.git"
+    run_git(tmp_path, "init", "-q", "--bare", "-b", "main", str(remote))
+    seed = tmp_path / "seed"
+    run_git(tmp_path, "clone", "-q", str(remote), str(seed))
+    _configure(seed, hooks)
+    (seed / "auth.py").write_text("def login(user, password):\n    return check(user, password)\n")
+    run_git(seed, "add", ".")
+    run_git(seed, "commit", "-q", "-m", "init")
+    run_git(seed, "push", "-q", "origin", "main")
+
+    me, teammate = tmp_path / "me", tmp_path / "teammate"
+    for clone in (me, teammate):
+        run_git(tmp_path, "clone", "-q", str(remote), str(clone))
+        _configure(clone, hooks)
+
+    if teammate_edits_auth:
+        (teammate / "auth.py").write_text("def login(user, password):\n    return check_v2(user, password)\n")
+    else:
+        (teammate / "notes.md").write_text("teammate notes\n")
+    run_git(teammate, "add", ".")
+    run_git(teammate, "commit", "-q", "-m", "teammate work")
+    run_git(teammate, "push", "-q", "origin", "main")
+
+    (me / "auth.py").write_text("def login(user, password):\n    return check_strict(user, password)\n")
+    run_git(me, "commit", "-q", "-am", "my work")
+    monkeypatch.setattr(git_tool, "_session_repo_path", str(me))
+    return me, teammate, remote
+
+
+@pytest.fixture
+def team_repos(tmp_path, monkeypatch):
+    return _team(tmp_path, monkeypatch, teammate_edits_auth=False)
+
+
+@pytest.fixture
+def team_repos_conflict(tmp_path, monkeypatch):
+    return _team(tmp_path, monkeypatch, teammate_edits_auth=True)
+
+
 class FakeLLM:
     """
     Stands in for Groq (and Gemini, which falls back to Groq when it has no key).
@@ -85,6 +139,9 @@ class FakeLLM:
     async def __call__(self, prompt: str) -> str:
         self.prompts.append(prompt)
         if "AI Planner" in prompt:
+            if isinstance(self.plan, list):  # one reply per planner call, in order
+                reply = self.plan.pop(0) if self.plan else ""
+                return reply if isinstance(reply, str) else json.dumps(reply)
             if self.plan is not None:
                 return self.plan if isinstance(self.plan, str) else json.dumps(self.plan)
             command = re.search(r'User Command: "(.*)"', prompt).group(1).lower()

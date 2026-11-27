@@ -461,3 +461,69 @@ def test_without_a_fallback_model_it_waits_and_retries_the_same_model(monkeypatc
 
     assert asyncio.run(diff_intelligence._call_groq("hi")) == "same model"
     assert json.loads(calls[0].content)["model"] == json.loads(calls[1].content)["model"]
+
+
+# ── Structured output: the plan schema ───────────────────────────────────────
+
+from agent.plan_schema import parse_plan  # noqa: E402
+
+
+@pytest.mark.parametrize("raw, tools", [
+    ('{"tool_calls": [{"tool": "commit_changes", "args": {"message": "fix: login"}}]}', ["commit_changes"]),
+    ('```json\n{"tool_calls": [{"tool": "get_git_diff"}]}\n```', ["get_git_diff"]),
+    ('Sure! {"tool_calls": [{"tool": "get_git_status"}]} Hope that helps.', ["get_git_status"]),
+    ('{"tool_calls": [{"tool": "push_to_remote", "args": {"branch": "feature/login-v2"}}], "risk_band": "Caution"}',
+     ["push_to_remote"]),
+])
+def test_valid_plans_are_accepted(raw, tools):
+    plan, error = parse_plan(raw)
+    assert error == "" and [c.tool for c in plan.tool_calls] == tools
+
+
+@pytest.mark.parametrize("raw, reason", [
+    ('{"tool_calls": [{"tool": "rm_rf"}]}', "got 'rm_rf'"),
+    ('{"tool_calls": [{"tool": "push_to_remote", "args": {"branch": "+main"}}]}', "unsafe branch name '+main'"),
+    ('{"tool_calls": [{"tool": "push_to_remote", "args": {"branch": "main:production"}}]}', "unsafe branch name"),
+    ('{"tool_calls": [{"tool": "push_to_remote", "args": {"branch": "--force"}}]}', "unsafe branch name"),
+    ('{"tool_calls": [{"tool": "get_git_status", "args": {"path": "/"}}]}', "does not take ['path']"),
+    (json.dumps({"tool_calls": [{"tool": "commit_changes", "args": {"message": "line one" + chr(10) + "line two"}}]}),
+     "one line"),
+    ('{"tool_calls": []}', "at least 1 item"),
+    ('{"tool_calls": [{"tool": "get_git_diff"}, {"tool": "get_git_diff"}, {"tool": "get_git_diff"},'
+     ' {"tool": "get_git_diff"}, {"tool": "get_git_diff"}]}', "at most 4 items"),
+    ("I would commit that.", "did not contain a JSON object"),
+    ('{"tool_calls": [', "did not contain a JSON object"),
+    ("", "empty"),
+])
+def test_invalid_plans_are_rejected_with_a_reason(raw, reason):
+    plan, error = parse_plan(raw)
+    assert plan is None and reason in error
+
+
+def test_push_refuses_unsafe_branch_names_itself(git_repo):
+    """Defence in depth: even a plan that skipped validation cannot force-push."""
+    import tools.git_tool as git_tool
+    assert git_tool.push("+main")["detail"].startswith("Refused to push unsafe branch name")
+    assert git_tool.pull("main:other")["detail"].startswith("Refused to pull unsafe branch name")
+
+
+@pytest.mark.parametrize("command, kept", [
+    ("get my teammates' latest work", True),
+    ("bring in the new commits", True),
+    ("what did my teammate change?", False),
+    ("what is the latest commit message", False),
+    ("don't bring in anything", False),
+])
+def test_guard_understands_ways_of_asking_to_pull(command, kept):
+    plan = guard_plan(command, _plan("pull_from_remote"))
+    assert ("pull_from_remote" in _tools(plan)) is kept
+
+
+def test_retired_gemini_model_is_dropped_too(monkeypatch, fake_llm):
+    calls = mock_httpx(monkeypatch, gemini_module, lambda req: httpx.Response(
+        404, json={"error": {"message": "This model models/gemini-2.0-flash is no longer available."}}))
+    llm = GeminiLLM()
+    llm.api_key = "some-key"
+    asyncio.run(llm.generate("a"))
+    asyncio.run(llm.generate("b"))
+    assert len(calls) == 1 and llm.api_key == ""

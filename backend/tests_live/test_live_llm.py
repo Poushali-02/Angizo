@@ -90,22 +90,23 @@ def _state(transcript):
     }
 
 
+_thread_ids = iter(range(10**6))
+
+
 def _run(transcript):
+    """Start a command; if it pauses at confirm's interrupt(), the result keeps its thread to resume."""
     from agent.graph import agent_graph
-    return asyncio.run(agent_graph.ainvoke(_state(transcript)))
+    config = {"configurable": {"thread_id": f"live-{next(_thread_ids)}"}}
+    result = asyncio.run(agent_graph.ainvoke(dict(_state(transcript), attempts=0, cancelled=False), config))
+    return {**result, "_config": config}
 
 
-def _confirm(state):
-    from agent.nodes import execute_action, narrate_response, verify_action
-    state = dict(state, confirmed=True)
-
-    async def go():
-        state.update(await execute_action(state))
-        state.update(verify_action(state))
-        state.update(await narrate_response(state))
-        return state
-
-    return asyncio.run(go())
+def _confirm(paused):
+    """Answer "yes" to the pending question, exactly as api/ws.py does: Command(resume=True)."""
+    from langgraph.types import Command
+    from agent.graph import agent_graph
+    result = asyncio.run(agent_graph.ainvoke(Command(resume=True), paused["_config"]))
+    return {**result, "_config": paused["_config"]}
 
 
 def _edit_auth(repo):

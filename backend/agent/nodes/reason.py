@@ -38,6 +38,7 @@ async def reason_plan(state: AgentState) -> AgentState:
                 "reasoning": reasoning,
                 "confirmation_required": True,
                 "confirmation_message": reasoning,
+                "pending_gate": "env",
                 "context": {**ctx, "risk_band": "high-risk"},
                 "plan_data": plan_data
             }
@@ -90,6 +91,7 @@ async def reason_plan(state: AgentState) -> AgentState:
         "reasoning": reasoning,
         "confirmation_required": confirmation_required,
         "confirmation_message": f"{reasoning}" if confirmation_required else None,
+        "pending_gate": "action" if confirmation_required else None,
         "context": {**ctx, "risk_band": risk_band},
         "plan_data": plan_data
     }
