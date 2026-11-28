@@ -126,8 +126,9 @@
 
   if (micBtn) {
     micBtn.disabled = false;
-    micBtn.title = 'Toggle Voice Input (Backend OS Mic)';
     micBtn.addEventListener('click', () => {
+      // Same as Ctrl+Alt+Space: cut off any speech, then start or stop listening
+      AudioQueue.stop();
       vscode.postMessage({ type: 'toggle_backend_mic' });
     });
   }
@@ -478,7 +479,7 @@
           playEarcon('mic_on');
           if (micBtn) {
             micBtn.classList.add('recording');
-            micBtn.innerHTML = '🛑';
+            micBtn.setAttribute('aria-pressed', 'true');
           }
           if (statusEl) {
             statusEl.textContent = 'Listening…';
@@ -500,7 +501,7 @@
           catTranscribing = false;
           if (micBtn) {
             micBtn.classList.remove('recording');
-            micBtn.innerHTML = '🎙️';
+            micBtn.setAttribute('aria-pressed', 'false');
           }
           if (statusEl) {
             statusEl.textContent = 'microphone off';
@@ -595,7 +596,7 @@
       isCapturing = true;
       if (micBtn) {
         micBtn.classList.add('recording');
-        micBtn.innerHTML = '🛑';
+        micBtn.setAttribute('aria-pressed', 'true');
       }
       if (statusEl) {
         statusEl.textContent = 'Listening…';
@@ -607,7 +608,7 @@
       isCapturing = false;
       if (micBtn) {
         micBtn.classList.remove('recording');
-        micBtn.innerHTML = '🎙️';
+        micBtn.setAttribute('aria-pressed', 'false');
         micBtn.title = 'Microphone error: ' + err.message;
       }
       if (statusEl) {
@@ -633,7 +634,7 @@
     isCapturing = false;
     if (micBtn) {
       micBtn.classList.remove('recording');
-      micBtn.innerHTML = '🎙️';
+      micBtn.setAttribute('aria-pressed', 'false');
     }
     if (statusEl) {
       statusEl.textContent = 'microphone off';

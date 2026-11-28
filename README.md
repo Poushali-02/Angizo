@@ -1,4 +1,6 @@
-# 🧠 Angizo — AI Accessibility Agent for Developers
+<p align="center"><img src="angizo-extension/media/logo.svg" width="120" alt="Angizo logo: a grey cat wearing headphones"></p>
+
+# Angizo — AI Accessibility Agent for Developers
 
 > **Empowering Blind and Low-Vision Software Developers through Voice-Driven Git Workflows, Real-Time Copilot Observer Streams, and Intellisense Error Interceptors.**
 
@@ -110,7 +112,7 @@ Angizo exposes native VS Code commands and accessible keyboard shortcuts:
 | **Start Voice Input** | `angizo.startVoiceInput` | *Palette* | Shows the panel without taking focus and starts listening. |
 | **Stop Voice Input** | `angizo.stopVoiceInput` | *Palette* | Stops the microphone. |
 
-The panel lives in the right (secondary) sidebar, not in an editor tab. It never opens or takes focus by itself. A cat at the top shows what Angizo is doing: asleep (idle), ears up (listening), tail swishing (thinking), mouth moving (talking), paw raised (waiting for your yes) and fur up (something failed). The cat is hidden from screen readers; every state is also spoken or played as a sound.
+The panel lives in the right (secondary) sidebar, not in an editor tab. It never opens or takes focus by itself. A cat in headphones at the top shows what Angizo is doing: asleep (idle), ears twitching with sound waves (listening), looking up with a thought bubble and swishing tail (thinking), happy eyes and moving mouth (talking), waving its paw with a question mark (waiting for your yes), and wide-eyed with an exclamation mark (something failed). The cat is hidden from screen readers; every state is also spoken or played as a sound.
 
 ---
 

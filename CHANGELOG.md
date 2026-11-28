@@ -7,20 +7,22 @@ All notable changes to Angizo, newest first. Everything below is on the `v1` bra
 ### Added
 - **Mic shortcut: `Ctrl+Alt+Space`** (`Cmd+Alt+Space` on Mac), command `angizo.toggleMic`. Press it and speak. A rising blip means it is listening, a falling blip means it stopped. Pressing it while Angizo is talking cuts the speech off. Sending a new command also cuts it off.
 - **Recording stops by itself** (`backend/tools/vad.py`). It stops about 1.2 s after you stop talking (`ANGIZO_MIC_SILENCE_MS` changes this). The first 0.3 s measure the room's noise, so a fan doesn't count as speech. If nothing is said within 6 s it stops and says "I didn't hear anything." That case is never sent for transcription, so no Sarvam credits are spent on silence. A recording is 15 s at most.
-- **The cat**, at the top of the panel, shows what Angizo is doing:
-  - idle: asleep
-  - listening: ears up
-  - thinking: tail swishing
-  - talking: mouth moving
-  - waiting for your yes: looking at you, paw raised
-  - failed: startled, fur up
+- **The cat**: a grey tabby in headphones with a mic, sitting on a terminal, at the top of the panel. It keeps the same pose in every state; only the face, ears, paw, tail and small extras change:
+  - idle: asleep, ears down, slow breathing, "z z"
+  - listening: eyes open, ears twitch, sound waves pulse toward the headphones
+  - thinking: eyes look up, tail swishes, a "…" bubble blinks
+  - talking: happy eyes, mouth moving, music notes
+  - waiting for your yes: looks at you, waves a paw, "?" bubble
+  - failed: wide eyes, worried brows, a startled hop, "!"
 
-  It is hidden from screen readers, because every state is already spoken or played as a sound. It follows the light or dark theme, and stays still when the system asks for reduced motion.
+  The terminal under it shows a hint of the state (for example `yes? Alt+Y / Alt+N`). The cat is hidden from screen readers, because every state is already spoken or played as a sound. The notes, waves and bubbles use the theme's text colour, so they show on light and dark themes. It stays still when the system asks for reduced motion.
+- **Logo and icons**: the cat's head in a circle is the extension icon (`media/logo.png`, `logo.svg`) and is at the top of the README. A one-colour outline of it is the sidebar icon.
 - **Angizo: Show Panel** command.
 - 9 offline tests for the auto-stop (two run the real mic loop with a fake microphone and prove silence is never sent to Sarvam), and 2 end-to-end checks: the panel never opens as an editor tab, and the shortcut starts and stops the mic. The suites now have 186 backend tests and 14 end-to-end checks.
 
 ### Changed
 - **The panel is in the right (secondary) sidebar instead of an editor tab.** It no longer opens beside your code every time something happens, and never takes focus. It is created once at startup, and focus goes straight back to the editor. Messages sent before it is ready wait in a queue and are not lost. It keeps playing audio while the sidebar is closed.
+- **The "Voice Interface" box is gone.** Its Pause, Resume and Stop buttons did nothing (no code behind them), and its "Idle" label repeated the cat's caption. A small mic button under the cat replaces it; clicking it works like `Ctrl+Alt+Space`, including cutting off speech. Its icon stays the same and screen readers hear it as pressed or not pressed (it used to swap to emoji). The feed gets the space.
 - **Angizo: Start Voice Input** now starts listening. It used to only open the panel.
 - The confirmation box hides as soon as you answer with Alt+Y or Alt+N. It used to stay open after a keyboard answer.
 

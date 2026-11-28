@@ -1736,30 +1736,40 @@ function getWebviewContent(
     }
 
     /* ===== The cat: shows what Angizo is doing. Decorative only (aria-hidden);
-       every state is also spoken or played as an earcon. ===== */
+       every state is also spoken or played as an earcon. Same pose in every state:
+       only the face, ears, paw, tail and the extras change. ===== */
     .cat-stage {
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 8px 0 2px;
     }
-    .cat { width: 150px; height: 104px; overflow: visible; }
-    .cat .fur { fill: #e3a35f; stroke: var(--vscode-foreground, #ccc); stroke-width: 1.6; stroke-linejoin: round; }
-    .cat .inner { fill: #f4c9a0; }
-    .cat .line { fill: none; stroke: var(--vscode-foreground, #ccc); stroke-width: 1.6; stroke-linecap: round; }
-    .cat .eye { fill: #3b2a1e; }
-    .cat .face { fill: none; stroke: #4a3424; stroke-width: 1.6; stroke-linecap: round; }
-    .cat .zzz { fill: var(--vscode-descriptionForeground, #999); font: 600 11px var(--vscode-font-family, sans-serif); }
-    .cat .spikes { stroke: var(--vscode-foreground, #ccc); stroke-width: 1.6; stroke-linecap: round; fill: none; }
-    .cat .eyes-open, .cat .eyes-closed, .cat .mouth-open, .cat .paw-up, .cat .spikes, .cat .zzz, .cat .sound { display: none; }
-    .cat .ear-l, .cat .ear-r, .cat .tail, .cat .head, .cat .mouth-open, .cat .paw-up {
-      transform-box: fill-box;
-    }
-    .cat .ear-l { transform-origin: 80% 100%; }
-    .cat .ear-r { transform-origin: 20% 100%; }
-    .cat .tail { transform-origin: 0% 100%; }
-    .cat .head { transform-origin: 50% 100%; transition: transform .25s ease; }
-    .cat .ear-l, .cat .ear-r { transition: transform .25s ease; }
+    .cat { width: 160px; height: 147px; overflow: visible; }
+    @media (max-height: 640px) { .cat { width: 112px; height: 103px; } .cat-stage { padding-top: 4px; } }
+    .cat * { transform-box: view-box; }
+    .cat .ink { fill: none; stroke: var(--vscode-foreground, #ccc); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+    .cat .ink-fill { fill: var(--vscode-foreground, #ccc); }
+    .cat .bubble { fill: var(--vscode-sideBar-background, #fff); stroke: var(--vscode-foreground, #ccc); stroke-width: 3.2; }
+    .cat text { font-family: var(--vscode-font-family, "Segoe UI", sans-serif); font-weight: 800; }
+    .cat .z1 { font-size: 18px; } .cat .z2 { font-size: 13px; }
+    .cat .qmark { font-size: 20px; } .cat .bang { font-size: 40px; font-weight: 900; }
+    .cat .purr { font-size: 12px; font-weight: 400; fill: var(--vscode-descriptionForeground, #999); }
+    .cat .term text { font-family: Consolas, "Courier New", monospace; font-size: 12.5px; font-weight: 700; fill: #e6e6e6; }
+    .cat .term .t-error { fill: #ff8a80; }
+
+    /* Hidden unless a state shows them */
+    .cat .tail-up, .cat .ears-down, .cat .eyes-open, .cat .eyes-closed, .cat .eyes-happy, .cat .eyes-up, .cat .eyes-wide,
+    .cat .mouth-open, .cat .mouth-o, .cat .paw-up,
+    .cat .x-zzz, .cat .x-listen, .cat .x-think, .cat .x-talk, .cat .x-wait, .cat .x-error,
+    .cat .term text { display: none; }
+
+    .cat .head { transform-origin: 120px 120px; transition: transform .3s ease; }
+    .cat .ear-l { transform-origin: 90px 56px; }
+    .cat .ear-r { transform-origin: 150px 56px; }
+    .cat .tail-up { transform-origin: 178px 145px; }
+    .cat .paw-up { transform-origin: 150px 140px; }
+    .cat .mouth-open { transform-origin: 120px 103px; }
+    .cat .breath { transform-origin: 120px 152px; }
     .cat-caption {
       margin-top: 2px;
       font-size: 11px;
@@ -1767,53 +1777,73 @@ function getWebviewContent(
       letter-spacing: .02em;
     }
 
-    /* idle: asleep, curled, ears relaxed */
-    .cat[data-state="idle"] .eyes-closed, .cat[data-state="idle"] .zzz { display: inline; }
-    .cat[data-state="idle"] .head { transform: translateY(6px) rotate(-6deg); }
-    .cat[data-state="idle"] .ear-l { transform: rotate(-14deg); }
-    .cat[data-state="idle"] .ear-r { transform: rotate(14deg); }
-    .cat[data-state="idle"] .zzz { animation: cat-zzz 2.6s ease-in-out infinite; }
+    /* idle: asleep, ears down, slow breathing, z z floats up */
+    .cat[data-state="idle"] .ears-down, .cat[data-state="idle"] .eyes-closed,
+    .cat[data-state="idle"] .x-zzz, .cat[data-state="idle"] .t-idle { display: inline; }
+    .cat[data-state="idle"] .ears-up { display: none; }
+    .cat[data-state="idle"] .head { transform: rotate(-6deg); }
+    .cat[data-state="idle"] .breath { animation: cat-breathe 3.2s ease-in-out infinite; }
+    .cat[data-state="idle"] .x-zzz { animation: cat-float 2.8s ease-in-out infinite; }
 
-    /* listening: awake, ears up and twitching */
-    .cat[data-state="listening"] .eyes-open { display: inline; }
-    .cat[data-state="listening"] .ear-l { animation: cat-ear-l 1.2s ease-in-out infinite; }
-    .cat[data-state="listening"] .ear-r { animation: cat-ear-r 1.2s ease-in-out infinite; }
+    /* listening: eyes open, ears twitch, sound arcs pulse toward the headphones */
+    .cat[data-state="listening"] .eyes-open, .cat[data-state="listening"] .x-listen,
+    .cat[data-state="listening"] .t-listening { display: inline; }
+    .cat[data-state="listening"] .ear-l { animation: cat-ear-l 1.4s ease-in-out infinite; }
+    .cat[data-state="listening"] .ear-r { animation: cat-ear-r 1.4s ease-in-out infinite .2s; }
+    .cat[data-state="listening"] .arc1 { animation: cat-pulse 1.2s ease-in-out infinite; }
+    .cat[data-state="listening"] .arc2 { animation: cat-pulse 1.2s ease-in-out infinite .3s; }
 
-    /* thinking: eyes open, tail swishing */
-    .cat[data-state="thinking"] .eyes-open { display: inline; }
-    .cat[data-state="thinking"] .tail { animation: cat-swish .9s ease-in-out infinite alternate; }
+    /* thinking: eyes look up, tail swishes, dots blink */
+    .cat[data-state="thinking"] .eyes-up, .cat[data-state="thinking"] .tail-up,
+    .cat[data-state="thinking"] .x-think, .cat[data-state="thinking"] .t-thinking { display: inline; }
+    .cat[data-state="thinking"] .tail-down { display: none; }
     .cat[data-state="thinking"] .head { transform: rotate(5deg); }
+    .cat[data-state="thinking"] .tail-up { animation: cat-swish .9s ease-in-out infinite alternate; }
+    .cat[data-state="thinking"] .d1 { animation: cat-blink 1.2s infinite; }
+    .cat[data-state="thinking"] .d2 { animation: cat-blink 1.2s infinite .2s; }
+    .cat[data-state="thinking"] .d3 { animation: cat-blink 1.2s infinite .4s; }
 
-    /* speaking: mouth moving */
-    .cat[data-state="speaking"] .eyes-open, .cat[data-state="speaking"] .mouth-open, .cat[data-state="speaking"] .sound { display: inline; }
-    .cat[data-state="speaking"] .mouth-open { animation: cat-talk .28s ease-in-out infinite alternate; transform-origin: 50% 0%; }
+    /* speaking: happy eyes, mouth moving, notes drift */
+    .cat[data-state="speaking"] .eyes-happy, .cat[data-state="speaking"] .mouth-open,
+    .cat[data-state="speaking"] .x-talk, .cat[data-state="speaking"] .t-speaking { display: inline; }
+    .cat[data-state="speaking"] .mouth-w { display: none; }
+    .cat[data-state="speaking"] .mouth-open { animation: cat-talk .26s ease-in-out infinite alternate; }
+    .cat[data-state="speaking"] .note1 { animation: cat-float 2s ease-in-out infinite; }
+    .cat[data-state="speaking"] .note2 { animation: cat-float 2s ease-in-out infinite .7s; }
 
-    /* waiting for a yes: looking at you, paw raised */
-    .cat[data-state="waiting"] .eyes-open, .cat[data-state="waiting"] .paw-up { display: inline; }
+    /* waiting for a yes: looks at you, paw waves, the ? bobs */
+    .cat[data-state="waiting"] .eyes-open, .cat[data-state="waiting"] .paw-up,
+    .cat[data-state="waiting"] .x-wait, .cat[data-state="waiting"] .t-waiting { display: inline; }
     .cat[data-state="waiting"] .paw-down { display: none; }
-    .cat[data-state="waiting"] .paw-up { animation: cat-paw 1.4s ease-in-out infinite; transform-origin: 50% 100%; }
-    .cat[data-state="waiting"] .eye { transform: scale(1.15); transform-box: fill-box; transform-origin: center; }
+    .cat[data-state="waiting"] .paw-up { animation: cat-wave 1.3s ease-in-out infinite; }
+    .cat[data-state="waiting"] .x-wait { animation: cat-bob 1.6s ease-in-out infinite; }
 
-    /* error: startled, fur up */
-    .cat[data-state="error"] .eyes-open, .cat[data-state="error"] .spikes, .cat[data-state="error"] .mouth-open { display: inline; }
-    .cat[data-state="error"] .eye { transform: scale(1.35); transform-box: fill-box; transform-origin: center; }
-    .cat[data-state="error"] .ear-l { transform: rotate(-24deg); }
-    .cat[data-state="error"] .ear-r { transform: rotate(24deg); }
-    .cat[data-state="error"] { animation: cat-jump .35s ease-out 1; }
+    /* error: wide eyes, worried brows, ears down, one startled hop, shock lines flash */
+    .cat[data-state="error"] .eyes-wide, .cat[data-state="error"] .ears-down, .cat[data-state="error"] .mouth-o,
+    .cat[data-state="error"] .x-error, .cat[data-state="error"] .t-error { display: inline; }
+    .cat[data-state="error"] .ears-up, .cat[data-state="error"] .mouth-w, .cat[data-state="error"] .mic { display: none; }
+    .cat[data-state="error"] .breath { animation: cat-hop .4s ease-out 1; }
+    .cat[data-state="error"] .shock { animation: cat-blink .5s ease-in-out 3; }
 
-    @keyframes cat-zzz { 0%,100% { opacity: .2; transform: translateY(2px); } 50% { opacity: 1; transform: translateY(-3px); } }
-    @keyframes cat-ear-l { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-8deg); } }
-    @keyframes cat-ear-r { 0%,100% { transform: rotate(0); } 50% { transform: rotate(8deg); } }
-    @keyframes cat-swish { from { transform: rotate(-18deg); } to { transform: rotate(16deg); } }
-    @keyframes cat-talk { from { transform: scaleY(.3); } to { transform: scaleY(1); } }
-    @keyframes cat-paw { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-12deg); } }
-    @keyframes cat-jump { 0% { transform: translateY(0); } 40% { transform: translateY(-8px); } 100% { transform: translateY(0); } }
+    @keyframes cat-breathe { 0%,100% { transform: scale(1, 1); } 50% { transform: scale(1.012, 1.03); } }
+    @keyframes cat-float { 0%,100% { opacity: .35; transform: translateY(3px); } 50% { opacity: 1; transform: translateY(-4px); } }
+    @keyframes cat-ear-l { 0%,70%,100% { transform: rotate(0); } 80% { transform: rotate(-9deg); } }
+    @keyframes cat-ear-r { 0%,70%,100% { transform: rotate(0); } 80% { transform: rotate(9deg); } }
+    @keyframes cat-pulse { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+    @keyframes cat-swish { from { transform: rotate(-10deg); } to { transform: rotate(8deg); } }
+    @keyframes cat-blink { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+    @keyframes cat-talk { from { transform: scaleY(.35); } to { transform: scaleY(1); } }
+    @keyframes cat-wave { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-10deg); } }
+    @keyframes cat-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    @keyframes cat-hop { 0% { transform: translateY(0); } 40% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
     @media (prefers-reduced-motion: reduce) {
       .cat *, .cat { animation: none !important; transition: none !important; }
     }
 
     /* ===== Sidebar width (about 300 px): wrap rows instead of running off the right edge ===== */
     *, *::before, *::after { box-sizing: border-box; }
+    .mic-row { display: flex; justify-content: center; margin: 6px 0 4px; }
+    .mic-row .mic-btn { width: 36px; height: 36px; }
     .app { width: 100%; max-width: 100vw; overflow-x: hidden; }
     .app > *, .main > *, section, .voice-card, .voice-row, .voice-info, .brand, .brand-info { min-width: 0; max-width: 100%; }
     .header { gap: 8px; }
@@ -1905,44 +1935,78 @@ function getWebviewContent(
 
     <!-- The cat (decorative: screen readers skip it; the state is spoken instead) -->
     <div class="cat-stage" aria-hidden="true">
-      <svg id="cat" class="cat" data-state="idle" viewBox="0 0 150 104" focusable="false">
-        <!-- tail -->
-        <path class="tail fur" d="M38 86 C14 84 8 64 20 52 C24 48 30 50 28 56 C22 66 26 76 40 78 Z"/>
-        <!-- body -->
-        <ellipse class="fur" cx="62" cy="80" rx="34" ry="20"/>
-        <!-- paws -->
-        <ellipse class="paw-down fur" cx="88" cy="96" rx="9" ry="5"/>
-        <ellipse class="fur" cx="72" cy="97" rx="9" ry="5"/>
-        <!-- fur standing up (error) -->
-        <path class="spikes" d="M36 64 l-4 -8 M46 59 l-2 -9 M58 57 l0 -9 M70 58 l2 -9 M80 61 l4 -8"/>
-        <!-- head -->
-        <g class="head">
-          <path class="ear-l fur" d="M78 40 L80 14 L96 30 Z"/>
-          <path class="ear-l inner" d="M82 34 L83 21 L91 30 Z"/>
-          <path class="ear-r fur" d="M112 30 L128 14 L128 40 Z"/>
-          <path class="ear-r inner" d="M117 30 L125 21 L125 34 Z"/>
-          <ellipse class="fur" cx="104" cy="50" rx="27" ry="23"/>
-          <g class="eyes-open">
-            <ellipse class="eye" cx="94" cy="47" rx="3.2" ry="4.2"/>
-            <ellipse class="eye" cx="114" cy="47" rx="3.2" ry="4.2"/>
+      <svg id="cat" class="cat" data-state="idle" viewBox="0 0 240 220" focusable="false">
+        <g class="breath">
+          <!-- tail: resting, and raised (thinking) -->
+          <g class="tail-down"><path d="M178 150 C206 152 222 132 214 112 C211 104 201 106 204 114 C208 128 198 138 178 138" fill="#d6d6d6" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M209 118 l8 -2 M206 130 l8 3" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></g>
+          <g class="tail-up"><path d="M178 150 C204 146 212 120 200 100 C196 92 186 96 190 104 C198 120 192 134 176 136" fill="#d6d6d6" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M196 112 l8 -3 M195 124 l9 0" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></g>
+          <!-- body -->
+          <path d="M52 152 C52 120 84 110 120 110 C156 110 188 120 188 152 Z" fill="#d6d6d6" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path d="M70 128 l10 6 M66 140 l11 3 M170 128 l-10 6 M174 140 l-11 3" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+          <!-- head -->
+          <g class="head">
+            <g class="ears-up">
+              <g class="ear-l"><path d="M72 64 L80 18 L108 48 Z" fill="#d6d6d6" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M80 56 L84 32 L99 49 Z" fill="#bcbcbc"/></g>
+              <g class="ear-r"><path d="M132 48 L160 18 L168 64 Z" fill="#d6d6d6" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M141 49 L156 32 L160 56 Z" fill="#bcbcbc"/></g>
+            </g>
+            <g class="ears-down"><path d="M70 70 L72 30 L104 52 Z" fill="#d6d6d6" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M78 62 L79 40 L96 53 Z" fill="#bcbcbc"/><path d="M136 52 L168 30 L170 70 Z" fill="#d6d6d6" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M144 53 L161 40 L162 62 Z" fill="#bcbcbc"/></g>
+            <ellipse cx="120" cy="88" rx="54" ry="44" fill="#d6d6d6" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path d="M110 46 v11 M120 44 v13 M130 46 v11" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+            <ellipse cx="120" cy="104" rx="25" ry="15" fill="#f4f4f4"/>
+            <ellipse cx="90" cy="100" rx="8" ry="4.6" fill="#b8b8b8"/><ellipse cx="150" cy="100" rx="8" ry="4.6" fill="#b8b8b8"/>
+            <g class="eyes-open"><circle cx="102" cy="85" r="7" fill="#1c1c1c"/><circle cx="138" cy="85" r="7" fill="#1c1c1c"/><circle cx="104.5" cy="82" r="2.6" fill="#fff"/><circle cx="140.5" cy="82" r="2.6" fill="#fff"/></g>
+            <g class="eyes-closed"><path d="M94 86 q8 6 16 0 M130 86 q8 6 16 0" fill="none" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></g>
+            <g class="eyes-happy"><path d="M94 88 q8 -9 16 0 M130 88 q8 -9 16 0" fill="none" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></g>
+            <g class="eyes-up"><circle cx="102" cy="84" r="6.5" fill="#1c1c1c"/><circle cx="138" cy="84" r="6.5" fill="#1c1c1c"/><circle cx="105" cy="80" r="2.4" fill="#fff"/><circle cx="141" cy="80" r="2.4" fill="#fff"/><path d="M95 72 l13 -2 M132 70 l13 2" fill="none" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></g>
+            <g class="eyes-wide"><circle cx="102" cy="84" r="9" fill="#fff" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="138" cy="84" r="9" fill="#fff" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="102" cy="85" r="4" fill="#1c1c1c"/><circle cx="138" cy="85" r="4" fill="#1c1c1c"/><path d="M92 73 l14 -5 M148 73 l-14 -5" fill="none" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></g>
+            <path d="M115 95 h10 l-5 5 z" fill="#1c1c1c" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path class="mouth-w" d="M112 102 q4 5 8 0 q4 5 8 0" fill="none" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path class="mouth-open" d="M113 103 q7 12 14 0 z" fill="#1c1c1c" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+            <ellipse class="mouth-o" cx="120" cy="107" rx="3.6" ry="4.4" fill="#1c1c1c"/>
+            <!-- headphones -->
+            <path d="M70 66 A54 50 0 0 1 170 66" fill="none" stroke="#1c1c1c" stroke-width="10" stroke-linecap="round"/>
+            <path d="M70 66 A54 50 0 0 1 170 66" fill="none" stroke="#6e6e6e" stroke-width="4" stroke-linecap="round"/>
+            <rect x="56" y="70" width="22" height="38" rx="10" fill="#2a2a2a" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><rect x="61" y="77" width="9" height="24" rx="4.5" fill="#6e6e6e"/>
+            <rect x="162" y="70" width="22" height="38" rx="10" fill="#2a2a2a" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><rect x="170" y="77" width="9" height="24" rx="4.5" fill="#6e6e6e"/>
           </g>
-          <g class="eyes-closed">
-            <path class="face" d="M89 48 q5 4 10 0"/>
-            <path class="face" d="M109 48 q5 4 10 0"/>
+          <!-- paws: both down, or the right one raised (waiting for a yes) -->
+          <ellipse cx="104" cy="142" rx="12" ry="8.5" fill="#f4f4f4" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M100 138 v6 M108 138 v6" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+          <g class="paw-down"><ellipse cx="136" cy="142" rx="12" ry="8.5" fill="#f4f4f4" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M132 138 v6 M140 138 v6" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></g>
+          <g class="paw-up">
+            <path d="M150 140 C158 124 170 112 182 104" fill="none" stroke="#1c1c1c" stroke-width="20" stroke-linecap="round"/>
+            <path d="M150 140 C158 124 170 112 182 104" fill="none" stroke="#d6d6d6" stroke-width="13.6" stroke-linecap="round"/>
+            <ellipse cx="186" cy="100" rx="11" ry="10" fill="#f4f4f4" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M182 93 v5 M188 92 v5" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
           </g>
-          <path class="face" d="M101 56 l3 2.5 l3 -2.5"/>
-          <path class="face" d="M98 61 q6 4 12 0"/>
-          <ellipse class="mouth-open eye" cx="104" cy="63" rx="3.4" ry="3"/>
-          <path class="line" d="M82 55 h-12 M83 59 l-11 3 M126 55 h12 M125 59 l11 3"/>
+          <!-- mic -->
+          <g class="mic"><path d="M120 130 v9" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><rect x="113" y="114" width="14" height="18" rx="7" fill="#6e6e6e" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M114 120 h12 M114 125 h12" stroke="#f4f4f4" stroke-width="1.6"/></g>
         </g>
-        <!-- raised paw (waiting for a yes), drawn in front of the head -->
-        <g class="paw-up"><path class="fur" d="M84 95 C104 92 124 86 133 74 C136 68 145 68 145 75 C144 86 122 98 94 100 Z"/></g>
-        <!-- zzz (asleep) -->
-        <text class="zzz" x="128" y="12">z z</text>
-        <!-- sound waves (speaking) -->
-        <path class="sound line" d="M138 52 q4 6 0 12 M143 48 q6 10 0 20"/>
+        <!-- extras: drawn in the theme's text colour so they show on light and dark themes -->
+        <g class="x-zzz"><text class="ink-fill z1" x="176" y="34">z</text><text class="ink-fill z2" x="192" y="20">z</text></g>
+        <g class="x-listen"><path class="ink arc1" d="M44 76 q-8 13 0 26 M196 76 q8 13 0 26"/><path class="ink arc2" d="M34 70 q-12 19 0 38 M206 70 q12 19 0 38"/></g>
+        <g class="x-think"><circle class="bubble" cx="200" cy="34" r="20"/><circle class="bubble" cx="180" cy="58" r="4"/><circle class="ink-fill d1" cx="191" cy="34" r="2.6"/><circle class="ink-fill d2" cx="200" cy="34" r="2.6"/><circle class="ink-fill d3" cx="209" cy="34" r="2.6"/><path class="ink" d="M216 98 l9 -6 M219 110 l10 -2"/></g>
+        <g class="x-talk"><g class="note1"><path class="ink" d="M40 40 v-20 l14 -4 v20"/><ellipse class="ink-fill" cx="36" cy="40" rx="5" ry="4"/><ellipse class="ink-fill" cx="50" cy="36" rx="5" ry="4"/></g><g class="note2"><path class="ink" d="M200 36 v-18"/><ellipse class="ink-fill" cx="196" cy="36" rx="5" ry="4"/></g><text class="purr" x="186" y="58">purr~</text></g>
+        <g class="x-wait"><circle class="bubble" cx="194" cy="36" r="17"/><circle class="bubble" cx="178" cy="58" r="3.5"/><text class="ink-fill qmark" x="188" y="43">?</text></g>
+        <g class="x-error"><text class="ink-fill bang" x="190" y="52">!</text><path class="ink shock" d="M48 28 l10 10 M38 46 l13 3 M62 18 l2 13"/></g>
+        <!-- terminal -->
+        <rect x="30" y="150" width="180" height="62" rx="10" fill="#1e1e1e" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="44" cy="161" r="3" fill="#ddd"/><circle cx="54" cy="161" r="3" fill="#999"/><circle cx="64" cy="161" r="3" fill="#666"/>
+        <g class="term">
+          <text class="t-idle" x="42" y="182">&gt; _</text>
+          <text class="t-listening" x="42" y="182">&gt; listening…</text>
+          <text class="t-thinking" x="42" y="182">&gt; thinking…</text>
+          <text class="t-speaking" x="42" y="182">&gt; speaking</text>
+          <text class="t-waiting" x="42" y="182">&gt; yes? Alt+Y / Alt+N</text>
+          <text class="t-error" x="42" y="182">! something failed</text>
+        </g>
+        <rect x="42" y="191" width="96" height="5" rx="2.5" fill="#555"/><rect x="42" y="200" width="60" height="5" rx="2.5" fill="#555"/><rect x="106" y="200" width="26" height="5" rx="2.5" fill="#999"/>
       </svg>
       <div id="catCaption" class="cat-caption">Asleep. Press Ctrl+Alt+Space to talk.</div>
+    </div>
+    <div class="mic-row">
+      <button id="micBtn" class="mic-btn" type="button" aria-pressed="false"
+        title="Start or stop listening (Ctrl+Alt+Space)" aria-label="Microphone: start or stop listening, Control Alt Space">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+      </button>
     </div>
 
 
@@ -1951,161 +2015,6 @@ function getWebviewContent(
     ================================= -->
 
     <main class="main">
-
-
-      <!-- =================================
-           VOICE INTERFACE
-      ================================= -->
-
-      <section>
-
-        <div class="section-header">
-
-          <div class="section-title">
-
-            <svg viewBox="0 0 24 24">
-
-              <path
-                d="
-                  M12 14c1.66 0 3-1.34 3-3V5
-                  c0-1.66-1.34-3-3-3S9 3.34 9 5v6
-                  c0 1.66 1.34 3 3 3z
-                "
-              />
-
-              <path
-                d="
-                  M17 11c0 2.76-2.24 5-5 5
-                  s-5-2.24-5-5H5
-                  c0 3.53 2.61 6.43 6 6.92V21h2
-                  v-3.08c3.39-.49 6-3.39 6-6.92h-2z
-                "
-              />
-
-            </svg>
-
-            Voice Interface
-
-          </div>
-
-        </div>
-
-
-        <div class="voice-card">
-
-          <div class="voice-row">
-
-
-            <div class="voice-info">
-
-              <button
-                id="micBtn"
-                class="mic-btn"
-                title="Toggle Voice Input (Click to speak)"
-                aria-label="Toggle Voice Input"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-              </button>
-
-
-              <div class="voice-text">
-
-                <div class="voice-title">
-
-                  Voice Command
-
-                </div>
-
-
-                <div class="voice-description">
-
-                  Speak naturally to control your codebase
-
-                </div>
-
-              </div>
-
-            </div>
-
-
-            <!-- AUDIO CONTROLS -->
-
-            <div class="audio-controls">
-
-
-              <!-- AUDIO PULSE -->
-
-              <div
-                id="audioPulse"
-                class="audio-pulse"
-                title="Audio is playing"
-              >
-
-                <span></span>
-
-                <span></span>
-
-                <span></span>
-
-                <span></span>
-
-                <span></span>
-
-              </div>
-
-
-              <!-- PAUSE -->
-
-              <button
-                id="pauseAudioBtn"
-                class="audio-btn"
-                type="button"
-              >
-
-                Pause
-
-              </button>
-
-
-              <!-- RESUME -->
-
-              <button
-                id="resumeAudioBtn"
-                class="audio-btn"
-                type="button"
-              >
-
-                Resume
-
-              </button>
-
-
-              <!-- STOP -->
-
-              <button
-                id="stopAudioBtn"
-                class="audio-btn"
-                type="button"
-              >
-
-                Stop
-
-              </button>
-
-
-              <div id="status">
-
-                Idle
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
 
 
       <!-- =================================

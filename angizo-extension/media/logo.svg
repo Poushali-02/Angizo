@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><circle cx="128" cy="128" r="120" fill="#ffffff" stroke="#1c1c1c" stroke-width="8"/><g transform="translate(-34,34) scale(1.35)">
+            <g class="ears-up">
+              <g class="ear-l"><path d="M72 64 L80 18 L108 48 Z" fill="#d6d6d6" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M80 56 L84 32 L99 49 Z" fill="#bcbcbc"/></g>
+              <g class="ear-r"><path d="M132 48 L160 18 L168 64 Z" fill="#d6d6d6" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M141 49 L156 32 L160 56 Z" fill="#bcbcbc"/></g>
+            </g>
+            <ellipse cx="120" cy="88" rx="54" ry="44" fill="#d6d6d6" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path d="M110 46 v11 M120 44 v13 M130 46 v11" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+            <ellipse cx="120" cy="104" rx="25" ry="15" fill="#f4f4f4"/>
+            <ellipse cx="90" cy="100" rx="8" ry="4.6" fill="#b8b8b8"/><ellipse cx="150" cy="100" rx="8" ry="4.6" fill="#b8b8b8"/>
+            <g class="eyes-open"><circle cx="102" cy="85" r="7" fill="#1c1c1c"/><circle cx="138" cy="85" r="7" fill="#1c1c1c"/><circle cx="104.5" cy="82" r="2.6" fill="#fff"/><circle cx="140.5" cy="82" r="2.6" fill="#fff"/></g>
+            <path d="M115 95 h10 l-5 5 z" fill="#1c1c1c" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path class="mouth-w" d="M112 102 q4 5 8 0 q4 5 8 0" fill="none" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path d="M70 66 A54 50 0 0 1 170 66" fill="none" stroke="#1c1c1c" stroke-width="10" stroke-linecap="round"/>
+            <path d="M70 66 A54 50 0 0 1 170 66" fill="none" stroke="#6e6e6e" stroke-width="4" stroke-linecap="round"/>
+            <rect x="56" y="70" width="22" height="38" rx="10" fill="#2a2a2a" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><rect x="61" y="77" width="9" height="24" rx="4.5" fill="#6e6e6e"/>
+            <rect x="162" y="70" width="22" height="38" rx="10" fill="#2a2a2a" stroke="#1c1c1c" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/><rect x="170" y="77" width="9" height="24" rx="4.5" fill="#6e6e6e"/>
+          </g></svg>
