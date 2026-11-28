@@ -1,5 +1,5 @@
 /**
- * neurocode-extension/src/webview-bridge.ts
+ * angizo-extension/src/webview-bridge.ts
  *
  * postMessage relay between the webview and ws-client.ts.
  *
@@ -11,14 +11,14 @@
  */
 
 import * as vscode from "vscode";
-import { NeurocodeWsClient, BackendMessage } from "./ws-client";
+import { AngizoWsClient, BackendMessage } from "./ws-client";
 
 export class WebviewBridge {
   private disposables: vscode.Disposable[] = [];
 
   constructor(
     private panel: vscode.WebviewPanel,
-    private wsClient: NeurocodeWsClient
+    private wsClient: AngizoWsClient
   ) {
     // --- Webview → Backend ---
     // Listen for postMessage from the webview and forward to ws-client

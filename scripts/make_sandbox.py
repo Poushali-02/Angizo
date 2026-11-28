@@ -102,7 +102,7 @@ Write-Host "`n== Backend (offline) ==" -ForegroundColor Cyan
 Push-Location (Join-Path $repo "backend"); & $py -m pytest; $backend = $LASTEXITCODE; Pop-Location
 
 Write-Host "`n== VS Code end-to-end ==" -ForegroundColor Cyan
-Push-Location (Join-Path $repo "neurocode-extension"); npm run -s test:e2e; $e2e = $LASTEXITCODE; Pop-Location
+Push-Location (Join-Path $repo "angizo-extension"); npm run -s test:e2e; $e2e = $LASTEXITCODE; Pop-Location
 
 $live = 0
 if ($Live) {

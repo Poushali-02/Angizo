@@ -1,5 +1,5 @@
 /**
- * neurocode-extension/src/webview/pcm-processor.js
+ * angizo-extension/src/webview/pcm-processor.js
  *
  * AudioWorkletProcessor that captures raw PCM audio from the microphone,
  * converts Float32 samples to Int16, and posts base64-encoded chunks

@@ -1,5 +1,5 @@
 """
-neurocode-backend/tools/speech.py
+backend/tools/speech.py
 
 How the agent talks, as fast as the free tiers allow:
 
@@ -16,7 +16,7 @@ import asyncio
 import logging
 import re
 
-logger = logging.getLogger("neurocode.speech")
+logger = logging.getLogger("angizo.speech")
 
 ACK_PHRASES = {
     "commit": "Preparing a commit.",

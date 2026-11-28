@@ -1,5 +1,5 @@
 """
-neurocode-backend/config.py
+backend/config.py
 
 Environment variable configuration.
 Values come from the process environment first, then backend/.env.
@@ -25,14 +25,19 @@ if env_path.exists() and os.getenv("ANGIZO_SKIP_DOTENV") != "1":
                     os.environ[k] = v.strip()
 
 
+def _env(name: str, default: str) -> str:
+    """ANGIZO_<name>, or the pre-rename NEUROCODE_<name> so existing .env files keep working."""
+    return os.getenv(f"ANGIZO_{name}") or os.getenv(f"NEUROCODE_{name}") or default
+
+
 # --- Server ---
-HOST: str = os.getenv("NEUROCODE_HOST", "0.0.0.0")
-PORT: int = int(os.getenv("NEUROCODE_PORT", "7001"))  # the extension connects to 7001
+HOST: str = _env("HOST", "0.0.0.0")
+PORT: int = int(_env("PORT", "7001"))  # the extension connects to 7001
 
 # --- Target Repository ---
 # Path to the Git repository the agent should operate on
 # If not set, defaults to the backend's working directory
-REPO_PATH: str = os.getenv("NEUROCODE_REPO_PATH", os.getcwd())
+REPO_PATH: str = _env("REPO_PATH", os.getcwd())
 
 # --- API Keys ---
 SARVAM_API_KEY: str = os.getenv("SARVAM_API_KEY", "")

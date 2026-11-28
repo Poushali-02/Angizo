@@ -1,4 +1,4 @@
-# NeuroCode — Agent Behavior Specification
+# Angizo — Agent Behavior Specification
 
 This file defines exact expected behavior for each supported command, for use when generating the LangGraph node implementations and tool wrappers.
 

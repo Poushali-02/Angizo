@@ -1,2 +1,2 @@
-# NeuroCode Backend
-This is the backend for the NeuroCode Accessibility Agent.
+# Angizo Backend
+This is the backend for the Angizo Accessibility Agent.

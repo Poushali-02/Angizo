@@ -1,5 +1,5 @@
 """
-neurocode-backend/tools/sarvam_tts.py
+backend/tools/sarvam_tts.py
 
 Sarvam TTS (bulbul) for every spoken line, with:
 - an in-memory cache, so repeated phrases ("Syntax error resolved in main.py.") cost no API call;
@@ -17,7 +17,7 @@ import httpx
 import config
 from tools.sarvam_key_manager import sarvam_key_manager
 
-logger = logging.getLogger("neurocode.sarvam_tts")
+logger = logging.getLogger("angizo.sarvam_tts")
 
 SARVAM_TTS_ENDPOINT = "https://api.sarvam.ai/text-to-speech"
 MAX_TEXT_CHARS = 450  # Sarvam's hard limit is 500 characters per input

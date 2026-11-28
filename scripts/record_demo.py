@@ -6,7 +6,7 @@ Record the Angizo demo video.
 1. Clones the sandbox playground into <out>/work (its origin is a local bare repo).
 2. Starts the real backend (backend/.env keys) with ANGIZO_SPEECH_LOG, so every clip the
    panel plays is saved with the time it was sent.
-3. Opens VS Code with the extension and runs neurocode-extension/test/demo/scenes.js.
+3. Opens VS Code with the extension and runs angizo-extension/test/demo/scenes.js.
 4. Records the screen area of the VS Code window with ffmpeg (gdigrab; capturing the window itself
    gives black frames because VS Code draws with the GPU), stopping when the last scene ends.
 5. Builds the soundtrack from the saved clips, placed where they played, and writes
@@ -31,7 +31,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 BACKEND = ROOT / "backend"
-EXTENSION = ROOT / "neurocode-extension"
+EXTENSION = ROOT / "angizo-extension"
 TITLE = "Angizo Demo"
 PORT = 7001
 

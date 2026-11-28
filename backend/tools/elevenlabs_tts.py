@@ -1,5 +1,5 @@
 """
-neurocode-backend/tools/elevenlabs_tts.py
+backend/tools/elevenlabs_tts.py
 
 ElevenLabs TTS Integration with:
 - In-memory TTSAudioCache: instant replay for repeated phrases (<2ms)
@@ -17,7 +17,7 @@ import httpx
 import base64
 import config
 
-logger = logging.getLogger("neurocode.elevenlabs_tts")
+logger = logging.getLogger("angizo.elevenlabs_tts")
 
 # ── In-Memory TTS Audio Cache ───────────────────────────────────────────────
 # Key: sha256(text + voice_id + risk_band), Value: base64 audio string

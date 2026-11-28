@@ -1,18 +1,18 @@
-# NeuroCode — Use Cases & Accessibility Impact Guide
+# Angizo — Use Cases & Accessibility Impact Guide
 
 ## Executive Summary
 
-**NeuroCode** is an AI-powered accessibility agent built specifically for **blind and low-vision software developers**. 
+**Angizo** is an AI-powered accessibility agent built specifically for **blind and low-vision software developers**. 
 
 Standard AI coding tools (such as Cursor, GitHub Copilot, Claude Code, and visual IDE extensions) rely almost entirely on **visual feedback loops**: graphical diff views, red/green code comparisons, spinning loading icons, popup dialogs, and visual branch selectors. For a developer relying on a screen reader (like NVDA, JAWS, or VoiceOver), these visual interfaces introduce extreme friction, cognitive fatigue, and navigation barriers.
 
-NeuroCode transforms software engineering into an **audio-first, voice-guided experience**. It sits alongside developers to convert complex visual Git diffs, codebase structures, and repository state changes into clear spoken prose, risk-banded auditory cues, and safe interactive voice workflows.
+Angizo transforms software engineering into an **audio-first, voice-guided experience**. It sits alongside developers to convert complex visual Git diffs, codebase structures, and repository state changes into clear spoken prose, risk-banded auditory cues, and safe interactive voice workflows.
 
 ---
 
 ## Feature-by-Feature Accessibility Impact
 
-Below is a detailed breakdown of every core feature built into NeuroCode and how it solves specific challenges faced by visually impaired software engineers.
+Below is a detailed breakdown of every core feature built into Angizo and how it solves specific challenges faced by visually impaired software engineers.
 
 ---
 
@@ -27,7 +27,7 @@ When a developer makes code changes or pulls updates from a team repository, scr
 ```
 A screen reader reads every symbol aloud: *"at at minus fourteen comma six plus fourteen comma twelve at at plus import open curly bracket AuthProvider close curly bracket..."*. Reviewing a 10-file pull request or working tree diff using a screen reader can take **15 to 30 minutes of exhausting auditory processing**.
 
-#### How NeuroCode Solves It
+#### How Angizo Solves It
 EchoDiff uses LLM diff intelligence (`diff_intelligence.py`) powered by Groq/Gemini to analyze repository diffs and synthesize them into **2-sentence spoken executive summaries**:
 * **Risk Banding:** Classifies diff risk as `safe` (read-only/doc edits), `caution` (minor logic tweaks), or `high-risk` (auth, database, core algorithms).
 * **Blast Radius Calculation:** Spoke-lists affected files, components, and module dependencies.
@@ -44,8 +44,8 @@ EchoDiff uses LLM diff intelligence (`diff_intelligence.py`) powered by Groq/Gem
 #### The Accessibility Problem
 VS Code extensions render custom UIs in sandboxed Webview iframes (Chromium). Modern browser security policies block microphone permissions (`Permissions policy violation`) inside sandboxed iframes. Sighted users click graphical buttons or type in text boxes, but blind developers using screen readers struggle with nested iframe focus traps, missing ARIA tags, or focus jumping.
 
-#### How NeuroCode Solves It
-NeuroCode bypasses browser iframe permission blocks entirely by capturing audio at the **host operating system level**:
+#### How Angizo Solves It
+Angizo bypasses browser iframe permission blocks entirely by capturing audio at the **host operating system level**:
 * **Direct OS Capture:** Uses Python `sounddevice` and `numpy` inside the backend process to capture raw 16kHz Int16 PCM audio directly from the physical microphone.
 * **Sarvam AI STT Integration:** Streams raw PCM audio directly to Sarvam AI STT (`saarika:v2.5`), converting Indian English and technical developer speech into text.
 * **Voice-Activated Toggle:** Users trigger microphone recording via a global hotkey or simple voice toggle without needing to navigate UI elements.
@@ -61,8 +61,8 @@ NeuroCode bypasses browser iframe permission blocks entirely by capturing audio 
 #### The Accessibility Problem
 Sighted developers glance at spinning loading indicators, progress bars, or bouncing dots while waiting for AI responses. For a blind developer, an AI response delay of 3 to 6 seconds manifests as **complete, terrifying silence ("dead air")**. The user cannot tell if the system crashed, lost network connection, or is actively working.
 
-#### How NeuroCode Solves It
-NeuroCode introduces **Zero-Silence Handoff** powered by Sarvam AI TTS (`bulbul:v2`):
+#### How Angizo Solves It
+Angizo introduces **Zero-Silence Handoff** powered by Sarvam AI TTS (`bulbul:v2`):
 1. The instant a voice or text command hits the backend WebSocket (`ws.py`), the system generates and streams an immediate filler audio payload (*"Analyzing workspace changes..."* or *"Inspecting repository diffs..."*) in under **200 milliseconds**.
 2. While filler audio plays in the webview audio engine, the LangGraph agent graph, RAG engine, and LLM process the query in parallel.
 3. The final answer payload replaces the filler seamlessly without audio stutter or awkward pauses.
@@ -78,8 +78,8 @@ NeuroCode introduces **Zero-Silence Handoff** powered by Sarvam AI TTS (`bulbul:
 #### The Accessibility Problem
 Autonomous AI agents that execute Git commands directly can easily cause catastrophic data loss if a voice command is misheard (e.g. mistaking *"check branch"* for *"checkout branch"* with uncommitted changes, or force-pushing over team work). Screen reader users cannot quickly visual-check terminal commands before hitting Enter.
 
-#### How NeuroCode Solves It
-NeuroCode enforces a strict **7-Node LangGraph State Machine** (`Understand` → `Context` → `Reason` → `Confirm` → `Execute` → `Verify` → `Narrate`):
+#### How Angizo Solves It
+Angizo enforces a strict **7-Node LangGraph State Machine** (`Understand` → `Context` → `Reason` → `Confirm` → `Execute` → `Verify` → `Narrate`):
 * **Mutating Action Intercept:** Actions like `git_commit`, `git_push`, `git_branch_switch`, and `git_undo` are intercepted at the `Confirm` node.
 * **Spoken Confirmation Prompts:** The agent pauses execution and speaks a high-contrast warning: *"Switching to main branch will overwrite 2 uncommitted files. Are you sure you want to proceed?"*
 * **Explicit User Choice:** Execution proceeds only when the user confirms via voice or keyboard button (`[Yes]` / `[No]`).
@@ -95,8 +95,8 @@ NeuroCode enforces a strict **7-Node LangGraph State Machine** (`Understand` →
 #### The Accessibility Problem
 Standard screen readers recite all text in a flat, robotic, monotonic voice, making it hard to distinguish between routine information (e.g. file saved) and critical warnings (e.g. merge conflict or failing build).
 
-#### How NeuroCode Solves It
-NeuroCode features a **Multi-Tier Voice Narration Engine** combining ElevenLabs API and Sarvam AI TTS:
+#### How Angizo Solves It
+Angizo features a **Multi-Tier Voice Narration Engine** combining ElevenLabs API and Sarvam AI TTS:
 * **Risk-Modulated Parameters:** ElevenLabs voice parameters (stability, similarity boost, style) adjust dynamically based on the risk band:
   * **Safe (`safe`):** Calm, natural, relaxed cadence.
   * **Caution (`caution`):** Measured, precise tone.
@@ -114,8 +114,8 @@ NeuroCode features a **Multi-Tier Voice Narration Engine** combining ElevenLabs 
 #### The Accessibility Problem
 Locating where a specific function, class, or variable is defined across a large codebase requires opening multiple files, using search panels, and line-navigating with a screen reader. This creates immense spatial orientation effort for blind programmers.
 
-#### How NeuroCode Solves It
-NeuroCode includes a zero-dependency **Local Codebase RAG Engine** (`rag_engine.py`):
+#### How Angizo Solves It
+Angizo includes a zero-dependency **Local Codebase RAG Engine** (`rag_engine.py`):
 * Indexes workspace source files (`.py`, `.ts`, `.js`, `.json`, `.md`).
 * Tokenizes code into semantic blocks while skipping `.git` and `node_modules`.
 * Performs sub-50ms TF-IDF semantic relevance ranking against user voice queries.
@@ -132,7 +132,7 @@ NeuroCode includes a zero-dependency **Local Codebase RAG Engine** (`rag_engine.
 #### The Accessibility Problem
 Writing good conventional commit messages requires reviewing uncommitted diffs to summarize changes accurately. For blind developers, gathering this context manually is tedious.
 
-#### How NeuroCode Solves It
+#### How Angizo Solves It
 * Automatically inspects uncommitted diffs via `git_tool.py`.
 * Uses `diff_intelligence.py` to generate structured conventional commit messages (e.g., `feat(auth): implement JWT token validation`).
 * Reads the draft aloud to the developer and prompts for confirmation before committing.
@@ -147,7 +147,7 @@ Writing good conventional commit messages requires reviewing uncommitted diffs t
 #### The Accessibility Problem
 Many AI tool webviews are cluttered with low-contrast UI elements, missing keyboard focus indicators, or unannounced dynamic DOM updates.
 
-#### How NeuroCode Solves It
+#### How Angizo Solves It
 * **High Contrast (WCAG 2.1 AAA):** Dark theme designed for low-vision developers.
 * **Screen Reader Live Regions:** Dynamic responses use ARIA live regions (`aria-live="polite"`) for immediate screen reader announcements.
 * **Audio Earcons:** Distinct sound chimes indicate system state changes (recording start, transcribing, success, error).
@@ -159,7 +159,7 @@ Many AI tool webviews are cluttered with low-contrast UI elements, missing keybo
 
 ## Sighted vs. Blind Developer Workflow Matrix
 
-| Workflow Task | Sighted Developer Workflow (Cursor/Copilot) | Blind Developer Workflow (Standard Tools) | Blind Developer Workflow (**NeuroCode**) |
+| Workflow Task | Sighted Developer Workflow (Cursor/Copilot) | Blind Developer Workflow (Standard Tools) | Blind Developer Workflow (**Angizo**)    |
 |---|---|---|---|
 | **Reviewing Uncommitted Diffs** | Glances at red/green visual diff panel (5 seconds). | Listens to screen reader read diff code line-by-line (15-30 mins). | Listens to **EchoDiff 2-sentence spoken summary & risk rating** (10 seconds). |
 | **Executing Git Operations** | Clicks Git panel icons or types terminal commands. | Navigates terminal output using screen reader cursor key commands. | Speaks natural voice command (**"Commit my changes"**). |
@@ -171,4 +171,4 @@ Many AI tool webviews are cluttered with low-contrast UI elements, missing keybo
 
 ## Conclusion
 
-NeuroCode bridges the accessibility gap in modern AI-assisted software development. By transforming visual IDE interactions into an audio-first, voice-guided, risk-aware conversational experience, NeuroCode enables blind and low-vision developers to code, review, and manage software with the same speed, autonomy, and confidence as sighted peers.
+Angizo bridges the accessibility gap in modern AI-assisted software development. By transforming visual IDE interactions into an audio-first, voice-guided, risk-aware conversational experience, Angizo enables blind and low-vision developers to code, review, and manage software with the same speed, autonomy, and confidence as sighted peers.

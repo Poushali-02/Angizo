@@ -1,4 +1,4 @@
-# NeuroCode — Build Roadmap
+# Angizo — Build Roadmap
 
 ## Build order (do not reorder — voice input is the highest-risk unknown)
 
@@ -27,7 +27,7 @@ Everything in `PRODUCT.md`'s MVP Feature List. This is the demo.
 - Multi-agent conflict detection ("two AI suggestions disagree" earcon)
 
 ## Phase 3 — post-hackathon roadmap (mention in pitch closing only, do not build)
-- NeuroCode Learn: accessible programming education built around the same audio-grammar vocabulary as Assist, so students learn the sounds/voice patterns they'll use professionally from day one
+- Angizo Learn: accessible programming education built around the same audio-grammar vocabulary as Assist, so students learn the sounds/voice patterns they'll use professionally from day one
 - Tactile structure export (swell paper / 3D-printable diagrams of data structures)
 - Meeting/screen-share accessibility narration
 - Native OS-level screen reader / Braille driver integration (beyond simulation)

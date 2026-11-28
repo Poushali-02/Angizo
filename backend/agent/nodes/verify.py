@@ -1,5 +1,5 @@
 """
-neurocode-backend/agent/nodes/verify.py
+backend/agent/nodes/verify.py
 
 [Verify] node: reads what [execute] reported and, for a failure, works out WHY from the
 git error text. The cause decides what happens next (agent/graph.py, route_after_verify):
@@ -11,7 +11,7 @@ import logging
 
 from agent.state import AgentState
 
-logger = logging.getLogger("neurocode.agent.verify")
+logger = logging.getLogger("angizo.agent.verify")
 
 # (cause, phrases git uses for it), checked in order. The phrases are specific on purpose:
 # git messages include repository paths, and a folder named "conflict-test" must not make

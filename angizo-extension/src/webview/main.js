@@ -1,5 +1,5 @@
 /**
- * neurocode-extension/src/webview/main.js
+ * angizo-extension/src/webview/main.js
  *
  * Webview client script running inside the VS Code Webview iframe.
  * Handles UI events, text commands, audio recording, and relays messages
@@ -73,7 +73,7 @@
       if (clean.startsWith('Workspace set to') || clean.startsWith('WebSocket') || clean.startsWith('Connected') || clean.startsWith('Session')) {
         addFeedItem('SYSTEM EVENT', clean, 'system');
       } else {
-        addFeedItem('NEUROCODE REASONING', clean, 'assistant');
+        addFeedItem('ANGIZO REASONING', clean, 'assistant');
       }
     } else if (str.startsWith('Audio playback notice:') || str.startsWith('Audio narration received')) {
       return;
@@ -453,7 +453,7 @@
       } else if (payload.type === 'confirmation_request') {
         stopProcessingAudio();
         if (payload.prompt) {
-          addFeedItem('NEUROCODE REASONING', payload.prompt, 'assistant');
+          addFeedItem('ANGIZO REASONING', payload.prompt, 'assistant');
         }
         if (confirmPrompt && confirmArea) {
           confirmPrompt.textContent = payload.prompt;

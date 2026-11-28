@@ -1,4 +1,4 @@
-# NeuroCode — Design Specification
+# Angizo — Design Specification
 
 ## Architecture decision: Modular Monolith
 
@@ -34,7 +34,7 @@ One FastAPI service, internally organized into independent modules, deployed as 
                          │   confirmation prompts down)
                          ▼
 ┌───────────────────────────────────────────────────────────┐
-│           NeuroCode Accessibility Agent (FastAPI)            │
+│           Angizo Accessibility Agent (FastAPI)               │
 │                                                               │
 │         Listen → Understand → Context → Reason →             │
 │              Confirm → Execute → Verify → Narrate             │
@@ -61,7 +61,7 @@ One FastAPI service, internally organized into independent modules, deployed as 
 ## Backend module breakdown
 
 ```
-neurocode-backend/
+backend/
 ├── agent/
 │   ├── graph.py          # LangGraph state graph definition (the 7-step loop)
 │   ├── state.py          # Shared agent state schema
@@ -88,7 +88,7 @@ neurocode-backend/
 ## Client (extension) module breakdown
 
 ```
-neurocode-extension/
+angizo-extension/
 ├── src/
 │   ├── extension.ts          # Activation, command registration
 │   ├── commands/               # One handler per VS Code command surface

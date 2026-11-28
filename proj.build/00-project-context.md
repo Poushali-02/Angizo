@@ -1,4 +1,4 @@
-# NeuroCode — Project Context
+# Angizo — Project Context
 
 Before planning any task, read PRODUCT.md, DESIGN.md, AGENT_SPEC.md,
 and ROADMAP.md at the repo root — they are the source of truth, not

@@ -1,5 +1,5 @@
 /**
- * neurocode-extension/src/observer/observer-hud.ts
+ * angizo-extension/src/observer/observer-hud.ts
  *
  * Floating 1-line HUD banner at the top of the active text editor.
  * Uses TextEditorDecorationType to overlay a non-intrusive status
@@ -34,7 +34,7 @@ export class ObserverHud {
     this.errorDecorationType = vscode.window.createTextEditorDecorationType({
       isWholeLine: false,
       after: {
-        contentText: " ⚠️ Neurocode extension found error",
+        contentText: " ⚠️ Angizo extension found error",
         color: "#FF4D4D",           // Vivid high-contrast red
         backgroundColor: "#2D1515", // Dark red tint
         fontWeight: "bold",
@@ -55,7 +55,7 @@ export class ObserverHud {
     this.applyToActiveEditor(`  ⚡ ${message}`);
   }
 
-  /** Display inline editor decoration 'Neurocode extension found error' on target line */
+  /** Display inline editor decoration 'Angizo extension found error' on target line */
   showInlineError(line: number): void {
     const editor = vscode.window.activeTextEditor;
     if (!editor) return;

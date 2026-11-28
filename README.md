@@ -15,17 +15,17 @@
 
 Standard IDE screen readers (NVDA, JAWS, VoiceOver) suffer from severe limitations when interacting with modern AI developer tools. When **GitHub Copilot** generates code, or when complex Git diffs and runtime errors occur, screen readers either stay completely silent ("dead air") or read raw diff punctuation character-by-character (`+`, `-`, `{`, `}`), creating cognitive overload.
 
-**NeuroCode** bridges this accessibility gap by introducing an audio-first, AI-driven IDE companion. Built with a 7-Node **LangGraph State Machine**, **Sarvam AI STT/TTS**, **Groq LLM Diff Intelligence**, and a custom **VS Code Extension**, NeuroCode translates complex background IDE events into non-intrusive Web Audio earcon streams, high-contrast HUD status overlays, and natural voice narration.
+**Angizo** bridges this accessibility gap by introducing an audio-first, AI-driven IDE companion. Built with a 7-Node **LangGraph State Machine**, **Sarvam AI STT/TTS**, **Groq LLM Diff Intelligence**, and a custom **VS Code Extension**, Angizo translates complex background IDE events into non-intrusive Web Audio earcon streams, high-contrast HUD status overlays, and natural voice narration.
 
 ---
 
 ## ⚡ The 3 Core Features
 
-NeuroCode provides three distinct, seamlessly integrated core features tailored for accessible software development:
+Angizo provides three distinct, seamlessly integrated core features tailored for accessible software development:
 
 ```
                                   ┌───────────────────────────────────────────────┐
-                                  │               NeuroCode Agent                 │
+                                  │               Angizo Agent                    │
                                   └───────────────────────┬───────────────────────┘
                                                           │
           ┌───────────────────────────────────────────────┼───────────────────────────────────────────────┐
@@ -87,7 +87,7 @@ Voice-first repository management and intelligent Git diff analysis:
   * **`interrupt()`**: commit, push and pull pause in `confirm`; a checkpointer keeps the state until the spoken "yes" resumes it with `Command(resume=...)`.
   * **Agentic loop**: `verify` classifies a failure; a push rejected because the remote is ahead goes `verify → recover → confirm` ("Should I pull them and push again?"), at most once. Conflicts are undone and explained, never left half-merged.
 * **Guarded `.env` File Access Security**:
-  * When a screen-reader or blind-mode developer attempts to open a sensitive `.env` file, NeuroCode intercepts access and prompts an auditory confirmation: *"Warning: You are trying to access a dot env file containing sensitive credentials. Press Alt+Y to confirm or Alt+N to reject."*
+  * When a screen-reader or blind-mode developer attempts to open a sensitive `.env` file, Angizo intercepts access and prompts an auditory confirmation: *"Warning: You are trying to access a dot env file containing sensitive credentials. Press Alt+Y to confirm or Alt+N to reject."*
 * **Spoken Confirmation Flow**:
   * High-risk operations (destructive commits, `.env` file modifications, git pushes) pause the agent execution loop and request explicit verbal or hotkey confirmation (`Alt+Y` / `Alt+N`).
 * **Multi-Tier Risk-Modulated Voice TTS**:
@@ -97,16 +97,16 @@ Voice-first repository management and intelligent Git diff analysis:
 
 ## ⌨️ Command & Keybinding Reference
 
-NeuroCode exposes native VS Code commands and accessible keyboard shortcuts:
+Angizo exposes native VS Code commands and accessible keyboard shortcuts:
 
 | Command Title | Command ID | Default Keybinding | Description |
 |---|---|---|---|
-| **Toggle Manual Coding Stream** | `neurocode.toggleManualStream` | `Alt+M` (`Cmd+Alt+M`) | Enables/disables Intellisense syntax & terminal error interception. |
-| **Confirm Action (Yes)** | `neurocode.confirm` | `Alt+Y` (`Cmd+Alt+Y`) | Confirms a pending agent action or sensitive file access. |
-| **Cancel Action (No)** | `neurocode.cancel` | `Alt+N` (`Cmd+Alt+N`) | Cancels a pending agent action or sensitive file access. |
-| **Toggle Copilot Observer** | `neurocode.toggleObserver` | *Palette* | Mutes or unmutes Copilot ambient audio earcons and HUD. |
-| **Start Voice Input** | `neurocode.startVoiceInput` | *Palette* | Opens the NeuroCode webview panel & starts voice loop. |
-| **Stop Voice Input** | `neurocode.stopVoiceInput` | *Palette* | Stops active microphone audio capture. |
+| **Toggle Manual Coding Stream** | `angizo.toggleManualStream` | `Alt+M` (`Cmd+Alt+M`) | Enables/disables Intellisense syntax & terminal error interception.    |
+| **Confirm Action (Yes)** | `angizo.confirm` | `Alt+Y` (`Cmd+Alt+Y`) | Confirms a pending agent action or sensitive file access.    |
+| **Cancel Action (No)** | `angizo.cancel` | `Alt+N` (`Cmd+Alt+N`) | Cancels a pending agent action or sensitive file access.    |
+| **Toggle Copilot Observer** | `angizo.toggleObserver` | *Palette* | Mutes or unmutes Copilot ambient audio earcons and HUD.    |
+| **Start Voice Input** | `angizo.startVoiceInput` | *Palette* | Opens the Angizo webview panel & starts voice loop.       |
+| **Stop Voice Input** | `angizo.stopVoiceInput` | *Palette* | Stops active microphone audio capture.    |
 
 ---
 
@@ -140,7 +140,7 @@ angizo/
 │   ├── requirements.txt
 │   └── requirements-dev.txt          # adds pytest
 │
-├── neurocode-extension/              # VS Code Extension
+├── angizo-extension/              # VS Code Extension
 │   ├── src/
 │   │   ├── extension.ts              # Extension host entrypoint & command registry
 │   │   ├── ws-client.ts              # WebSocket client connecting host to backend
@@ -187,8 +187,8 @@ Create a `.env` file inside `backend/`:
 
 ```env
 # Server Configuration
-NEUROCODE_HOST=0.0.0.0
-NEUROCODE_PORT=7001
+ANGIZO_HOST=0.0.0.0
+ANGIZO_PORT=7001
 
 # API Keys
 SARVAM_API_KEY=your_sarvam_api_key_here        # Required (STT & Fallback TTS)
@@ -233,14 +233,14 @@ python main.py
 In a separate terminal:
 
 ```bash
-cd neurocode-extension
+cd angizo-extension
 
 # Install dependencies & compile TypeScript
 npm install
 npm run compile
 ```
 
-1. Open `neurocode-extension` in VS Code (`code neurocode-extension`).
+1. Open `angizo-extension` in VS Code (`code angizo-extension`).
 2. Press **`F5`** to launch the **Extension Development Host**.
 3. In the new window, open the Command Palette (`Ctrl+Shift+P`) and run **`Angizo: Start Voice Input`**.
 
@@ -276,7 +276,7 @@ The LLM (Groq/Gemini) and the voices (Sarvam/ElevenLabs) are replaced by fakes, 
 ### VS Code extension: end-to-end
 
 ```bash
-cd neurocode-extension
+cd angizo-extension
 npm install
 npm run test:e2e
 ```
@@ -325,7 +325,7 @@ Every answer and its latency is written to `<sandbox>/runs/live/report.md`.
 1. **Voice command**: run *Angizo: Start Voice Input*, type *"review my git diff"* in the panel and press Run.
 2. **Commit**: type *"commit my changes"*, listen to the files and message, then press `Alt+Y` (or `Alt+N`).
 3. **Copilot**: accept a Copilot completion and listen for the one-sentence summary.
-4. **Sensitive file guard**: with a screen reader on (or `neurocode.simulateBlindMode`), open a `.env` file.
+4. **Sensitive file guard**: with a screen reader on (or `angizo.simulateBlindMode`), open a `.env` file.
 
 ---
 

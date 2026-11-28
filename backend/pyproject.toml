@@ -1,7 +1,7 @@
 [project]
-name = "neurocode-backend"
+name = "angizo-backend"
 version = "0.1.0"
-description = "NeuroCode Backend - AI Accessibility Agent"
+description = "Angizo Backend - AI Accessibility Agent"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [

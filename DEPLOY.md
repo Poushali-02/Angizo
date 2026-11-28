@@ -1,12 +1,12 @@
-# NeuroCode — Deployment & Operations Guide (`DEPLOY.md`)
+# Angizo — Deployment & Operations Guide (`DEPLOY.md`)
 
-This document provides comprehensive, step-by-step instructions for deploying, packaging, and operating the **NeuroCode** AI Accessibility Agent system.
+This document provides comprehensive, step-by-step instructions for deploying, packaging, and operating the **Angizo** AI Accessibility Agent system.
 
 ---
 
 ## 🏗️ Architecture Overview
 
-NeuroCode consists of two main decoupled components that communicate over a local or remote WebSocket connection:
+Angizo consists of two main decoupled components that communicate over a local or remote WebSocket connection:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -28,7 +28,7 @@ NeuroCode consists of two main decoupled components that communicate over a loca
 ```
 
 1. **FastAPI Backend Engine (`backend/`)**: Modular Python monolith that handles microphone recording (`sounddevice`), speech-to-text (`Sarvam AI`), LLM diff reasoning (`Groq LLaMA 3.3`), multi-tier TTS narration (`ElevenLabs` + `Sarvam AI` fallback), and Git operations (`GitPython`).
-2. **VS Code Extension (`neurocode-extension/`)**: TypeScript extension host managing the WebSocket client connection and bridging messages to an accessible webview UI.
+2. **VS Code Extension (`angizo-extension/`)**: TypeScript extension host managing the WebSocket client connection and bridging messages to an accessible webview UI.
 
 ---
 
@@ -56,9 +56,9 @@ Create a `.env` file in the `backend/` directory based on the following template
 
 ```ini
 # --- Server Configuration ---
-NEUROCODE_HOST=0.0.0.0
-NEUROCODE_PORT=7001
-NEUROCODE_REPO_PATH=
+ANGIZO_HOST=0.0.0.0
+ANGIZO_PORT=7001
+ANGIZO_REPO_PATH=
 
 # --- AI & LLM Service Keys ---
 # Groq API Key (Primary LLM: llama-3.3-70b-versatile)
@@ -82,7 +82,7 @@ GEMINI_MODEL=gemini-1.5-flash
 GITHUB_PAT=ghp_xxxxxxxx─────────────────────────
 
 # Database / Telemetry (Optional)
-MONGODB_URI=mongodb://localhost:27017/neurocode
+MONGODB_URI=mongodb://localhost:27017/angizo
 ```
 
 ---
@@ -120,7 +120,7 @@ python main.py
 
 ```bash
 # Navigate to extension directory
-cd neurocode-extension
+cd angizo-extension
 
 # Install node dependencies
 npm install
@@ -130,11 +130,11 @@ npm run compile
 ```
 
 #### Debugging in VS Code (Extension Development Host):
-1. Open the workspace root (`nuro_code`) in VS Code.
+1. Open the workspace root (`angizo`) in VS Code.
 2. Press `F5` (or go to **Run and Debug** -> **Extension**).
 3. In the new VS Code window that opens, open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
-4. Type `NeuroCode: Start Voice Input` and press `Enter`.
-5. The accessible NeuroCode panel will open in the side column and automatically connect to `ws://localhost:7001/ws/session`.
+4. Type `Angizo: Start Voice Input` and press `Enter`.
+5. The accessible Angizo panel will open in the side column and automatically connect to `ws://localhost:7001/ws/session`.
 
 ---
 
@@ -149,23 +149,23 @@ npm install -g @vscode/vsce
 
 ### 2. Package into VSIX
 ```bash
-cd neurocode-extension
+cd angizo-extension
 
 # Package extension
 vsce package
 ```
-*This produces `neurocode-0.1.0.vsix` in the `neurocode-extension/` directory.*
+*This produces `angizo-0.1.0.vsix` in the `angizo-extension/` directory.*
 
 ### 3. Installing the VSIX Package
 
 #### Via VS Code CLI:
 ```bash
-code --install-extension neurocode-0.1.0.vsix
+code --install-extension angizo-0.1.0.vsix
 ```
 
 #### Via Cursor IDE CLI:
 ```bash
-cursor --install-extension neurocode-0.1.0.vsix
+cursor --install-extension angizo-0.1.0.vsix
 ```
 
 #### Via VS Code UI:
@@ -173,7 +173,7 @@ cursor --install-extension neurocode-0.1.0.vsix
 2. Go to the **Extensions** view (`Ctrl+Shift+X` / `Cmd+Shift+X`).
 3. Click the three dots `...` menu in the top-right corner of the Extensions view.
 4. Select **Install from VSIX...**.
-5. Select `neurocode-0.1.0.vsix`.
+5. Select `angizo-0.1.0.vsix`.
 
 ---
 
@@ -220,21 +220,21 @@ CMD ["python", "main.py"]
 cd backend
 
 # Build Docker image
-docker build -t neurocode-backend:latest .
+docker build -t angizo-backend:latest .
 
 # Run Docker container with environment variables
 docker run -d \
-  --name neurocode-server \
+  --name angizo-server \
   -p 7001:7001 \
   --env-file .env \
-  neurocode-backend:latest
+  angizo-backend:latest
 ```
 
 ### 3. Deploying to Cloud PaaS (Railway / Render / AWS ECS)
 - **Port**: Set application port to `7001`.
 - **Environment Variables**: Add all key-value pairs from `.env` into the Cloud Provider's Secret Settings.
 - **WebSocket Support**: Ensure WebSocket connections (`/ws/session`) are enabled in your Cloud Load Balancer / Reverse Proxy.
-- **HTTPS / WSS**: When deploying to remote servers, replace `ws://` with secure WebSocket `wss://` in `neurocode-extension/src/extension.ts`.
+- **HTTPS / WSS**: When deploying to remote servers, replace `ws://` with secure WebSocket `wss://` in `angizo-extension/src/extension.ts`.
 
 ---
 
@@ -242,7 +242,7 @@ docker run -d \
 
 | Check Item | Target Endpoint / Command | Expected Result |
 | :--- | :--- | :--- |
-| **Backend REST API** | `GET http://localhost:7001/` | Returns JSON status `{ "status": "ok", "app": "NeuroCode" }` |
+| **Backend REST API** | `GET http://localhost:7001/` | Returns JSON status `{ "status": "ok", "app": "Angizo" }`    |
 | **WebSocket Connection** | `ws://localhost:7001/ws/session` | Upgraded to WebSocket (HTTP 101 Switching Protocols) |
 | **Voice STT Audio Test** | Voice toggle in Webview | Status updates `listening` → `transcribing` → `idle` |
 | **LLM Reasoning & Git** | Voice/Text: "check git status" | Speaks summary via TTS and logs diff analysis |
@@ -258,12 +258,12 @@ docker run -d \
 
 ### 2. Extension Displays "Backend Disconnected"
 - **Cause**: FastAPI server is not running, or listening on a different port.
-- **Solution**: Check if backend is running on `http://localhost:7001`. If custom port is used, update `wsPort` in `neurocode-extension/src/extension.ts` line 62.
+- **Solution**: Check if backend is running on `http://localhost:7001`. If custom port is used, update `wsPort` in `angizo-extension/src/extension.ts` line 62.
 
 ### 3. ElevenLabs Audio Payload Silent / Fails
 - **Cause**: ElevenLabs quota exceeded or `ELEVENLABS_API_KEY` invalid/missing.
-- **Solution**: NeuroCode includes an automatic fallback mechanism. If ElevenLabs returns an error (or 401/429), it instantly falls back to **Sarvam AI TTS (`bulbul:v2`)**, ensuring voice output is never interrupted.
+- **Solution**: Angizo includes an automatic fallback mechanism. If ElevenLabs returns an error (or 401/429), it instantly falls back to **Sarvam AI TTS (`bulbul:v2`)**, ensuring voice output is never interrupted.
 
 ---
 
-*NeuroCode — AI Accessibility Agent Deployment Guide.*
+*Angizo — AI Accessibility Agent Deployment Guide.*

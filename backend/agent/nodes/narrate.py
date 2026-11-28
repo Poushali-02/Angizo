@@ -1,5 +1,5 @@
 """
-neurocode-backend/agent/nodes/narrate.py
+backend/agent/nodes/narrate.py
 
 [Narrate] node: chooses the sentence the user hears. Speech itself is produced by
 api/ws.py (send_spoken), which plays the first sentence while the rest is synthesised.
@@ -11,7 +11,7 @@ import re
 
 from agent.state import AgentState
 
-logger = logging.getLogger("neurocode.agent.narrate")
+logger = logging.getLogger("angizo.agent.narrate")
 
 _FAILURE_WORDS = {
     "remote_ahead": "The push was rejected because the remote has commits you don't have. Pull them first, then push.",

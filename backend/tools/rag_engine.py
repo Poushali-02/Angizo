@@ -1,5 +1,5 @@
 """
-neurocode-backend/tools/rag_engine.py
+backend/tools/rag_engine.py
 
 Codebase RAG (Retrieval Augmented Generation) Engine:
 - Recursively scans active workspace code files (.py, .ts, .js, .md, etc.)
@@ -17,7 +17,7 @@ import asyncio
 import httpx
 import config
 
-logger = logging.getLogger("neurocode.rag_engine")
+logger = logging.getLogger("angizo.rag_engine")
 
 IGNORE_DIRS = {".git", ".venv", "node_modules", "out", "dist", "__pycache__", ".next", ".vscode", "build"}
 ALLOWED_EXTS = {".py", ".ts", ".js", ".json", ".md", ".html", ".css", ".sql", ".sh"}  # never secrets files

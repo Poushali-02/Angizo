@@ -1,6 +1,6 @@
-# NeuroCode Architecture Diagrams & System Topology
+# Angizo Architecture Diagrams & System Topology
 
-This document illustrates the complete system topology, agent workflow, component breakdown, and audio latency management for the **NeuroCode AI Accessibility Agent**, updated to match the verified implementation across the VS Code extension host and Python FastAPI backend.
+This document illustrates the complete system topology, agent workflow, component breakdown, and audio latency management for the **Angizo AI Accessibility Agent**, updated to match the verified implementation across the VS Code extension host and Python FastAPI backend.
 
 ---
 
@@ -18,7 +18,7 @@ graph TD
 
     subgraph "VS Code Extension Host (Node.js Environment)"
         VEM --> WBridge["webview-bridge.ts"]
-        WBridge --> WSClient["ws-client.ts (NeurocodeWsClient)"]
+        WBridge --> WSClient["ws-client.ts (AngizoWsClient)"]
         WSClient -- "Bi-directional WebSocket (ws://localhost:7001/ws/session)" --> WSAPI["api/ws.py (FastAPI Endpoint)"]
     end
 
@@ -54,7 +54,7 @@ graph TD
 
 ## 2. Agent Core Loop (LangGraph 7-Node StateGraph Flow)
 
-NeuroCode orchestrates complex operations through a deterministic 7-node LangGraph `StateGraph`. Safe actions proceed automatically; mutating actions pause at the `confirm` node for human-in-the-loop verification.
+Angizo orchestrates complex operations through a deterministic 7-node LangGraph `StateGraph`. Safe actions proceed automatically; mutating actions pause at the `confirm` node for human-in-the-loop verification.
 
 ```mermaid
 graph TD
@@ -95,7 +95,7 @@ classDiagram
             +activate(context)
             +deactivate()
         }
-        class NeurocodeWsClient {
+        class AngizoWsClient {
             -ws: WebSocket
             +connect()
             +send(message)
@@ -170,10 +170,10 @@ classDiagram
         }
     }
 
-    Extension --> NeurocodeWsClient
+    Extension --> AngizoWsClient
     Extension --> WebviewBridge
     WebviewBridge --> WebviewPanel
-    NeurocodeWsClient <..> WebSocketHandler : WebSocket Protocol
+    AngizoWsClient <..> WebSocketHandler : WebSocket Protocol
 
     MainApp --> WebSocketHandler
     WebSocketHandler --> SarvamSTTClient
@@ -190,7 +190,7 @@ classDiagram
 
 ## 4. Zero-Silence Audio Handoff Sequence Diagram
 
-To eliminate silent "dead air" for blind developers, NeuroCode streams instant filler audio while RAG and LLM processing execute in parallel.
+To eliminate silent "dead air" for blind developers, Angizo streams instant filler audio while RAG and LLM processing execute in parallel.
 
 ```mermaid
 sequenceDiagram
@@ -234,7 +234,7 @@ sequenceDiagram
 
 ## 5. Technology Stack Summary
 
-| Layer / Subsystem | Primary Technology | Model / Library | Key Responsibility in NeuroCode |
+| Layer / Subsystem | Primary Technology | Model / Library | Key Responsibility in Angizo    |
 |---|---|---|---|
 | **IDE Extension Host** | TypeScript / Node.js | `vscode` API v1.85+ | Extension lifecycle, window management, webview messaging bridge. |
 | **Webview UI** | Vanilla HTML5 / JS | ARIA Live Regions, Web Audio | Accessible dark-mode UI, base64 audio player, recording indicator ring. |

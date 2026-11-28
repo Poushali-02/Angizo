@@ -1,5 +1,5 @@
 """
-neurocode-backend/tools/sarvam_stt.py
+backend/tools/sarvam_stt.py
 
 Sarvam STT Integration following Sarvam Strategy Spec:
 - 16kHz mono 16-bit PCM streaming audio capture.
@@ -11,7 +11,7 @@ import logging
 import httpx
 import config
 
-logger = logging.getLogger("neurocode.sarvam_stt")
+logger = logging.getLogger("angizo.sarvam_stt")
 
 class SarvamSTT:
     def __init__(self, api_key: str = None):

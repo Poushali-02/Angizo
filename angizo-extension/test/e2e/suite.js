@@ -67,7 +67,7 @@ exports.run = async function run() {
     editor.selection = new vscode.Selection(1, 0, 1, 0);
     await typeSlowly("const a = ;");
     // Wait for the TypeScript server to flag the error (a cold start can take several seconds)
-    const end = Date.now() + 30000;
+    const end = Date.now() + 60000; // a cold TypeScript server can take over 30 s on first use
     while (!vscode.languages.getDiagnostics(doc.uri).some((d) => d.severity === vscode.DiagnosticSeverity.Error)) {
       if (Date.now() > end) throw new Error("TypeScript never reported the syntax error");
       await sleep(250);
@@ -186,21 +186,21 @@ exports.run = async function run() {
   });
 
   await check("Alt+Y and Alt+N send the confirmation answer to the backend", async () => {
-    await vscode.commands.executeCommand("neurocode.confirm");
+    await vscode.commands.executeCommand("angizo.confirm");
     await waitFor("confirm yes", (m) => m.type === "confirm_response" && m.confirmed === true);
-    await vscode.commands.executeCommand("neurocode.cancel");
+    await vscode.commands.executeCommand("angizo.cancel");
     await waitFor("confirm no", (m) => m.type === "confirm_response" && m.confirmed === false);
   });
 
   await check("the observer mute command silences the Copilot stream", async () => {
-    await vscode.commands.executeCommand("neurocode.toggleObserver"); // mute
+    await vscode.commands.executeCommand("angizo.toggleObserver"); // mute
     const before = countWhere((m) => m.event_type === "copilot_complete");
     const doc = await vscode.workspace.openTextDocument(file("generated.ts"));
     const editor = await vscode.window.showTextDocument(doc);
     await editor.edit((e) => e.insert(doc.lineAt(doc.lineCount - 1).range.end, "// a long comment from the AI\n"));
     await sleep(3000);
     assert.strictEqual(countWhere((m) => m.event_type === "copilot_complete"), before);
-    await vscode.commands.executeCommand("neurocode.toggleObserver"); // unmute again
+    await vscode.commands.executeCommand("angizo.toggleObserver"); // unmute again
   });
 
   console.log("\n[e2e] Results:\n" + results.map((r) => "[e2e]   " + r).join("\n"));

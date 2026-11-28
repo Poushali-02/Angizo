@@ -1,5 +1,5 @@
 /**
- * neurocode-extension/src/observer/observer-status-bar.ts
+ * angizo-extension/src/observer/observer-status-bar.ts
  *
  * Accessible VS Code Status Bar item for the Copilot Observer.
  *
@@ -24,7 +24,7 @@ export class ObserverStatusBar {
       vscode.StatusBarAlignment.Left,
       100
     );
-    this.item.command = "neurocode.toggleObserver";
+    this.item.command = "angizo.toggleObserver";
     this.item.tooltip = "Angizo Copilot Observer — click to toggle mute";
     this.setIdle();
     this.item.show();

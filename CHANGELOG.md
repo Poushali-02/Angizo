@@ -2,6 +2,15 @@
 
 All notable changes to Angizo, newest first. Everything below is on the `v1` branch and not yet in `main`.
 
+## 2026-11-28: Renamed NeuroCode to Angizo everywhere
+
+### Changed
+- Every mention of NeuroCode in code and docs now says Angizo (65 files).
+- The extension folder is now `angizo-extension/` (was `neurocode-extension/`). CI, scripts and docs use the new path.
+- Command IDs and settings are now `angizo.*`, for example `angizo.confirm`, `angizo.runCommand`, `angizo.backendPort` and `angizo.simulateBlindMode`. Keybindings follow them. A setting saved under the old `neurocode.*` name must be set again under `angizo.*`.
+- Environment variables are now `ANGIZO_HOST`, `ANGIZO_PORT` and `ANGIZO_REPO_PATH`. The old `NEUROCODE_*` names still work, so existing `.env` files need no change.
+- Also renamed: log names (`angizo.*`), `AngizoWsClient`, the package names (`angizo`, `angizo-backend`), and absolute `nuro_code` links in the pitch doc (now repo-relative).
+
 ## 2026-11-28: Structured outputs, interrupt(), the recovery loop, measurements and the demo
 
 ### Added

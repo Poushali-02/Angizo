@@ -1,6 +1,6 @@
-# NeuroCode — Working Functionalities & Feature Audit
+# Angizo — Working Functionalities & Feature Audit
 
-This document summarizes all verified, working functionalities built into the NeuroCode AI Accessibility Agent across the backend engine, voice pipeline, AI models, and VS Code extension.
+This document summarizes all verified, working functionalities built into the Angizo AI Accessibility Agent across the backend engine, voice pipeline, AI models, and VS Code extension.
 
 ---
 
@@ -70,7 +70,7 @@ This document summarizes all verified, working functionalities built into the Ne
 
 * **Extension Host Architecture:**
   * Webview never communicates with the network directly.
-  * Extension host maintains a persistent WebSocket connection (`ws://localhost:7001/ws/session`) via `NeurocodeWsClient`.
+  * Extension host maintains a persistent WebSocket connection (`ws://localhost:7001/ws/session`) via `AngizoWsClient`.
 * **Webview Bridge (`WebviewBridge`):**
   * Relays postMessages between the webview UI and extension host WebSocket.
 * **Accessible Dark-Mode Webview UI:**

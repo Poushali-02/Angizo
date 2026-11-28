@@ -1,7 +1,7 @@
 /**
- * neurocode-extension/src/ws-client.ts
+ * angizo-extension/src/ws-client.ts
  *
- * WebSocket connection to the NeuroCode backend.
+ * WebSocket connection to the Angizo backend.
  *
  * CRITICAL CONSTRAINT (DESIGN.md + 01-architecture.md):
  *   This WebSocket lives in the extension host (Node.js process),
@@ -22,7 +22,7 @@ export interface BackendMessage {
   [key: string]: unknown;
 }
 
-export class NeurocodeWsClient extends EventEmitter {
+export class AngizoWsClient extends EventEmitter {
   private ws: WebSocket | null = null;
   private url: string;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;

@@ -1,5 +1,5 @@
 """
-neurocode-backend/agent/nodes/context.py
+backend/agent/nodes/context.py
 """
 import asyncio
 import logging
@@ -7,7 +7,7 @@ from agent.state import AgentState
 from tools.git_tool import status as git_status_tool, diff as git_diff_tool
 from tools.rag_engine import rag_engine
 
-logger = logging.getLogger("neurocode.agent.context")
+logger = logging.getLogger("angizo.agent.context")
 
 async def gather_context(state: AgentState) -> AgentState:
     """

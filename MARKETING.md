@@ -1,4 +1,4 @@
-# NeuroCode — Business & Marketing Strategy
+# Angizo — Business & Marketing Strategy
 
 > *"The most powerful developer tool in the world is useless if 253 million people can't access it."*
 
@@ -24,13 +24,13 @@ There are an estimated **253 million visually impaired people** worldwide, with 
 | No risk-aware confirmation for Git commands | Accidental `git push --force` can destroy days of work |
 | Copilot Chat generates code silently | Blind developers are completely unaware of what AI is writing |
 
-**NeuroCode solves every single one of these problems.**
+**Angizo solves every single one of these problems.**
 
 ---
 
-## 🏆 The Product — What NeuroCode Is
+## 🏆 The Product — What Angizo Is
 
-**NeuroCode** is a VS Code extension and AI backend that transforms the software development workflow into an **audio-first, voice-guided experience** for blind and low-vision professional developers.
+**Angizo** is a VS Code extension and AI backend that transforms the software development workflow into an **audio-first, voice-guided experience** for blind and low-vision professional developers.
 
 It sits alongside GitHub Copilot, Cursor, and standard AI tools as an **accessibility intelligence layer** — converting visual IDE interactions into spoken narration, risk-aware voice confirmations, and real-time auditory feedback.
 
@@ -39,7 +39,7 @@ It sits alongside GitHub Copilot, Cursor, and standard AI tools as an **accessib
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
-│   "NeuroCode gives blind developers the same speed, safety,    │
+│   "Angizo gives blind developers the same speed, safety,       │
 │    and autonomy that AI coding tools give sighted developers." │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
@@ -99,13 +99,13 @@ For companies with accessibility mandates (Fortune 500, government agencies, uni
 
 #### 3. API Platform (Long-Term)
 
-Open NeuroCode's voice narration, EchoDiff, and risk-banding capabilities as a REST API:
+Open Angizo's voice narration, EchoDiff, and risk-banding capabilities as a REST API:
 - **Usage-based pricing:** $0.002 per diff analysis, $0.001 per TTS narration
 - Target customers: IDE vendors, developer productivity platforms, accessibility toolkit builders
 
 #### 4. Services & Consulting
 
-- Accessibility auditing and integration support for enterprise dev teams adopting NeuroCode.
+- Accessibility auditing and integration support for enterprise dev teams adopting Angizo.
 - Estimated: $5,000–$25,000 per engagement.
 
 ---
@@ -116,7 +116,7 @@ Open NeuroCode's voice narration, EchoDiff, and risk-banding capabilities as a R
 
 - **Open Source Core:** Release the core VS Code extension and LangGraph backend on GitHub under MIT License to build community trust.
 - **Developer Community Outreach:** Target blind developer communities (ACB, NFB, Disability in Tech, a11y Slack channels, r/blind, Twitter/X accessibility circles).
-- **Influencer Demos:** Partner with prominent blind developer content creators on YouTube and Twitch to demonstrate NeuroCode live.
+- **Influencer Demos:** Partner with prominent blind developer content creators on YouTube and Twitch to demonstrate Angizo live.
 - **VS Code Marketplace Launch:** Publish to the official VS Code Marketplace — zero acquisition friction.
 - **Hackathon Awards:** Leverage hackathon wins for press visibility and VC introductions.
 
@@ -128,7 +128,7 @@ Open NeuroCode's voice narration, EchoDiff, and risk-banding capabilities as a R
 
 ### Phase 3: Platform & API Expansion (Year 2–3)
 
-- Expose NeuroCode's EchoDiff, risk-banding, and TTS narration as a standalone developer API.
+- Expose Angizo's EchoDiff, risk-banding, and TTS narration as a standalone developer API.
 - Partner with **JetBrains**, **Neovim/Helix community**, and **Eclipse Foundation** to port the backend to non-VS Code IDEs.
 - Explore integration with **GitHub Copilot Enterprise** as an accessibility plugin.
 
@@ -147,7 +147,7 @@ Open NeuroCode's voice narration, EchoDiff, and risk-banding capabilities as a R
 | **Voice Control for VS Code** | Simple voice-to-command mapping | No AI context, no diff intelligence, no TTS output |
 | **Standard Screen Readers (NVDA/JAWS)** | General OS screen reading | Cannot interpret Git diffs, risk assess code changes, or interact with AI agents |
 
-### NeuroCode's Unfair Advantages
+### Angizo's Unfair Advantages
 
 1. **Category Creator:** No product in the market occupies the "AI accessibility layer for developers" space.
 2. **Deep VS Code API Integration:** Real-time extension host hooks unavailable to web-based tools.
@@ -180,7 +180,7 @@ Open NeuroCode's voice narration, EchoDiff, and risk-banding capabilities as a R
 
 ### Brand Pillars
 
-1. **Empowerment:** NeuroCode doesn't create workarounds — it creates parity.
+1. **Empowerment:** Angizo doesn't create workarounds — it creates parity.
 2. **Safety:** Every action is narrated, risk-assessed, and confirmed before execution.
 3. **Intelligence:** Not just a screen reader; an AI reasoning agent that understands code.
 4. **Reliability:** Multi-tier fallbacks guarantee voice audio and AI responses always work.
@@ -213,7 +213,7 @@ Open NeuroCode's voice narration, EchoDiff, and risk-banding capabilities as a R
 | **VS Code API changes break integration** | Low | Pin to stable API versions; maintain compatibility layer |
 | **AI API cost scaling** | Medium | Tiered pricing ensures costs scale with revenue; local RAG reduces LLM calls |
 | **Small initial market size** | Medium | TAM expands as developer accessibility awareness grows post-ADA enforcement |
-| **GitHub Copilot adds native accessibility** | Low–Medium | NeuroCode's multi-provider architecture (Groq + ElevenLabs + Sarvam) + 7-node safety loop is a unique, deep moat |
+| **GitHub Copilot adds native accessibility** | Low–Medium | Angizo's multi-provider architecture (Groq + ElevenLabs + Sarvam) + 7-node safety loop is a unique, deep moat    |
 | **User adoption friction** | Low | Free tier + VS Code Marketplace zero-click install eliminates barriers |
 
 ---
@@ -224,7 +224,7 @@ The accessibility gap in AI developer tools is **not a niche edge case — it is
 
 Legislation (ADA, Section 508, European Accessibility Act 2025) is increasingly holding enterprises accountable. The cost of excluding blind developers is rising.
 
-**NeuroCode is the first mover in an untapped category** with:
+**Angizo is the first mover in an untapped category** with:
 
 - A working technical MVP.
 - A clear enterprise revenue path via compliance-driven procurement.

@@ -1,5 +1,5 @@
 """
-neurocode-backend/tools/gemini_llm.py
+backend/tools/gemini_llm.py
 
 Gemini LLM Integration (with Groq LLM Fallback):
 - Primary LLM: Google Gemini REST API (gemini-1.5-flash)
@@ -15,7 +15,7 @@ import config
 from agent.plan_schema import parse_plan
 from tools.diff_intelligence import diff_intelligence, _clean_spoken
 
-logger = logging.getLogger("neurocode.gemini_llm")
+logger = logging.getLogger("angizo.gemini_llm")
 
 class GeminiLLM:
     def __init__(self):
@@ -84,7 +84,7 @@ class GeminiLLM:
             logger.info(f"[Planner] Fast path for '{transcript}': {[c['tool'] for c in quick['tool_calls']]}")
             return quick
 
-        prompt = f"""You are the AI Planner for NeuroCode accessibility development agent.
+        prompt = f"""You are the AI Planner for Angizo accessibility development agent.
 Analyze the user command and select atomic tools to execute:
 
 Available Atomic Tools:
@@ -189,7 +189,7 @@ Return JSON ONLY in this format:
         Synthesizes plain-language narration reasoning for the user based on
         RAG codebase context, git status/diffs, and user prompt.
         """
-        prompt = f"""You are the AI assistant for NeuroCode, a voice-driven accessibility tool.
+        prompt = f"""You are the AI assistant for Angizo, a voice-driven accessibility tool.
 Answer the user's question in at most 2 short spoken sentences (under 45 words) based on the provided codebase context.
 
 User Question: "{transcript}"
@@ -220,7 +220,7 @@ Answer requirement:
 # with extra detail ("commit with message ...", "push to staging") still goes to the LLM.
 
 _FILLER_WORDS = re.compile(
-    r"\b(please|hey|hi|angizo|neurocode|can you|could you|would you|kindly|now|for me|just)\b"
+    r"\b(please|hey|hi|angizo|angizo|can you|could you|would you|kindly|now|for me|just)\b"
 )
 _FAST_PATTERNS = [
     (r"(commit|save) (my |all |the )?(changes|work|files|code)( and push( (it|them|to origin))?)?",

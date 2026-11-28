@@ -1,5 +1,5 @@
 /**
- * neurocode-extension/src/observer/observer-earcon.ts
+ * angizo-extension/src/observer/observer-earcon.ts
  *
  * Earcon controller for the Copilot Observer.
  *

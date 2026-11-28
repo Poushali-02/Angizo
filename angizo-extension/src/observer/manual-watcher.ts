@@ -1,5 +1,5 @@
 /**
- * neurocode-extension/src/observer/manual-watcher.ts
+ * angizo-extension/src/observer/manual-watcher.ts
  *
  * Stage 1 Manual Coding Observer — Intellisense Syntax Error Interceptor.
  *
@@ -12,7 +12,7 @@
  */
 
 import * as vscode from "vscode";
-import { NeurocodeWsClient } from "../ws-client";
+import { AngizoWsClient } from "../ws-client";
 
 export interface ManualSyntaxErrorEvent {
   type: "syntax_error";
@@ -34,7 +34,7 @@ interface LineErrorEntry {
 export class ManualWatcher {
   private disposables: vscode.Disposable[] = [];
   private onEvent: (event: ManualSyntaxErrorEvent) => void;
-  private wsClient: NeurocodeWsClient | undefined;
+  private wsClient: AngizoWsClient | undefined;
 
   // Active error map per file -> per 0-indexed line -> LineErrorEntry
   private pendingLineErrors: Map<string, Map<number, LineErrorEntry>> = new Map();
@@ -70,7 +70,7 @@ export class ManualWatcher {
 
   constructor(
     onEvent: (event: ManualSyntaxErrorEvent) => void,
-    wsClient?: NeurocodeWsClient
+    wsClient?: AngizoWsClient
   ) {
     this.onEvent = onEvent;
     this.wsClient = wsClient;

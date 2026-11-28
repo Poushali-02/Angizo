@@ -1,5 +1,5 @@
 /**
- * neurocode-extension/src/observer/terminal-watcher.ts
+ * angizo-extension/src/observer/terminal-watcher.ts
  *
  * Stage 2 Runtime & Compilation Error Interceptor.
  *
@@ -13,7 +13,7 @@
  */
 
 import * as vscode from "vscode";
-import { NeurocodeWsClient } from "../ws-client";
+import { AngizoWsClient } from "../ws-client";
 
 export interface TerminalRuntimeErrorEvent {
   type: "runtime_error";
@@ -31,7 +31,7 @@ const ANSI_ESCAPES = /\x1B\][^\x07\x1B]*(?:\x07|\x1B\x5C)|\x1B\[[0-?]*[ -/]*[@-~
 export class TerminalWatcher {
   private disposables: vscode.Disposable[] = [];
   private onEvent: (event: TerminalRuntimeErrorEvent) => void;
-  private wsClient: NeurocodeWsClient | undefined;
+  private wsClient: AngizoWsClient | undefined;
 
   private terminalBuffer = "";
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -40,7 +40,7 @@ export class TerminalWatcher {
 
   constructor(
     onEvent: (event: TerminalRuntimeErrorEvent) => void,
-    wsClient?: NeurocodeWsClient
+    wsClient?: AngizoWsClient
   ) {
     this.onEvent = onEvent;
     this.wsClient = wsClient;

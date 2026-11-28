@@ -1,11 +1,11 @@
 """
-neurocode-backend/agent/nodes/execute.py
+backend/agent/nodes/execute.py
 """
 import logging
 from agent.state import AgentState
 from agent.registry import execute_tool_call
 
-logger = logging.getLogger("neurocode.agent.execute")
+logger = logging.getLogger("angizo.agent.execute")
 
 async def execute_action(state: AgentState) -> AgentState:
     """

@@ -1,5 +1,5 @@
 """
-neurocode-backend/tools/git_tool.py
+backend/tools/git_tool.py
 
 GitPython wrapper per AGENT_SPEC.md interfaces.
 """
@@ -8,7 +8,7 @@ import os
 import logging
 import config
 
-logger = logging.getLogger("neurocode.tools.git")
+logger = logging.getLogger("angizo.tools.git")
 
 # Per-session repo path override (set by WebSocket client)
 _session_repo_path = None

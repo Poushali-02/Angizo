@@ -52,7 +52,7 @@ context → understand → reason → confirm ⇄ interrupt(): pause for a spoke
 2. Install the dependencies:
 
    ```powershell
-   cd backend; uv pip install -r requirements-dev.txt; cd ..\neurocode-extension; npm install; npm run compile
+   cd backend; uv pip install -r requirements-dev.txt; cd ..\angizo-extension; npm install; npm run compile
    ```
 
 3. A fresh sandbox to demo in (this resets it):
@@ -71,7 +71,7 @@ context → understand → reason → confirm ⇄ interrupt(): pause for a spoke
 2. Open VS Code with Angizo on the playground:
 
    ```powershell
-   code --extensionDevelopmentPath=C:\Users\poush\OneDrive\Desktop\angizo\neurocode-extension C:\Users\poush\OneDrive\Projects\angizo-sandbox\playground
+   code --extensionDevelopmentPath=C:\Users\poush\OneDrive\Desktop\angizo\angizo-extension C:\Users\poush\OneDrive\Projects\angizo-sandbox\playground
    ```
 
 3. Press `Ctrl+Shift+P`, then run **Angizo: Start Voice Input** to open the panel.
@@ -117,7 +117,7 @@ It takes about 3 minutes. It records the screen area where the VS Code window si
 | Layer | Command | What it proves | Cost |
 |---|---|---|---|
 | Backend logic | `cd backend; .venv\Scripts\python.exe -m pytest` | ~180 tests: git safety, the graph with `interrupt()` and the recovery loop, schema validation, the plan guard, the WebSocket API, speech fallbacks | free, offline |
-| Extension in real VS Code | `cd neurocode-extension; npm run test:e2e` | 12 checks: syntax errors (late ones too), Copilot detection, the terminal crash, Alt+Y/N, mute | free, offline |
+| Extension in real VS Code | `cd angizo-extension; npm run test:e2e` | 12 checks: syntax errors (late ones too), Copilot detection, the terminal crash, Alt+Y/N, mute | free, offline    |
 | Real APIs | `$env:ANGIZO_LIVE="1"; $env:ANGIZO_SANDBOX="C:\Users\poush\OneDrive\Projects\angizo-sandbox"; cd backend; .venv\Scripts\python.exe -m pytest tests_live` | Groq planning and answers, speech, transcription, latency; add `$env:ANGIZO_LIVE_MIC="1"` for the microphone | Groq free; about 30 Sarvam requests |
 | Measurements | `cd backend; .venv\Scripts\python.exe evals\measure.py --runs 3 --speech` | planner accuracy, unsafe-action count, time per node, code search, token use, writes `reports/measurements.md` | Groq free; 4 Sarvam requests |
 | Everything, as a user sees it | the demo recording (section 3) | the whole loop: VS Code → backend → LLM → git → speech → panel | about 25 Sarvam requests |

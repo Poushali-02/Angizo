@@ -1,5 +1,5 @@
 """
-neurocode-backend/agent/nodes/understand.py
+backend/agent/nodes/understand.py
 """
 import asyncio
 import logging
@@ -7,7 +7,7 @@ from agent.state import AgentState
 from tools.gemini_llm import gemini_llm
 from tools.git_tool import status as git_status_tool
 
-logger = logging.getLogger("neurocode.agent.understand")
+logger = logging.getLogger("angizo.agent.understand")
 
 async def understand_intent(state: AgentState) -> AgentState:
     """

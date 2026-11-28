@@ -62,13 +62,13 @@ async function typeSlowly(text, delay = 70) {
 
 async function say(command) {
   const before = clips().length;
-  await vscode.commands.executeCommand("neurocode.runCommand", command);
+  await vscode.commands.executeCommand("angizo.runCommand", command);
   return before;
 }
 
 async function answer(yes) {
   const before = clips().length;
-  await vscode.commands.executeCommand(yes ? "neurocode.confirm" : "neurocode.cancel");
+  await vscode.commands.executeCommand(yes ? "angizo.confirm" : "angizo.cancel");
   return before;
 }
 
@@ -83,7 +83,7 @@ exports.run = async function run() {
   // Tidy window: no chat sidebar, Angizo panel open
   await vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar").then(undefined, () => {});
   await vscode.commands.executeCommand("workbench.action.closeAllEditors");
-  await vscode.commands.executeCommand("neurocode.startVoiceInput");
+  await vscode.commands.executeCommand("angizo.startVoiceInput");
   await sleep(4000); // let the extension connect to the backend
 
   // Tell the recorder the window is ready, and wait until it is recording

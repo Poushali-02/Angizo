@@ -1,5 +1,5 @@
 """
-neurocode-backend/api/rest.py
+backend/api/rest.py
 
 REST endpoints: health check, config, auth token exchange.
 Step 1: Only /health is implemented.

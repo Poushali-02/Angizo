@@ -1,5 +1,5 @@
 """
-neurocode-backend/agent/nodes/__init__.py
+backend/agent/nodes/__init__.py
 """
 from .understand import understand_intent
 from .context import gather_context

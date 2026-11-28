@@ -1,5 +1,5 @@
 """
-neurocode-backend/agent/nodes/recover.py
+backend/agent/nodes/recover.py
 
 [Recover] node: the agentic loop. Reached only when [verify] found a failure that has a
 known fix and no recovery has been tried yet. It replaces the plan with the fix and asks
@@ -14,7 +14,7 @@ import logging
 
 from agent.state import AgentState
 
-logger = logging.getLogger("neurocode.agent.recover")
+logger = logging.getLogger("angizo.agent.recover")
 
 MAX_RECOVERY_ATTEMPTS = 1
 

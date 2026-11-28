@@ -1,5 +1,5 @@
 """
-neurocode-backend/agent/nodes/confirm.py
+backend/agent/nodes/confirm.py
 
 [Confirm] node: the human-in-the-loop step.
 
@@ -18,7 +18,7 @@ from langgraph.types import interrupt
 
 from agent.state import AgentState
 
-logger = logging.getLogger("neurocode.agent.confirm")
+logger = logging.getLogger("angizo.agent.confirm")
 
 
 def confirm_action(state: AgentState) -> dict:

@@ -1,5 +1,5 @@
 /**
- * neurocode-extension/src/extension.ts
+ * angizo-extension/src/extension.ts
  *
  * VS Code extension activation and command registration.
  * Creates the webview panel and wires up the postMessage bridge.
@@ -12,7 +12,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { NeurocodeWsClient } from "./ws-client";
+import { AngizoWsClient } from "./ws-client";
 import { WebviewBridge } from "./webview-bridge";
 import { CopilotWatcher, CopilotObserverEvent } from "./observer/copilot-watcher";
 import { ManualWatcher, ManualSyntaxErrorEvent } from "./observer/manual-watcher";
@@ -22,7 +22,7 @@ import { ObserverStatusBar } from "./observer/observer-status-bar";
 import { ObserverHud } from "./observer/observer-hud";
 
 let panel: vscode.WebviewPanel | undefined;
-let wsClient: NeurocodeWsClient | undefined;
+let wsClient: AngizoWsClient | undefined;
 let bridge: WebviewBridge | undefined;
 
 // --- Copilot Observer modules (live for the full extension lifetime) ---
@@ -41,8 +41,8 @@ export function activate(context: vscode.ExtensionContext) {
   // Backend port: ANGIZO_WS_PORT (used by the end-to-end tests), then the angizo setting, then 7001
   const wsPort =
     process.env.ANGIZO_WS_PORT ||
-    String(vscode.workspace.getConfiguration("neurocode").get<number>("backendPort", 7001));
-  wsClient = new NeurocodeWsClient(`ws://localhost:${wsPort}/ws/session`);
+    String(vscode.workspace.getConfiguration("angizo").get<number>("backendPort", 7001));
+  wsClient = new AngizoWsClient(`ws://localhost:${wsPort}/ws/session`);
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (workspaceFolders && workspaceFolders.length > 0) {
     wsClient.setWorkspacePath(workspaceFolders[0].uri.fsPath);
@@ -55,7 +55,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
     } else {
       panel = vscode.window.createWebviewPanel(
-        "neurocodePanel",
+        "angizoPanel",
         "Angizo",
         { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
         {
@@ -90,7 +90,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // --- Start Voice Input command ---
   const startCmd = vscode.commands.registerCommand(
-    "neurocode.startVoiceInput",
+    "angizo.startVoiceInput",
     () => {
       ensureWebviewPanel();
     }
@@ -98,9 +98,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   // --- Run a Command: type a request without the panel's text box ---
   // From the Command Palette it asks in an input box (screen-reader friendly); scripts and
-  // the demo pass the text directly: executeCommand("neurocode.runCommand", "review my diff").
+  // the demo pass the text directly: executeCommand("angizo.runCommand", "review my diff").
   const runCommandCmd = vscode.commands.registerCommand(
-    "neurocode.runCommand",
+    "angizo.runCommand",
     async (text?: string) => {
       const command =
         typeof text === "string" && text.trim()
@@ -119,7 +119,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // --- Stop Voice Input command ---
   const stopCmd = vscode.commands.registerCommand(
-    "neurocode.stopVoiceInput",
+    "angizo.stopVoiceInput",
     () => {
       if (panel) {
         panel.webview.postMessage({ type: "stop_mic" });
@@ -130,7 +130,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // --- Confirm Action command ---
   const confirmCmd = vscode.commands.registerCommand(
-    "neurocode.confirm",
+    "angizo.confirm",
     () => {
       if (wsClient && wsClient.isConnected) {
         wsClient.sendConfirmResponse(true);
@@ -143,7 +143,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // --- Cancel Action command ---
   const cancelCmd = vscode.commands.registerCommand(
-    "neurocode.cancel",
+    "angizo.cancel",
     () => {
       if (wsClient && wsClient.isConnected) {
         wsClient.sendConfirmResponse(false);
@@ -156,7 +156,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // --- Toggle Manual Coding Stream command ---
   const toggleManualStreamCmd = vscode.commands.registerCommand(
-    "neurocode.toggleManualStream",
+    "angizo.toggleManualStream",
     () => {
       if (manualWatcher) {
         const newState = !manualWatcher.isEnabled();
@@ -280,7 +280,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // --- Toggle Observer command ---
   const toggleObserverCmd = vscode.commands.registerCommand(
-    "neurocode.toggleObserver",
+    "angizo.toggleObserver",
     () => {
       if (!copilotWatcher || !observerEarcon || !observerStatusBar) return;
       const nowMuted = !copilotWatcher.isMuted();
@@ -299,7 +299,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // --- Announce Observer Status command (Screen Reader Hotkey Ctrl+Shift+S) ---
   const announceStatusCmd = vscode.commands.registerCommand(
-    "neurocode.announceStatus",
+    "angizo.announceStatus",
     () => {
       if (!observerStatusBar) return;
       const label = observerStatusBar.getAccessibleLabel();
@@ -320,7 +320,7 @@ export function activate(context: vscode.ExtensionContext) {
     if (editor && editor.document) {
       const fileName = editor.document.fileName;
       if (fileName.endsWith(".env") || fileName.split(/[\\/]/).pop() === ".env") {
-        const config = vscode.workspace.getConfiguration("neurocode");
+        const config = vscode.workspace.getConfiguration("angizo");
         const simulateBlindMode = config.get<boolean>("simulateBlindMode", false);
         const isScreenReaderActive = simulateBlindMode || (vscode.env as any).accessibilitySupport === 3;
         if (isScreenReaderActive) {

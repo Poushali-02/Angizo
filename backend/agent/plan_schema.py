@@ -1,5 +1,5 @@
 """
-neurocode-backend/agent/plan_schema.py
+backend/agent/plan_schema.py
 
 Structured output for the planner: the LLM's JSON plan must match this schema, or it is
 not used. parse_plan() turns raw LLM text into a validated Plan, or into an error message

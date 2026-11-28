@@ -28,14 +28,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: neurocode-extension
+        working-directory: angizo-extension
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: neurocode-extension/package-lock.json
+          cache-dependency-path: angizo-extension/package-lock.json
       - name: Install
         run: npm ci
       - name: Type-check and compile

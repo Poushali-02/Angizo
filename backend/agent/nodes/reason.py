@@ -1,5 +1,5 @@
 """
-neurocode-backend/agent/nodes/reason.py
+backend/agent/nodes/reason.py
 """
 import logging
 from agent.state import AgentState
@@ -7,7 +7,7 @@ from tools.diff_intelligence import diff_intelligence
 from tools.gemini_llm import gemini_llm
 from tools.speech import prefetch_speech
 
-logger = logging.getLogger("neurocode.agent.reason")
+logger = logging.getLogger("angizo.agent.reason")
 
 async def reason_plan(state: AgentState) -> AgentState:
     """

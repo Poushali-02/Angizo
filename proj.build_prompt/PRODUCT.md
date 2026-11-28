@@ -1,4 +1,4 @@
-# NeuroCode — Product Specification
+# Angizo — Product Specification
 
 ## One-line description
 An AI Accessibility Agent, delivered as a VS Code extension, that lets blind and low-vision developers understand, review, and manage AI-generated code changes and Git workflows by voice — without reading raw diffs line by line.
@@ -65,7 +65,7 @@ One conversational surface for the full Git/GitHub lifecycle: status, commit, pu
 
 ## Explicitly out of scope for MVP (roadmap only)
 
-- **NeuroCode Learn** (accessible programming education) — future product line, mention as closing vision only
+- **Angizo Learn** (accessible programming education) — future product line, mention as closing vision only
 - **Tactile structure export** (swell paper / 3D print) — hardware-dependent, low demo-time-to-value ratio
 - **Structural Braille compiler** (full AST-aware tactile layout) — MVP only routes flagged fragments, not full structural compilation
 - **PR review threading as a standalone feature** — folded into Voice Git as one more command, not a separate pillar
@@ -96,7 +96,7 @@ One conversational surface for the full Git/GitHub lifecycle: status, commit, pu
 1. Set up the problem verbally: "As a sighted developer, you glance at a diff for three seconds. Now imagine you're blind." (30–45s)
 2. Play a raw screen reader reading a diff line-by-line, uninterrupted, for 20–30s. Let the room feel it.
 3. One-sentence pivot: "We didn't build another AI coding assistant. We built an AI Accessibility Agent."
-4. Trigger a real Copilot/agent refactor. Say nothing. NeuroCode speaks first — risk-classified summary + earcon.
+4. Trigger a real Copilot/agent refactor. Say nothing. Angizo speaks first — risk-classified summary + earcon.
 5. Voice Git live: commit → push → narrate outcome.
 6. Zero-Silence Handoff: "Watch what happens while AI is thinking" — continuous filler narration.
 7. Braille, one sentence: "Speech is excellent for logic. Braille is excellent for punctuation." Show the fragment land on the simulated panel.
@@ -114,7 +114,7 @@ One conversational surface for the full Git/GitHub lifecycle: status, commit, pu
 Sarvam (STT + filler TTS) is a technical reliability choice, not a sponsor-track target — no prize is being chased with it.
 
 ## Anticipated Q&A
-- **"Why not Cursor?"** → "Cursor helps developers generate code. NeuroCode helps blind developers understand and manage AI-generated changes. They complement each other."
+- **"Why not Cursor?"** → "Cursor helps developers generate code. Angizo helps blind developers understand and manage AI-generated changes. They complement each other."
 - **"Why is this agentic, not just an extension?"** → Recite the loop: understand → context → reason → confirm → execute → verify → narrate.
 - **"How autonomous is it really?"** → It always confirms before executing anything consequential — the strength is accessible orchestration, not autonomy that removes the developer from the loop.
-- **"Why not use an OS-level agent (Claude computer use, etc.)?"** → Those act on the visual screen; that doesn't help a user who can't see it. NeuroCode is a narrow, accessibility-specialized reasoning layer over one workflow, translated into the audio/tactile vocabulary this specific population already trusts.
+- **"Why not use an OS-level agent (Claude computer use, etc.)?"** → Those act on the visual screen; that doesn't help a user who can't see it. Angizo is a narrow, accessibility-specialized reasoning layer over one workflow, translated into the audio/tactile vocabulary this specific population already trusts.

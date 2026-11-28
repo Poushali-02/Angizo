@@ -1,5 +1,5 @@
 /**
- * neurocode-extension/src/observer/copilot-watcher.ts
+ * angizo-extension/src/observer/copilot-watcher.ts
  *
  * Copilot Observer - AI generation detector & event emitter.
  *
@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { NeurocodeWsClient } from "../ws-client";
+import { AngizoWsClient } from "../ws-client";
 
 // --- Event Types ------------------------------------------------------------
 
@@ -66,7 +66,7 @@ const DEPENDENCY_FILES = new Set([
 export class CopilotWatcher {
   private disposables: vscode.Disposable[] = [];
   private onEvent: (event: CopilotObserverEvent) => void;
-  private wsClient: NeurocodeWsClient | undefined;
+  private wsClient: AngizoWsClient | undefined;
 
   // Session tracking state
   private isGenerating = false;
@@ -86,7 +86,7 @@ export class CopilotWatcher {
 
   constructor(
     onEvent: (event: CopilotObserverEvent) => void,
-    wsClient?: NeurocodeWsClient
+    wsClient?: AngizoWsClient
   ) {
     this.onEvent = onEvent;
     this.wsClient = wsClient;

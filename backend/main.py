@@ -1,5 +1,5 @@
 """
-neurocode-backend/main.py
+backend/main.py
 
 FastAPI app entrypoint.
 Matches DESIGN.md module layout: main.py at the backend root.
@@ -24,11 +24,11 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
 )
-logger = logging.getLogger("neurocode")
+logger = logging.getLogger("angizo")
 
 # --- App ---
 app = FastAPI(
-    title="NeuroCode Accessibility Agent",
+    title="Angizo Accessibility Agent",
     description="AI Accessibility Agent backend — modular monolith (FastAPI)",
     version="0.1.0",
 )
@@ -40,7 +40,7 @@ app.include_router(rest_router)
 @app.on_event("startup")
 async def on_startup():
     logger.info(
-        f"NeuroCode backend starting on {config.HOST}:{config.PORT}"
+        f"Angizo backend starting on {config.HOST}:{config.PORT}"
     )
     # Synthesise the acknowledgement phrases once, so every "Reading your changes." is instant
     import asyncio

@@ -686,7 +686,7 @@ wheels = [
 ]
 
 [[package]]
-name = "neurocode-backend"
+name = "angizo-backend"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

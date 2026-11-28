@@ -1,5 +1,5 @@
 """
-neurocode-backend/tools/sarvam_key_manager.py
+backend/tools/sarvam_key_manager.py
 
 Sarvam API Key Pool Manager:
 - Manages key rotation across multiple Sarvam API keys.
@@ -12,7 +12,7 @@ import time
 import logging
 import config
 
-logger = logging.getLogger("neurocode.sarvam_key_manager")
+logger = logging.getLogger("angizo.sarvam_key_manager")
 
 class SarvamKeyManager:
     def __init__(self):

@@ -1,5 +1,5 @@
 """
-neurocode-backend/tools/diff_intelligence.py
+backend/tools/diff_intelligence.py
 
 Gemini AI Integration for Diff Intelligence & Intent Classification:
 - Smart intent classification with fixed taxonomy fallback
@@ -18,7 +18,7 @@ import re
 import httpx
 import config
 
-logger = logging.getLogger("neurocode.diff_intelligence")
+logger = logging.getLogger("angizo.diff_intelligence")
 
 class DiffIntelligence:
     def __init__(self, api_key: str = None):
@@ -110,7 +110,7 @@ class DiffIntelligence:
         Supported intents: git_status, git_commit, git_push, git_pull, git_branch_create,
         git_branch_switch, git_explain_conflict, git_review, git_undo, github_open_pr.
         """
-        prompt = f"""You are the intent classifier for NeuroCode voice accessibility agent.
+        prompt = f"""You are the intent classifier for Angizo voice accessibility agent.
 Classify the following user command transcript into EXACTLY one of these intent strings:
 - git_status
 - git_commit
@@ -228,7 +228,7 @@ Return ONLY the commit message string without quotes or extra text."""
         if not diff_text.strip():
             return "There are no uncommitted changes in your working tree."
 
-        prompt = f"""You are the code review engine for NeuroCode voice accessibility assistant.
+        prompt = f"""You are the code review engine for Angizo voice accessibility assistant.
 Analyze this exact git diff and explain the precise changes made:
 
 ```diff

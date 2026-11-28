@@ -1,5 +1,5 @@
 """
-neurocode-backend/agent/graph.py
+backend/agent/graph.py
 
 The agent as a LangGraph state graph (8 nodes; the 8th, recover, makes it a loop):
 
@@ -37,7 +37,7 @@ from agent.nodes import (
 from agent.nodes.recover import can_recover, recover_plan
 from agent.state import AgentState
 
-logger = logging.getLogger("neurocode.agent.graph")
+logger = logging.getLogger("angizo.agent.graph")
 
 
 def route_after_confirm(state: AgentState) -> str:

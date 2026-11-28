@@ -12,7 +12,7 @@ Thumbs.db
 !.vscode/extensions.json
 
 # -----------------------------
-# Python / FastAPI (neurocode-backend)
+# Python / FastAPI (angizo-backend)
 # -----------------------------
 __pycache__/
 *.py[cod]
@@ -23,7 +23,7 @@ __pycache__/
 venv/
 env/
 ENV/
-neurocode-backend/.venv/
+backend/.venv/
 
 # Python tooling caches
 .pytest_cache/
@@ -52,7 +52,7 @@ dist/
 !.env.example
 
 # -----------------------------
-# Node / VS Code Extension (neurocode-extension)
+# Node / VS Code Extension (angizo-extension)
 # -----------------------------
 node_modules/
 npm-debug.log*
@@ -61,10 +61,10 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Extension build outputs
-neurocode-extension/out/
-neurocode-extension/dist/
-neurocode-extension/.eslintcache
-neurocode-extension/.npm/
+angizo-extension/out/
+angizo-extension/dist/
+angizo-extension/.eslintcache
+angizo-extension/.npm/
 *.vsix
 
 # TypeScript incremental build info

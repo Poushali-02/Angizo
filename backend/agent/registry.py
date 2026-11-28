@@ -1,5 +1,5 @@
 """
-neurocode-backend/agent/registry.py
+backend/agent/registry.py
 
 Atomic Tool Registry & Executor for Dynamic ReAct Planning.
 Eliminates static intent taxonomy enums completely.
@@ -16,7 +16,7 @@ from tools.git_tool import (
 )
 from tools.diff_intelligence import diff_intelligence
 
-logger = logging.getLogger("neurocode.agent.registry")
+logger = logging.getLogger("angizo.agent.registry")
 
 # --- ATOMIC TOOL SPECIFICATIONS FOR LLM PLANNER ---
 ATOMIC_TOOLS = [

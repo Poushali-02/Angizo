@@ -1,29 +1,29 @@
-# NeuroCode — Copilot Real-Time Streaming Observer (`STREAM.md`)
+# Angizo — Copilot Real-Time Streaming Observer (`STREAM.md`)
 
 ## Executive Summary
 
 Standard screen readers (NVDA, JAWS, VoiceOver) stay completely silent while **GitHub Copilot** or automated AI agents generate code, edit files, or update dependencies. This creates a severe accessibility gap—blind developers experience complete "dead air," causing confusion about whether Copilot is actively working, hung, or finished.
 
-**NeuroCode Copilot Observer** (`STREAM.md`) is an audio-first, non-intrusive background observer feature. It monitors Copilot's real-time generation, file creations, and dependency updates, translating background IDE events into **subtle earcon audio streams, floating HUD status banners, and natural voice announcements**.
+**Angizo Copilot Observer** (`STREAM.md`) is an audio-first, non-intrusive background observer feature. It monitors Copilot's real-time generation, file creations, and dependency updates, translating background IDE events into **subtle earcon audio streams, floating HUD status banners, and natural voice announcements**.
 
 ---
 
 ## 🎨 UI/UX Design Architecture: "Co-Pilot Observer Mode"
 
-Since Copilot Chat occupies the primary sidebar panel, NeuroCode operates in **Co-Pilot Observer Mode**—a zero-collision background audio overlay and status bar integration.
+Since Copilot Chat occupies the primary sidebar panel, Angizo operates in **Co-Pilot Observer Mode**—a zero-collision background audio overlay and status bar integration.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │ VS Code Editor: auth.ts                                                │
 │                                                                        │
 │ ┌────────────────────────────────────────────────────────────────────┐ │
-│ │ 🔊 [NeuroCode Observer] Copilot generating in auth.ts... [⏸️ Mute] │ │  <-- Layer 1: Floating Editor Top HUD
+│ │ 🔊 [Angizo Observer] Copilot generating in auth.ts... [⏸️ Mute] │ │  <-- Layer 1: Floating Editor Top HUD
 │ └────────────────────────────────────────────────────────────────────┘ │
 │ 14 | import { AuthProvider } from './auth';                            │
 │ 15 | // Copilot code streaming in real-time...                        │
 └────────────────────────────────────────────────────────────────────────┘
 ┌────────────────────────────────────────────────────────────────────────┐
-│ ⚡ NeuroCode Observer: Copilot generated 45 lines in auth.ts (0 errors) │  <-- Layer 2: Accessible Status Bar
+│ ⚡ Angizo Observer: Copilot generated 45 lines in auth.ts (0 errors) │  <-- Layer 2: Accessible Status Bar
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -45,7 +45,7 @@ Since Copilot Chat occupies the primary sidebar panel, NeuroCode operates in **C
    * Can be read on-demand at any time using standard screen reader shortcuts (`Ctrl+Shift+S` or `Insert+F12`).
 
 4. **Layer 4: Adaptive Mode Switching**
-   * **Standard Mode:** Full NeuroCode voice chat & diff review panel when inspecting Git diffs.
+   * **Standard Mode:** Full Angizo voice chat & diff review panel when inspecting Git diffs.
    * **Observer Mode:** Automatically engaged when Copilot Chat or inline completion becomes active, hiding sidebar clutter and providing ambient audio updates.
 
 ---
@@ -61,7 +61,7 @@ graph TD
         StatusBar["vscode.window.createStatusBarItem<br/>(Accessible Status Bar)"]
     end
 
-    subgraph "NeuroCode Observer Engine (TypeScript / Webview)"
+    subgraph "Angizo Observer Engine (TypeScript / Webview)"
         Debouncer["Chunk Debouncer & Typing Rate Classifier"]
         EarconEngine["Web Audio Earcon Generator"]
         HUDOverlay["Floating Editor Text Decoration HUD"]
@@ -115,13 +115,13 @@ graph TD
 
 ## 🤖 Prompts & LLM Specifications
 
-When Copilot completes a multi-file generation or complex refactoring, NeuroCode passes the edit diff summary to Groq LLM (`llama-3.3-70b-versatile`) to generate a **1-sentence screen-reader narration**.
+When Copilot completes a multi-file generation or complex refactoring, Angizo passes the edit diff summary to Groq LLM (`llama-3.3-70b-versatile`) to generate a **1-sentence screen-reader narration**.
 
 ### Prompt Spec 1: Copilot Generation Spoken Summary Prompt
 
 ```text
 SYSTEM PROMPT:
-You are the accessibility voice narrator for NeuroCode.
+You are the accessibility voice narrator for Angizo.
 A blind software developer is using GitHub Copilot. Copilot has just completed an automated code generation session.
 
 Summarize what Copilot generated into EXACTLY ONE short, spoken sentence (max 15 words) suitable for a screen reader or TTS voice engine. Do not use code markdown syntax, special characters, or raw diff markers.
@@ -160,7 +160,7 @@ EXAMPLE OUTPUTS:
 ## 🚀 Step-by-Step Implementation Roadmap
 
 ### Phase 1: Event Detection & Heuristic Classifier (VS Code Host)
-1. Create `src/observer/copilot-watcher.ts` in `neurocode-extension`.
+1. Create `src/observer/copilot-watcher.ts` in `angizo-extension`.
 2. Register `onDidChangeTextDocument` and calculate insertion character delta per millisecond.
 3. Classify AI streaming vs human typing via threshold (`>10 chars per chunk` within `50ms`).
 

@@ -1,5 +1,5 @@
 """
-neurocode-backend/api/ws.py
+backend/api/ws.py
 
 Main WebSocket endpoint — client <-> agent bridge.
 Step 2 & 3: Wires the WebSocket to the LangGraph agent graph.
@@ -29,7 +29,7 @@ from tools.diff_intelligence import diff_intelligence
 from tools.sarvam_tts import sarvam_tts_client
 from tools.speech import ack_phrase, split_for_speech, ACK_PHRASES
 
-logger = logging.getLogger("neurocode.ws")
+logger = logging.getLogger("angizo.ws")
 router = APIRouter()
 
 def is_gibberish(text: str) -> bool:
