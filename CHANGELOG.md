@@ -18,6 +18,7 @@ All notable changes to Angizo, newest first. Everything below is on the `v1` bra
   The terminal under it shows a hint of the state (for example `yes? Alt+Y / Alt+N`). The cat is hidden from screen readers, because every state is already spoken or played as a sound. The notes, waves and bubbles use the theme's text colour, so they show on light and dark themes. It stays still when the system asks for reduced motion.
 - **Logo and icons**: the cat's head in a circle is the extension icon (`media/logo.png`, `logo.svg`) and is at the top of the README. A one-colour outline of it is the sidebar icon.
 - **Angizo: Show Panel** command.
+- `angizo-extension/.vscodeignore`: the packaged extension (`npx @vscode/vsce package`) leaves out the tests and TypeScript sources (37 files, 107 KB).
 - 9 offline tests for the auto-stop (two run the real mic loop with a fake microphone and prove silence is never sent to Sarvam), and 2 end-to-end checks: the panel never opens as an editor tab, and the shortcut starts and stops the mic. The suites now have 186 backend tests and 14 end-to-end checks.
 
 ### Changed
