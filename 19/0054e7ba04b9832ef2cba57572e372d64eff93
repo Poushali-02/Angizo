@@ -1,0 +1,86 @@
+angizo-extension/.vscodeignore
+  s_2adf9dde9c0a0e::t_92c41215f518a0 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "autter_version": "3.9.1",
+  "base_commit_sha": "190054e7ba04b9832ef2cba57572e372d64eff93",
+  "branch": "v1-UI",
+  "prompts": {
+    "s_2adf9dde9c0a0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "64563ae5-3f51-4e7b-b39d-5a6e8568c454",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:470e2450d526ed5a63f53ba68b5f79487564125ce7d1e0d9e72a3fa55c61be44",
+      "total_additions": 6,
+      "total_deletions": 0,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_2adf9dde9c0a0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "64563ae5-3f51-4e7b-b39d-5a6e8568c454",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:470e2450d526ed5a63f53ba68b5f79487564125ce7d1e0d9e72a3fa55c61be44",
+      "stats": {
+        "total_additions": 6,
+        "total_deletions": 0,
+        "accepted_lines": 6,
+        "overriden_lines": 0,
+        "files": {
+          "angizo-extension/.vscodeignore": {
+            "total_additions": 6,
+            "total_deletions": 0,
+            "accepted_lines": 6,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/copilot-watcher.ts": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/manual-watcher.ts": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/observer-hud.ts": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/observer-status-bar.ts": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/terminal-watcher.ts": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/webview/pcm-processor.js": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          }
+        }
+      }
+    }
+  },
+  "integrity": {"v":1,"commit":"190054e7ba04b9832ef2cba57572e372d64eff93","tree":"f70c873fbc43fef0d9fbf42d703728ea09ee2cc9","files":{"angizo-extension/.vscodeignore":"c9add0286cc4fdb5c81066a65094dab63b732c96"},"digest":"e96ba4f9e644b631a44d3af00ca3f286e9ed3125221443760635b2c054cc74de"}
+}
