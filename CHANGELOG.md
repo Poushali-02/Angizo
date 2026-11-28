@@ -2,6 +2,31 @@
 
 All notable changes to Angizo, newest first. Everything below is on the `v1` branch and not yet in `main`.
 
+## 2026-11-28: Sidebar panel, the cat, and push-to-talk (branch `v1-UI`)
+
+### Added
+- **Mic shortcut: `Ctrl+Alt+Space`** (`Cmd+Alt+Space` on Mac), command `angizo.toggleMic`. Press it and speak. A rising blip means it is listening, a falling blip means it stopped. Pressing it while Angizo is talking cuts the speech off. Sending a new command also cuts it off.
+- **Recording stops by itself** (`backend/tools/vad.py`). It stops about 1.2 s after you stop talking (`ANGIZO_MIC_SILENCE_MS` changes this). The first 0.3 s measure the room's noise, so a fan doesn't count as speech. If nothing is said within 6 s it stops and says "I didn't hear anything." That case is never sent for transcription, so no Sarvam credits are spent on silence. A recording is 15 s at most.
+- **The cat**, at the top of the panel, shows what Angizo is doing:
+  - idle: asleep
+  - listening: ears up
+  - thinking: tail swishing
+  - talking: mouth moving
+  - waiting for your yes: looking at you, paw raised
+  - failed: startled, fur up
+
+  It is hidden from screen readers, because every state is already spoken or played as a sound. It follows the light or dark theme, and stays still when the system asks for reduced motion.
+- **Angizo: Show Panel** command.
+- 9 offline tests for the auto-stop (two run the real mic loop with a fake microphone and prove silence is never sent to Sarvam), and 2 end-to-end checks: the panel never opens as an editor tab, and the shortcut starts and stops the mic. The suites now have 186 backend tests and 14 end-to-end checks.
+
+### Changed
+- **The panel is in the right (secondary) sidebar instead of an editor tab.** It no longer opens beside your code every time something happens, and never takes focus. It is created once at startup, and focus goes straight back to the editor. Messages sent before it is ready wait in a queue and are not lost. It keeps playing audio while the sidebar is closed.
+- **Angizo: Start Voice Input** now starts listening. It used to only open the panel.
+- The confirmation box hides as soon as you answer with Alt+Y or Alt+N. It used to stay open after a keyboard answer.
+
+### Fixed
+- **Angizo: Stop Voice Input** could start the mic instead of stopping it, because it sent a toggle. It now sends a stop.
+
 ## 2026-11-28: Renamed NeuroCode to Angizo everywhere
 
 ### Changed

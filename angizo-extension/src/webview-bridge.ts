@@ -13,16 +13,22 @@
 import * as vscode from "vscode";
 import { AngizoWsClient, BackendMessage } from "./ws-client";
 
+/** The webview side of the bridge: the Angizo sidebar view (see angizo-view.ts). */
+export interface BridgeTarget {
+  postMessage(message: unknown): unknown;
+  onDidReceiveMessage: vscode.Event<any>;
+}
+
 export class WebviewBridge {
   private disposables: vscode.Disposable[] = [];
 
   constructor(
-    private panel: vscode.WebviewPanel,
+    private panel: BridgeTarget,
     private wsClient: AngizoWsClient
   ) {
     // --- Webview → Backend ---
     // Listen for postMessage from the webview and forward to ws-client
-    const webviewListener = panel.webview.onDidReceiveMessage(
+    const webviewListener = panel.onDidReceiveMessage(
       (msg: { type: string; data?: string; text?: string; confirmed?: boolean }) => {
         if (msg.type === "audio_frame" && msg.data) {
           // Forward PCM audio frame to backend via extension-host WebSocket
@@ -43,7 +49,7 @@ export class WebviewBridge {
     const onBackendMessage = (msg: BackendMessage) => {
       // Wrap in a backend_message envelope so the webview can distinguish
       // backend responses from extension-host commands (start_mic, etc.)
-      panel.webview.postMessage({
+      panel.postMessage({
         type: "backend_message",
         payload: msg,
       });

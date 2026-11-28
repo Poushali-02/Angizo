@@ -21,6 +21,10 @@
         "title": "Angizo: Run a Command…"
       },
       {
+        "command": "angizo.toggleMic",
+        "title": "Angizo: Start/Stop Listening (Mic)"
+      },
+      {
         "command": "angizo.startVoiceInput",
         "title": "Angizo: Start Voice Input"
       },
@@ -47,9 +51,18 @@
       {
         "command": "angizo.toggleManualStream",
         "title": "Angizo: Toggle Manual Coding Stream"
+      },
+      {
+        "command": "angizo.showPanel",
+        "title": "Angizo: Show Panel"
       }
     ],
     "keybindings": [
+      {
+        "command": "angizo.toggleMic",
+        "key": "ctrl+alt+space",
+        "mac": "cmd+alt+space"
+      },
       {
         "command": "angizo.announceStatus",
         "key": "ctrl+shift+s",
@@ -85,6 +98,24 @@
           "description": "Port of the Angizo Python backend (ws://localhost:<port>/ws/session)."
         }
       }
+    },
+    "viewsContainers": {
+      "secondarySidebar": [
+        {
+          "id": "angizo-sidebar",
+          "title": "Angizo",
+          "icon": "media/cat.svg"
+        }
+      ]
+    },
+    "views": {
+      "angizo-sidebar": [
+        {
+          "type": "webview",
+          "id": "angizo.view",
+          "name": "Angizo"
+        }
+      ]
     }
   },
   "scripts": {

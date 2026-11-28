@@ -101,12 +101,16 @@ Angizo exposes native VS Code commands and accessible keyboard shortcuts:
 
 | Command Title | Command ID | Default Keybinding | Description |
 |---|---|---|---|
+| **Start/Stop Listening (Mic)** | `angizo.toggleMic` | `Ctrl+Alt+Space` (`Cmd+Alt+Space`) | Push to talk. Recording stops by itself about 1.2 s after you stop talking; press again to stop sooner. Also cuts Angizo off if it is talking. |
 | **Toggle Manual Coding Stream** | `angizo.toggleManualStream` | `Alt+M` (`Cmd+Alt+M`) | Enables/disables Intellisense syntax & terminal error interception.    |
 | **Confirm Action (Yes)** | `angizo.confirm` | `Alt+Y` (`Cmd+Alt+Y`) | Confirms a pending agent action or sensitive file access.    |
 | **Cancel Action (No)** | `angizo.cancel` | `Alt+N` (`Cmd+Alt+N`) | Cancels a pending agent action or sensitive file access.    |
 | **Toggle Copilot Observer** | `angizo.toggleObserver` | *Palette* | Mutes or unmutes Copilot ambient audio earcons and HUD.    |
-| **Start Voice Input** | `angizo.startVoiceInput` | *Palette* | Opens the Angizo webview panel & starts voice loop.       |
-| **Stop Voice Input** | `angizo.stopVoiceInput` | *Palette* | Stops active microphone audio capture.    |
+| **Show Panel** | `angizo.showPanel` | *Palette* | Shows the Angizo panel (with the cat) in the right sidebar. |
+| **Start Voice Input** | `angizo.startVoiceInput` | *Palette* | Shows the panel without taking focus and starts listening. |
+| **Stop Voice Input** | `angizo.stopVoiceInput` | *Palette* | Stops the microphone. |
+
+The panel lives in the right (secondary) sidebar, not in an editor tab. It never opens or takes focus by itself. A cat at the top shows what Angizo is doing: asleep (idle), ears up (listening), tail swishing (thinking), mouth moving (talking), paw raised (waiting for your yes) and fur up (something failed). The cat is hidden from screen readers; every state is also spoken or played as a sound.
 
 ---
 
@@ -242,7 +246,7 @@ npm run compile
 
 1. Open `angizo-extension` in VS Code (`code angizo-extension`).
 2. Press **`F5`** to launch the **Extension Development Host**.
-3. In the new window, open the Command Palette (`Ctrl+Shift+P`) and run **`Angizo: Start Voice Input`**.
+3. Angizo appears in the right sidebar (press `Ctrl+Alt+B` if the sidebar is closed). Press **`Ctrl+Alt+Space`** and speak.
 
 ---
 
@@ -322,7 +326,7 @@ Every answer and its latency is written to `<sandbox>/runs/live/report.md`.
 
 ### Manual checks (need real API keys)
 
-1. **Voice command**: run *Angizo: Start Voice Input*, type *"review my git diff"* in the panel and press Run.
+1. **Voice command**: press `Ctrl+Alt+Space`, say *"review my git diff"*, and stop talking (or type it in the panel and press Run).
 2. **Commit**: type *"commit my changes"*, listen to the files and message, then press `Alt+Y` (or `Alt+N`).
 3. **Copilot**: accept a Copilot completion and listen for the one-sentence summary.
 4. **Sensitive file guard**: with a screen reader on (or `angizo.simulateBlindMode`), open a `.env` file.

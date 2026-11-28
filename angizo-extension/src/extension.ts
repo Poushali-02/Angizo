@@ -2,7 +2,7 @@
  * angizo-extension/src/extension.ts
  *
  * VS Code extension activation and command registration.
- * Creates the webview panel and wires up the postMessage bridge.
+ * Registers the Angizo sidebar view (right side, see angizo-view.ts) and wires up the bridge.
  *
  * Architecture (DESIGN.md / 01-architecture.md):
  *   - Webview captures audio via AudioWorklet → postMessage → extension host
@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { AngizoWsClient } from "./ws-client";
 import { WebviewBridge } from "./webview-bridge";
+import { AngizoView } from "./angizo-view";
 import { CopilotWatcher, CopilotObserverEvent } from "./observer/copilot-watcher";
 import { ManualWatcher, ManualSyntaxErrorEvent } from "./observer/manual-watcher";
 import { TerminalWatcher, TerminalRuntimeErrorEvent } from "./observer/terminal-watcher";
@@ -21,7 +22,7 @@ import { ObserverEarcon } from "./observer/observer-earcon";
 import { ObserverStatusBar } from "./observer/observer-status-bar";
 import { ObserverHud } from "./observer/observer-hud";
 
-let panel: vscode.WebviewPanel | undefined;
+let view: AngizoView | undefined;
 let wsClient: AngizoWsClient | undefined;
 let bridge: WebviewBridge | undefined;
 
@@ -33,7 +34,12 @@ let observerEarcon: ObserverEarcon | undefined;
 let observerStatusBar: ObserverStatusBar | undefined;
 let observerHud: ObserverHud | undefined;
 
-export function activate(context: vscode.ExtensionContext) {
+/** What activate() returns; the end-to-end test reads it. */
+export interface AngizoApi {
+  readonly viewReady: boolean;
+}
+
+export function activate(context: vscode.ExtensionContext): AngizoApi {
   console.log("Angizo extension activating");
   vscode.window.showInformationMessage("Angizo is listening.");
 
@@ -48,51 +54,53 @@ export function activate(context: vscode.ExtensionContext) {
     wsClient.setWorkspacePath(workspaceFolders[0].uri.fsPath);
   }
 
-  function ensureWebviewPanel(preserveFocus: boolean = true): vscode.WebviewPanel {
-    if (panel) {
-      if (!preserveFocus) {
-        panel.reveal(vscode.ViewColumn.Beside, false);
-      }
-    } else {
-      panel = vscode.window.createWebviewPanel(
-        "angizoPanel",
-        "Angizo",
-        { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
-        {
-          enableScripts: true,
-          retainContextWhenHidden: true,
-          localResourceRoots: [
-            vscode.Uri.file(
-              path.join(context.extensionPath, "src", "webview")
-            ),
-            vscode.Uri.file(
-              path.join(context.extensionPath, "out", "webview")
-            ),
-          ],
-        }
-      );
+  // The panel lives in the right sidebar, not in an editor tab. It never pops open or takes
+  // focus by itself: messages wait until the view is ready (it is created once at startup).
+  const angizoView = new AngizoView(
+    (webview) => getWebviewContent(webview, context),
+    [
+      vscode.Uri.file(path.join(context.extensionPath, "src", "webview")),
+      vscode.Uri.file(path.join(context.extensionPath, "out", "webview")),
+    ]
+  );
+  view = angizoView;
+  context.subscriptions.push(
+    angizoView,
+    vscode.window.registerWebviewViewProvider(AngizoView.viewId, angizoView, {
+      webviewOptions: { retainContextWhenHidden: true },
+    })
+  );
+  bridge = new WebviewBridge(angizoView, wsClient);
+  observerEarcon = new ObserverEarcon(angizoView);
+  // Audio plays in the webview, so create it now (focus goes straight back to the editor).
+  setTimeout(() => void angizoView.ensureResolved(), 500);
 
-      panel.onDidDispose(() => {
-        panel = undefined;
-        bridge?.dispose();
-        bridge = undefined;
-      });
-
-      panel.webview.html = getWebviewContent(panel.webview, context);
-
-      if (wsClient) {
-        bridge = new WebviewBridge(panel, wsClient);
-        observerEarcon?.setPanel(panel);
-      }
+  /** Push-to-talk: start listening, or stop and send what was said. Also cuts off any speech. */
+  let micOn = false;
+  wsClient.on("message", (msg: { type?: string; state?: string }) => {
+    if (msg && msg.type === "mic_status") micOn = msg.state === "recording";
+  });
+  function toggleMic(): void {
+    if (!wsClient || !wsClient.isConnected) {
+      angizoView.postMessage({ type: "speak_text", text: "Angizo's backend is not running." });
+      return;
     }
-    return panel;
+    angizoView.postMessage({ type: "stop_speech" });
+    angizoView.postMessage({ type: "mic_toggled", listening: !micOn });
+    wsClient.toggleBackendMic();
   }
+  context.subscriptions.push(vscode.commands.registerCommand("angizo.toggleMic", toggleMic));
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("angizo.showPanel", () => angizoView.reveal(false))
+  );
 
   // --- Start Voice Input command ---
   const startCmd = vscode.commands.registerCommand(
     "angizo.startVoiceInput",
     () => {
-      ensureWebviewPanel();
+      void angizoView.reveal(true);
+      if (!micOn) toggleMic();
     }
   );
 
@@ -110,8 +118,8 @@ export function activate(context: vscode.ExtensionContext) {
               placeHolder: "e.g. review my diff, commit my changes, push my branch",
             }))?.trim();
       if (!command) return;
-      const currentPanel = ensureWebviewPanel();
-      currentPanel.webview.postMessage({ type: "command_sent", text: command });
+      angizoView.postMessage({ type: "stop_speech" });
+      angizoView.postMessage({ type: "command_sent", text: command });
       wsClient?.sendTextCommand(command);
     }
   );
@@ -121,10 +129,7 @@ export function activate(context: vscode.ExtensionContext) {
   const stopCmd = vscode.commands.registerCommand(
     "angizo.stopVoiceInput",
     () => {
-      if (panel) {
-        panel.webview.postMessage({ type: "stop_mic" });
-        vscode.window.showInformationMessage("Angizo: Voice input stopped");
-      }
+      wsClient?.stopBackendMic();
     }
   );
 
@@ -175,11 +180,10 @@ export function activate(context: vscode.ExtensionContext) {
   // Observer starts watching immediately (does not require the webview panel)
   observerStatusBar = new ObserverStatusBar();
   observerHud = new ObserverHud();
-  observerEarcon = new ObserverEarcon(); // panel attached later when panel opens
 
   // ─── Manual Coding Streamer & Error Interceptors ─────────────────────────
   manualWatcher = new ManualWatcher((event: ManualSyntaxErrorEvent) => {
-    const currentPanel = ensureWebviewPanel();
+    const currentPanel = angizoView;
     if (event.isResolved) {
       observerEarcon?.play("complete", currentPanel);
       observerStatusBar?.setComplete(0, 0, event.file, "Manual");
@@ -196,7 +200,7 @@ export function activate(context: vscode.ExtensionContext) {
   manualWatcher.activate(context);
 
   terminalWatcher = new TerminalWatcher((event: TerminalRuntimeErrorEvent) => {
-    const currentPanel = ensureWebviewPanel();
+    const currentPanel = angizoView;
     observerEarcon?.play("error", currentPanel);
     observerStatusBar?.setError(1, "Runtime");
     observerHud?.show(`Angizo Intercept: Runtime ${event.errorName} in ${event.file}`);
@@ -205,7 +209,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   /** Routes CopilotObserverEvents to earcon, HUD, status bar, and webview */
   function handleObserverEvent(event: CopilotObserverEvent): void {
-    const currentPanel = ensureWebviewPanel();
+    const currentPanel = angizoView;
 
     switch (event.type) {
       case "copilot_start": {
@@ -214,7 +218,7 @@ export function activate(context: vscode.ExtensionContext) {
         observerEarcon?.startTick(currentPanel);
         observerStatusBar?.setGenerating(event.file || "unknown file");
         observerHud?.show(`Angizo Observer: Copilot generating in ${event.file}... `);
-        currentPanel.webview.postMessage({
+        currentPanel.postMessage({
           type: "observer_status",
           state: "generating",
           file: event.file,
@@ -234,7 +238,7 @@ export function activate(context: vscode.ExtensionContext) {
           `Angizo Observer: Copilot done — ${lines} lines added`
         );
         observerHud?.scheduleHide();
-        currentPanel.webview.postMessage({
+        currentPanel.postMessage({
           type: "observer_status",
           state: "complete",
           linesAdded: lines,
@@ -249,7 +253,7 @@ export function activate(context: vscode.ExtensionContext) {
           event.byAi ? `Angizo Observer: Copilot created ${event.file}` : `Angizo Observer: New file ${event.file}`
         );
         observerHud?.scheduleHide();
-        currentPanel.webview.postMessage({
+        currentPanel.postMessage({
           type: "observer_status",
           state: "file_created",
           file: event.file,
@@ -304,12 +308,7 @@ export function activate(context: vscode.ExtensionContext) {
       if (!observerStatusBar) return;
       const label = observerStatusBar.getAccessibleLabel();
       vscode.window.showInformationMessage(`Angizo: ${label}`);
-      if (panel) {
-        panel.webview.postMessage({
-          type: "speak_text",
-          text: label,
-        });
-      }
+      angizoView.postMessage({ type: "speak_text", text: label });
     }
   );
 
@@ -324,12 +323,10 @@ export function activate(context: vscode.ExtensionContext) {
         const simulateBlindMode = config.get<boolean>("simulateBlindMode", false);
         const isScreenReaderActive = simulateBlindMode || (vscode.env as any).accessibilitySupport === 3;
         if (isScreenReaderActive) {
-          if (panel) {
-            panel.webview.postMessage({
-              type: "speak_text",
-              text: "Warning: You are trying to access a dot env file containing sensitive credentials. Do you want to open it? Press Alt+Y to confirm or Alt+N to reject.",
-            });
-          }
+          angizoView.postMessage({
+            type: "speak_text",
+            text: "Warning: You are trying to access a dot env file containing sensitive credentials. Do you want to open it? Press Alt+Y to confirm or Alt+N to reject.",
+          });
           vscode.window.showWarningMessage(
             "Warning: You are trying to access a .env file containing sensitive credentials. Do you want to open it? Press Alt+Y to confirm or Alt+N to reject.",
             "Yes",
@@ -351,12 +348,18 @@ export function activate(context: vscode.ExtensionContext) {
   checkEnvAccess(vscode.window.activeTextEditor);
 
   context.subscriptions.push(observerStatusBar, observerHud);
+
+  return {
+    get viewReady() {
+      return angizoView.isReady;
+    },
+  };
 }
 
 export function deactivate() {
   wsClient?.close();
   bridge?.dispose();
-  panel?.dispose();
+  view?.dispose();
   copilotWatcher?.dispose();
   observerEarcon?.dispose();
   observerStatusBar?.dispose();
@@ -1732,6 +1735,92 @@ function getWebviewContent(
       }
     }
 
+    /* ===== The cat: shows what Angizo is doing. Decorative only (aria-hidden);
+       every state is also spoken or played as an earcon. ===== */
+    .cat-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0 2px;
+    }
+    .cat { width: 150px; height: 104px; overflow: visible; }
+    .cat .fur { fill: #e3a35f; stroke: var(--vscode-foreground, #ccc); stroke-width: 1.6; stroke-linejoin: round; }
+    .cat .inner { fill: #f4c9a0; }
+    .cat .line { fill: none; stroke: var(--vscode-foreground, #ccc); stroke-width: 1.6; stroke-linecap: round; }
+    .cat .eye { fill: #3b2a1e; }
+    .cat .face { fill: none; stroke: #4a3424; stroke-width: 1.6; stroke-linecap: round; }
+    .cat .zzz { fill: var(--vscode-descriptionForeground, #999); font: 600 11px var(--vscode-font-family, sans-serif); }
+    .cat .spikes { stroke: var(--vscode-foreground, #ccc); stroke-width: 1.6; stroke-linecap: round; fill: none; }
+    .cat .eyes-open, .cat .eyes-closed, .cat .mouth-open, .cat .paw-up, .cat .spikes, .cat .zzz, .cat .sound { display: none; }
+    .cat .ear-l, .cat .ear-r, .cat .tail, .cat .head, .cat .mouth-open, .cat .paw-up {
+      transform-box: fill-box;
+    }
+    .cat .ear-l { transform-origin: 80% 100%; }
+    .cat .ear-r { transform-origin: 20% 100%; }
+    .cat .tail { transform-origin: 0% 100%; }
+    .cat .head { transform-origin: 50% 100%; transition: transform .25s ease; }
+    .cat .ear-l, .cat .ear-r { transition: transform .25s ease; }
+    .cat-caption {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--vscode-descriptionForeground, #999);
+      letter-spacing: .02em;
+    }
+
+    /* idle: asleep, curled, ears relaxed */
+    .cat[data-state="idle"] .eyes-closed, .cat[data-state="idle"] .zzz { display: inline; }
+    .cat[data-state="idle"] .head { transform: translateY(6px) rotate(-6deg); }
+    .cat[data-state="idle"] .ear-l { transform: rotate(-14deg); }
+    .cat[data-state="idle"] .ear-r { transform: rotate(14deg); }
+    .cat[data-state="idle"] .zzz { animation: cat-zzz 2.6s ease-in-out infinite; }
+
+    /* listening: awake, ears up and twitching */
+    .cat[data-state="listening"] .eyes-open { display: inline; }
+    .cat[data-state="listening"] .ear-l { animation: cat-ear-l 1.2s ease-in-out infinite; }
+    .cat[data-state="listening"] .ear-r { animation: cat-ear-r 1.2s ease-in-out infinite; }
+
+    /* thinking: eyes open, tail swishing */
+    .cat[data-state="thinking"] .eyes-open { display: inline; }
+    .cat[data-state="thinking"] .tail { animation: cat-swish .9s ease-in-out infinite alternate; }
+    .cat[data-state="thinking"] .head { transform: rotate(5deg); }
+
+    /* speaking: mouth moving */
+    .cat[data-state="speaking"] .eyes-open, .cat[data-state="speaking"] .mouth-open, .cat[data-state="speaking"] .sound { display: inline; }
+    .cat[data-state="speaking"] .mouth-open { animation: cat-talk .28s ease-in-out infinite alternate; transform-origin: 50% 0%; }
+
+    /* waiting for a yes: looking at you, paw raised */
+    .cat[data-state="waiting"] .eyes-open, .cat[data-state="waiting"] .paw-up { display: inline; }
+    .cat[data-state="waiting"] .paw-down { display: none; }
+    .cat[data-state="waiting"] .paw-up { animation: cat-paw 1.4s ease-in-out infinite; transform-origin: 50% 100%; }
+    .cat[data-state="waiting"] .eye { transform: scale(1.15); transform-box: fill-box; transform-origin: center; }
+
+    /* error: startled, fur up */
+    .cat[data-state="error"] .eyes-open, .cat[data-state="error"] .spikes, .cat[data-state="error"] .mouth-open { display: inline; }
+    .cat[data-state="error"] .eye { transform: scale(1.35); transform-box: fill-box; transform-origin: center; }
+    .cat[data-state="error"] .ear-l { transform: rotate(-24deg); }
+    .cat[data-state="error"] .ear-r { transform: rotate(24deg); }
+    .cat[data-state="error"] { animation: cat-jump .35s ease-out 1; }
+
+    @keyframes cat-zzz { 0%,100% { opacity: .2; transform: translateY(2px); } 50% { opacity: 1; transform: translateY(-3px); } }
+    @keyframes cat-ear-l { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-8deg); } }
+    @keyframes cat-ear-r { 0%,100% { transform: rotate(0); } 50% { transform: rotate(8deg); } }
+    @keyframes cat-swish { from { transform: rotate(-18deg); } to { transform: rotate(16deg); } }
+    @keyframes cat-talk { from { transform: scaleY(.3); } to { transform: scaleY(1); } }
+    @keyframes cat-paw { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-12deg); } }
+    @keyframes cat-jump { 0% { transform: translateY(0); } 40% { transform: translateY(-8px); } 100% { transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) {
+      .cat *, .cat { animation: none !important; transition: none !important; }
+    }
+
+    /* ===== Sidebar width (about 300 px): wrap rows instead of running off the right edge ===== */
+    *, *::before, *::after { box-sizing: border-box; }
+    .app { width: 100%; max-width: 100vw; overflow-x: hidden; }
+    .app > *, .main > *, section, .voice-card, .voice-row, .voice-info, .brand, .brand-info { min-width: 0; max-width: 100%; }
+    .header { gap: 8px; }
+    .connection { white-space: nowrap; flex-shrink: 0; }
+    .voice-row, .audio-controls { flex-wrap: wrap; }
+    .cat-caption { text-align: center; padding: 0 12px; }
+
   </style>
 
 </head>
@@ -1813,6 +1902,48 @@ function getWebviewContent(
       </div>
 
     </header>
+
+    <!-- The cat (decorative: screen readers skip it; the state is spoken instead) -->
+    <div class="cat-stage" aria-hidden="true">
+      <svg id="cat" class="cat" data-state="idle" viewBox="0 0 150 104" focusable="false">
+        <!-- tail -->
+        <path class="tail fur" d="M38 86 C14 84 8 64 20 52 C24 48 30 50 28 56 C22 66 26 76 40 78 Z"/>
+        <!-- body -->
+        <ellipse class="fur" cx="62" cy="80" rx="34" ry="20"/>
+        <!-- paws -->
+        <ellipse class="paw-down fur" cx="88" cy="96" rx="9" ry="5"/>
+        <ellipse class="fur" cx="72" cy="97" rx="9" ry="5"/>
+        <!-- fur standing up (error) -->
+        <path class="spikes" d="M36 64 l-4 -8 M46 59 l-2 -9 M58 57 l0 -9 M70 58 l2 -9 M80 61 l4 -8"/>
+        <!-- head -->
+        <g class="head">
+          <path class="ear-l fur" d="M78 40 L80 14 L96 30 Z"/>
+          <path class="ear-l inner" d="M82 34 L83 21 L91 30 Z"/>
+          <path class="ear-r fur" d="M112 30 L128 14 L128 40 Z"/>
+          <path class="ear-r inner" d="M117 30 L125 21 L125 34 Z"/>
+          <ellipse class="fur" cx="104" cy="50" rx="27" ry="23"/>
+          <g class="eyes-open">
+            <ellipse class="eye" cx="94" cy="47" rx="3.2" ry="4.2"/>
+            <ellipse class="eye" cx="114" cy="47" rx="3.2" ry="4.2"/>
+          </g>
+          <g class="eyes-closed">
+            <path class="face" d="M89 48 q5 4 10 0"/>
+            <path class="face" d="M109 48 q5 4 10 0"/>
+          </g>
+          <path class="face" d="M101 56 l3 2.5 l3 -2.5"/>
+          <path class="face" d="M98 61 q6 4 12 0"/>
+          <ellipse class="mouth-open eye" cx="104" cy="63" rx="3.4" ry="3"/>
+          <path class="line" d="M82 55 h-12 M83 59 l-11 3 M126 55 h12 M125 59 l11 3"/>
+        </g>
+        <!-- raised paw (waiting for a yes), drawn in front of the head -->
+        <g class="paw-up"><path class="fur" d="M84 95 C104 92 124 86 133 74 C136 68 145 68 145 75 C144 86 122 98 94 100 Z"/></g>
+        <!-- zzz (asleep) -->
+        <text class="zzz" x="128" y="12">z z</text>
+        <!-- sound waves (speaking) -->
+        <path class="sound line" d="M138 52 q4 6 0 12 M143 48 q6 10 0 20"/>
+      </svg>
+      <div id="catCaption" class="cat-caption">Asleep. Press Ctrl+Alt+Space to talk.</div>
+    </div>
 
 
     <!-- =================================
