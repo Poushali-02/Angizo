@@ -335,7 +335,11 @@ async def record_backend_audio(ws: WebSocket, session_id: str):
                     task["stop_reason"] = reason
                     task["recording"] = False
 
+        from tools.vad import pick_input_device
+        device, device_name = pick_input_device()
+        logger.info(f"[Backend Mic] Recording from: {device_name}")
         stream = sd.InputStream(
+            device=device,
             samplerate=sample_rate,
             channels=channels,
             dtype='float32',
@@ -350,7 +354,8 @@ async def record_backend_audio(ws: WebSocket, session_id: str):
         # one is still being transcribed and answered.
         release_mic()
         reason = task.get("stop_reason") or "manual"
-        logger.info(f"[Backend Mic] Recording stopped ({reason}). Total bytes captured: {len(audio_buffer)}")
+        logger.info(f"[Backend Mic] Recording stopped ({reason}). Total bytes captured: {len(audio_buffer)}, "
+                    f"speech threshold {detector.threshold:.4f}")
         if reason == "no_speech":
             # Nothing was said: skip transcription so no Sarvam credits are spent on silence.
             await ws.send_json({"type": "mic_status", "state": "idle", "reason": "no_speech"})

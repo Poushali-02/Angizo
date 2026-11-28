@@ -28,6 +28,8 @@ All notable changes to Angizo, newest first. Everything below is on the `v1` bra
 - The confirmation box hides as soon as you answer with Alt+Y or Alt+N. It used to stay open after a keyboard answer.
 
 ### Fixed
+- **Quiet microphones were never heard.** Measured on a real laptop mic (room noise 0.0035, speech bursts 0.006–0.018), most speech was below the auto-stop's fixed 0.01 floor, so every recording ended with "I didn't hear anything." Speech now only has to be twice as loud as the room's noise, with a floor of 0.004.
+- **The mic can be chosen.** Set `ANGIZO_MIC_DEVICE` in `backend/.env` to part of a device name (for example `ZEB-DUKE` for a headset); the default is the Windows default mic. The backend logs which mic it records from and the speech threshold it used.
 - **Angizo: Stop Voice Input** could start the mic instead of stopping it, because it sent a toggle. It now sends a stop.
 
 ## 2026-11-28: Renamed NeuroCode to Angizo everywhere

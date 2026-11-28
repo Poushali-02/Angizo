@@ -93,7 +93,7 @@ class _FakeWs:
 def _fake_sounddevice(blocks):
     """A sounddevice stand-in whose stream feeds the given 0.1 s blocks to the callback on start."""
     class InputStream:
-        def __init__(self, samplerate, channels, dtype, callback):
+        def __init__(self, samplerate, channels, dtype, callback, device=None):
             self.callback = callback
 
         def __enter__(self):
@@ -135,3 +135,24 @@ def test_speech_then_silence_stops_and_transcribes(monkeypatch):
     sent, calls = _record(monkeypatch, [_quiet()] * 5 + [_speech()] * 10 + [_quiet()] * 20)
     assert len(calls) == 1
     assert {"type": "mic_status", "state": "transcribing", "reason": "silence"} in sent
+
+
+def test_quiet_laptop_mic_still_counts_as_speech():
+    # Measured on her laptop mic: room about 0.0035, speech 0.006-0.018. The old fixed 0.01 floor missed it.
+    d = SilenceDetector(sample_rate=RATE, silence_ms=1200)
+    blocks = [_quiet(0.0035)] * 5 + [_speech(0.0127)] * 10 + [_quiet(0.0035)] * 20  # sine peak 0.0127 = level 0.009, below the old 0.01 floor
+    reason, _ = _run(d, blocks)
+    assert reason == "silence"
+
+
+def test_mic_is_chosen_by_part_of_its_name(monkeypatch):
+    from tools.vad import pick_input_device
+    devices = [{"name": "Speakers (Realtek)", "max_input_channels": 0},
+               {"name": "Microphone (Realtek(R) Audio)", "max_input_channels": 2},
+               {"name": "Headset (ZEB-DUKE)", "max_input_channels": 1}]
+    fake = types.SimpleNamespace(query_devices=lambda kind=None: devices[1] if kind == "input" else devices)
+    monkeypatch.setitem(sys.modules, "sounddevice", fake)
+    assert pick_input_device("zeb-duke") == (2, "Headset (ZEB-DUKE)")
+    assert pick_input_device("") == (None, "Microphone (Realtek(R) Audio)")
+    monkeypatch.setenv("ANGIZO_MIC_DEVICE", "ZEB")
+    assert pick_input_device() == (2, "Headset (ZEB-DUKE)")

@@ -103,7 +103,7 @@ Angizo exposes native VS Code commands and accessible keyboard shortcuts:
 
 | Command Title | Command ID | Default Keybinding | Description |
 |---|---|---|---|
-| **Start/Stop Listening (Mic)** | `angizo.toggleMic` | `Ctrl+Alt+Space` (`Cmd+Alt+Space`) | Push to talk. Recording stops by itself about 1.2 s after you stop talking; press again to stop sooner. Also cuts Angizo off if it is talking. |
+| **Start/Stop Listening (Mic)** | `angizo.toggleMic` | `Ctrl+Alt+Space` (`Cmd+Alt+Space`) | Push to talk. Recording stops by itself about 1.2 s after you stop talking; press again to stop sooner. Also cuts Angizo off if it is talking. The backend must be running: it records the mic. To use another mic, set `ANGIZO_MIC_DEVICE` in `backend/.env` to part of its name (e.g. `ZEB-DUKE`). |
 | **Toggle Manual Coding Stream** | `angizo.toggleManualStream` | `Alt+M` (`Cmd+Alt+M`) | Enables/disables Intellisense syntax & terminal error interception.    |
 | **Confirm Action (Yes)** | `angizo.confirm` | `Alt+Y` (`Cmd+Alt+Y`) | Confirms a pending agent action or sensitive file access.    |
 | **Cancel Action (No)** | `angizo.cancel` | `Alt+N` (`Cmd+Alt+N`) | Cancels a pending agent action or sensitive file access.    |

@@ -5,7 +5,8 @@ Decides when a mic recording should stop by itself, so the user presses the mic 
 once, speaks, and stops talking (no second press).
 
 How: the first ~0.3 s measure the room's background level; anything clearly louder
-(3x the background, and at least MIN_LEVEL) counts as speech. After speech, a stretch
+(2x the background, and at least MIN_LEVEL) counts as speech. The floor is low on purpose:
+measured on a real laptop mic, the room sat at 0.0035 and speech at 0.006-0.018. After speech, a stretch
 of quiet (default 1.2 s) ends the recording. Two safety limits: nothing said within 6 s
 (stop, and skip transcription, so no Sarvam credits are spent on silence), and 15 s at most.
 """
@@ -14,7 +15,8 @@ import math
 import os
 from typing import Optional
 
-MIN_LEVEL = 0.01  # RMS of float samples in [-1, 1]; quieter than this is never speech
+MIN_LEVEL = 0.004  # RMS of float samples in [-1, 1]; quieter than this is never speech
+NOISE_FACTOR = 2.0  # speech must be this many times louder than the room
 
 
 def _rms(samples) -> float:
@@ -60,7 +62,7 @@ class SilenceDetector:
 
         if self._samples <= round(self.calibrate_s * self.sample_rate):
             self._noise_levels.append(level)
-            self.threshold = max(MIN_LEVEL, 3 * (sum(self._noise_levels) / len(self._noise_levels)))
+            self.threshold = max(MIN_LEVEL, NOISE_FACTOR * (sum(self._noise_levels) / len(self._noise_levels)))
             return None
 
         if level >= self.threshold:
@@ -76,3 +78,18 @@ class SilenceDetector:
         if self._samples >= round(self.max_s * self.sample_rate):
             return "max_length"
         return None
+
+
+def pick_input_device(name: Optional[str] = None):
+    """The mic to record from: ANGIZO_MIC_DEVICE (part of a device name, e.g. "ZEB-DUKE") or
+    the system default (None). Returns (device index or None, device name)."""
+    wanted = (name if name is not None else os.getenv("ANGIZO_MIC_DEVICE", "")).strip().lower()
+    try:
+        import sounddevice as sd
+        if wanted:
+            for i, d in enumerate(sd.query_devices()):
+                if d["max_input_channels"] > 0 and wanted in d["name"].lower():
+                    return i, d["name"]
+        return None, sd.query_devices(kind="input")["name"]
+    except Exception:
+        return None, "default"
