@@ -1,0 +1,216 @@
+CHANGELOG.md
+  s_2adf9dde9c0a0e::t_39d2395b51eb5e 5-19,21-29
+README.md
+  s_2adf9dde9c0a0e::t_f80ab0204a76c5 104,109-113,249,329
+angizo-extension/media/cat.svg
+  s_2adf9dde9c0a0e::t_355135c82d64fe 1
+angizo-extension/package.json
+  s_2adf9dde9c0a0e::t_f927596be7ad39 23,61
+  s_2adf9dde9c0a0e::t_c385e4eab5b92f 24-26,54-57,62-65,101-118
+angizo-extension/src/angizo-view.ts
+  s_2adf9dde9c0a0e::t_a857714e099db1 1-118
+angizo-extension/src/extension.ts
+  s_2adf9dde9c0a0e::t_e2bcf3be483ac5 5,17,25,57-86,88-90,92-96,102-103,121-122,132,186,203,212,221,241,256,311,326-329,362
+  s_2adf9dde9c0a0e::t_02529a9617e3f8 37-42,351-356
+  s_2adf9dde9c0a0e::t_f927596be7ad39 87,1947
+  s_2adf9dde9c0a0e::t_f8036312bb2398 1738-1749,1752-1797,1799-1814,1906-1929,1932,1935-1937,1940-1946
+  s_2adf9dde9c0a0e::t_86fa437805c5e4 1750-1751,1930-1931,1933-1934
+  s_2adf9dde9c0a0e::t_154ab7d06c3c1e 1798,1938-1939
+  s_2adf9dde9c0a0e::t_d8389b72819bf9 1815-1823
+angizo-extension/src/observer/observer-earcon.ts
+  s_2adf9dde9c0a0e::t_016a1b4a6d8873 17-20,25,29,33,43,47,51
+angizo-extension/src/webview-bridge.ts
+  s_2adf9dde9c0a0e::t_016a1b4a6d8873 16-21,26,31,52
+angizo-extension/src/webview/main.js
+  s_2adf9dde9c0a0e::t_94d810b0170629 260,262-279,281-313,316,456-458,468-470,476-478,489-491,497,499-500,515-516,532,644-647
+  s_2adf9dde9c0a0e::t_2c6130d08fea5e 280
+angizo-extension/src/ws-client.ts
+  s_2adf9dde9c0a0e::t_e2bcf3be483ac5 132-136
+angizo-extension/test/demo/scenes.js
+  s_2adf9dde9c0a0e::t_70ccb2f73fc280 83,85
+angizo-extension/test/e2e/suite.js
+  s_2adf9dde9c0a0e::t_02529a9617e3f8 64-88
+backend/api/ws.py
+  s_2adf9dde9c0a0e::t_31ca687c6f9214 303-307,317-318,323,328,332-336,346,352-360
+  s_2adf9dde9c0a0e::t_5757976bc6cd4b 308-310,313,349-351,388
+backend/tests/test_vad.py
+  s_2adf9dde9c0a0e::t_5e4a5efc7c4f23 1-75
+  s_2adf9dde9c0a0e::t_84e1a6b1b820d1 76-137
+backend/tools/vad.py
+  s_2adf9dde9c0a0e::t_478be483ddfbb5 1-78
+docs/DEMO.md
+  s_2adf9dde9c0a0e::t_f80ab0204a76c5 13,77,92,120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "autter_version": "3.9.1",
+  "base_commit_sha": "8c5898b8271fc9ffc3c8b42b53016ba41f208a6f",
+  "branch": "v1-UI",
+  "prompts": {
+    "s_2adf9dde9c0a0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "64563ae5-3f51-4e7b-b39d-5a6e8568c454",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:a58e77a9ac74a83c123ae536fd759bc92db48ba927c3965e94e97dea4f05a24e",
+      "total_additions": 780,
+      "total_deletions": 120,
+      "accepted_lines": 759,
+      "overriden_lines": 2
+    }
+  },
+  "sessions": {
+    "s_2adf9dde9c0a0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "64563ae5-3f51-4e7b-b39d-5a6e8568c454",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:a58e77a9ac74a83c123ae536fd759bc92db48ba927c3965e94e97dea4f05a24e",
+      "stats": {
+        "total_additions": 780,
+        "total_deletions": 120,
+        "accepted_lines": 759,
+        "overriden_lines": 2,
+        "files": {
+          "CHANGELOG.md": {
+            "total_additions": 25,
+            "total_deletions": 0,
+            "accepted_lines": 24,
+            "overriden_lines": 1
+          },
+          "README.md": {
+            "total_additions": 8,
+            "total_deletions": 4,
+            "accepted_lines": 8,
+            "overriden_lines": 0
+          },
+          "angizo-extension/media/cat.svg": {
+            "total_additions": 1,
+            "total_deletions": 0,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "angizo-extension/package.json": {
+            "total_additions": 31,
+            "total_deletions": 0,
+            "accepted_lines": 31,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/angizo-view.ts": {
+            "total_additions": 118,
+            "total_deletions": 0,
+            "accepted_lines": 118,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/extension.ts": {
+            "total_additions": 205,
+            "total_deletions": 74,
+            "accepted_lines": 199,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/copilot-watcher.ts": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/manual-watcher.ts": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/observer-earcon.ts": {
+            "total_additions": 10,
+            "total_deletions": 7,
+            "accepted_lines": 10,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/observer-hud.ts": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/observer-status-bar.ts": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/terminal-watcher.ts": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/webview-bridge.ts": {
+            "total_additions": 9,
+            "total_deletions": 3,
+            "accepted_lines": 9,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/webview/main.js": {
+            "total_additions": 77,
+            "total_deletions": 5,
+            "accepted_lines": 76,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/webview/pcm-processor.js": {
+            "total_additions": 0,
+            "total_deletions": 0,
+            "accepted_lines": 0,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/ws-client.ts": {
+            "total_additions": 5,
+            "total_deletions": 0,
+            "accepted_lines": 5,
+            "overriden_lines": 0
+          },
+          "angizo-extension/test/demo/scenes.js": {
+            "total_additions": 2,
+            "total_deletions": 3,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "angizo-extension/test/e2e/suite.js": {
+            "total_additions": 25,
+            "total_deletions": 0,
+            "accepted_lines": 25,
+            "overriden_lines": 0
+          },
+          "backend/api/ws.py": {
+            "total_additions": 34,
+            "total_deletions": 9,
+            "accepted_lines": 32,
+            "overriden_lines": 0
+          },
+          "backend/tests/test_vad.py": {
+            "total_additions": 137,
+            "total_deletions": 0,
+            "accepted_lines": 137,
+            "overriden_lines": 0
+          },
+          "backend/tools/vad.py": {
+            "total_additions": 88,
+            "total_deletions": 10,
+            "accepted_lines": 78,
+            "overriden_lines": 0
+          },
+          "docs/DEMO.md": {
+            "total_additions": 5,
+            "total_deletions": 5,
+            "accepted_lines": 4,
+            "overriden_lines": 1
+          }
+        }
+      }
+    }
+  },
+  "integrity": {"v":1,"commit":"8c5898b8271fc9ffc3c8b42b53016ba41f208a6f","tree":"4544bb2a90d4a717c1b9970a84edc20ac5607ac8","files":{"CHANGELOG.md":"4550f640f3ed6eb7233dd9ea3570ead52d9c29fa","README.md":"18b472d5e0ee3c1a772e1dc86a14e232c84473de","angizo-extension/media/cat.svg":"ed85a420df84188a5fed3b2146ad67c296912f95","angizo-extension/package.json":"dcd0dfa9b64f64f8d9801c8c815448273617cd08","angizo-extension/src/angizo-view.ts":"2461f0fd570b8bc09c6ede0dfc92c4e1a676c26e","angizo-extension/src/extension.ts":"72e05d9018d8653084c04851451d31a5cad52a5d","angizo-extension/src/observer/observer-earcon.ts":"14b34d8ed4b5789cd4acc745a32c370e225b8ace","angizo-extension/src/webview-bridge.ts":"60cce5c37767ad5b4e0a6a9e5b04ec35882d74ef","angizo-extension/src/webview/main.js":"a83f3afda61a13a698c5ecd9e9f37fa78d02e55c","angizo-extension/src/ws-client.ts":"48e986e5e9bd8d8521984db93e9f7816113901a8","angizo-extension/test/demo/scenes.js":"6e0008e8e705190c3e30a3ce975dd7b13e1e3192","angizo-extension/test/e2e/suite.js":"1dd948f202e88583a0b8c0b128bd0d82a7c1afa5","backend/api/ws.py":"15a507464b1796d414c066ae913630e85fe40284","backend/tests/test_vad.py":"747b4cbf708f896eee2beb79f7deffef00c4d7a2","backend/tools/vad.py":"ad6fb421d27fb9206f8e7da6d44efaedceb106d8","docs/DEMO.md":"0cc6d323120d96852d34d741feac22dc99de65ac"},"digest":"6c7c16f65afa62a8b38453e0bf7cc0f081497e8864462708fec4e028c8029e44"}
+}
