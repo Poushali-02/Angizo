@@ -1,0 +1,565 @@
+.github/workflows/ci.yml
+  s_2adf9dde9c0a0e::t_f927596be7ad39 31,38
+.gitignore
+  s_2adf9dde9c0a0e::t_f927596be7ad39 15,26,55,64-67
+CHANGELOG.md
+  s_2adf9dde9c0a0e::t_e8ff2af615d142 5-13
+DEPLOY.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1,3,9,31,59-61,85,123,133,136-137,152,157,163,168,176,223,227,230,237,261,265,269
+  s_2adf9dde9c0a0e::t_9c131dd74be0c6 245
+MARKETING.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1,27,31,33,102,108,119,131,150,183,227
+  s_2adf9dde9c0a0e::t_9c131dd74be0c6 42,216
+PITCH_DIFFERENTIATION.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1,3,9,15,32-34,37,43-44,52-53,55,61-62,69,79,82,85,90-91,107-108
+  s_2adf9dde9c0a0e::t_9c131dd74be0c6 17,99
+README.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 18,24,90,100,143,190-191,236,243,279,328
+  s_2adf9dde9c0a0e::t_9c131dd74be0c6 28,104-109
+STREAM.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1,7,13,20,26,48,64,118,124,163
+TECH_DES.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1,5,7,37,45,68,80,97,109,119,122,136,149,152,156,169,172-175,204
+  s_2adf9dde9c0a0e::t_9c131dd74be0c6 15-25
+USECASE.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1,5,9,15,30,47-48,64-65,81-82,98-99,117-118,135,150,174
+  s_2adf9dde9c0a0e::t_9c131dd74be0c6 162
+angizo-extension/package.json
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-105
+angizo-extension/src/extension.ts
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-2207
+angizo-extension/src/observer/copilot-watcher.ts
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-316
+angizo-extension/src/observer/manual-watcher.ts
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-399
+angizo-extension/src/observer/observer-earcon.ts
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-68
+angizo-extension/src/observer/observer-hud.ts
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-130
+angizo-extension/src/observer/observer-status-bar.ts
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-105
+angizo-extension/src/observer/terminal-watcher.ts
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-215
+angizo-extension/src/webview-bridge.ts
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-67
+angizo-extension/src/webview/main.js
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-576
+angizo-extension/src/webview/pcm-processor.js
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-75
+angizo-extension/src/ws-client.ts
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-208
+angizo-extension/test/demo/scenes.js
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-180
+angizo-extension/test/e2e/suite.js
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-69,71-209
+  s_2adf9dde9c0a0e::t_38c2c4a6e05ca1 70
+architecture_diagram.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1,3,21,57,98,173,176,193
+  s_2adf9dde9c0a0e::t_9c131dd74be0c6 237
+backend/README.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1-2
+backend/agent/graph.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,40
+backend/agent/nodes/__init__.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2
+backend/agent/nodes/confirm.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,21
+backend/agent/nodes/context.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,10
+backend/agent/nodes/execute.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,8
+backend/agent/nodes/narrate.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,14
+backend/agent/nodes/reason.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,10
+backend/agent/nodes/recover.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,17
+backend/agent/nodes/understand.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,10
+backend/agent/nodes/verify.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,14
+backend/agent/plan_schema.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2
+backend/agent/registry.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,19
+backend/agent/state.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2
+backend/api/__init__.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1
+backend/api/rest.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2
+backend/api/ws.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,32
+backend/config.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2
+  s_2adf9dde9c0a0e::t_ac7610573365f6 28-32,34-35,40
+backend/main.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,27,31,43
+backend/pyproject.toml
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,4
+backend/tools/__init__.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1
+backend/tools/diff_intelligence.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,21,113,231
+backend/tools/elevenlabs_tts.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,20
+backend/tools/gemini_llm.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,18,87,192,223
+backend/tools/git_tool.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,11
+backend/tools/rag_engine.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,20
+backend/tools/sarvam_key_manager.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,15
+backend/tools/sarvam_stt.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,14
+backend/tools/sarvam_tts.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,20
+backend/tools/speech.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 2,19
+docs/DEMO.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 55,74
+  s_2adf9dde9c0a0e::t_9c131dd74be0c6 120
+proj.build/00-project-context.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1
+proj.build_prompt/AGENT_SPEC.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1
+proj.build_prompt/DESIGN.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1,64,91
+  s_2adf9dde9c0a0e::t_9c131dd74be0c6 37
+proj.build_prompt/PRODUCT.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1,68,99,117,120
+proj.build_prompt/ROADMAP.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1,30
+proj.build_prompt/WORKING_FUNCTIONALITIES.md
+  s_2adf9dde9c0a0e::t_f927596be7ad39 1,3,73
+scripts/make_sandbox.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 105
+scripts/record_demo.py
+  s_2adf9dde9c0a0e::t_f927596be7ad39 9,34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "autter_version": "3.9.1",
+  "base_commit_sha": "cdb64436c1e25a914de7ef8596c8a63ff0c62a4e",
+  "branch": "v1",
+  "prompts": {
+    "s_2adf9dde9c0a0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "64563ae5-3f51-4e7b-b39d-5a6e8568c454",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:c5efd562c19479296fe1c72a5aad00c32c3cecc005e25d2336b39a57334081c5",
+      "total_additions": 5150,
+      "total_deletions": 276,
+      "accepted_lines": 5119,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_2adf9dde9c0a0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "64563ae5-3f51-4e7b-b39d-5a6e8568c454",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Poushali Bhattacharyya <poushalibhattacharyya02@gmail.com>",
+      "messages_url": "cas:c5efd562c19479296fe1c72a5aad00c32c3cecc005e25d2336b39a57334081c5",
+      "stats": {
+        "total_additions": 5150,
+        "total_deletions": 276,
+        "accepted_lines": 5119,
+        "overriden_lines": 0,
+        "files": {
+          ".github/workflows/ci.yml": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          ".gitignore": {
+            "total_additions": 7,
+            "total_deletions": 7,
+            "accepted_lines": 7,
+            "overriden_lines": 0
+          },
+          "CHANGELOG.md": {
+            "total_additions": 9,
+            "total_deletions": 0,
+            "accepted_lines": 9,
+            "overriden_lines": 0
+          },
+          "DEPLOY.md": {
+            "total_additions": 26,
+            "total_deletions": 26,
+            "accepted_lines": 25,
+            "overriden_lines": 0
+          },
+          "MARKETING.md": {
+            "total_additions": 15,
+            "total_deletions": 15,
+            "accepted_lines": 13,
+            "overriden_lines": 0
+          },
+          "PITCH_DIFFERENTIATION.md": {
+            "total_additions": 27,
+            "total_deletions": 27,
+            "accepted_lines": 25,
+            "overriden_lines": 0
+          },
+          "README.md": {
+            "total_additions": 25,
+            "total_deletions": 25,
+            "accepted_lines": 18,
+            "overriden_lines": 0
+          },
+          "STREAM.md": {
+            "total_additions": 10,
+            "total_deletions": 10,
+            "accepted_lines": 10,
+            "overriden_lines": 0
+          },
+          "TECH_DES.md": {
+            "total_additions": 43,
+            "total_deletions": 43,
+            "accepted_lines": 32,
+            "overriden_lines": 0
+          },
+          "USECASE.md": {
+            "total_additions": 20,
+            "total_deletions": 20,
+            "accepted_lines": 19,
+            "overriden_lines": 0
+          },
+          "angizo-extension/package.json": {
+            "total_additions": 105,
+            "total_deletions": 0,
+            "accepted_lines": 105,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/extension.ts": {
+            "total_additions": 2207,
+            "total_deletions": 0,
+            "accepted_lines": 2207,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/copilot-watcher.ts": {
+            "total_additions": 316,
+            "total_deletions": 0,
+            "accepted_lines": 316,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/manual-watcher.ts": {
+            "total_additions": 399,
+            "total_deletions": 0,
+            "accepted_lines": 399,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/observer-earcon.ts": {
+            "total_additions": 68,
+            "total_deletions": 0,
+            "accepted_lines": 68,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/observer-hud.ts": {
+            "total_additions": 130,
+            "total_deletions": 0,
+            "accepted_lines": 130,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/observer-status-bar.ts": {
+            "total_additions": 105,
+            "total_deletions": 0,
+            "accepted_lines": 105,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/observer/terminal-watcher.ts": {
+            "total_additions": 215,
+            "total_deletions": 0,
+            "accepted_lines": 215,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/webview-bridge.ts": {
+            "total_additions": 67,
+            "total_deletions": 0,
+            "accepted_lines": 67,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/webview/main.js": {
+            "total_additions": 576,
+            "total_deletions": 0,
+            "accepted_lines": 576,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/webview/pcm-processor.js": {
+            "total_additions": 75,
+            "total_deletions": 0,
+            "accepted_lines": 75,
+            "overriden_lines": 0
+          },
+          "angizo-extension/src/ws-client.ts": {
+            "total_additions": 208,
+            "total_deletions": 0,
+            "accepted_lines": 208,
+            "overriden_lines": 0
+          },
+          "angizo-extension/test/demo/scenes.js": {
+            "total_additions": 180,
+            "total_deletions": 0,
+            "accepted_lines": 180,
+            "overriden_lines": 0
+          },
+          "angizo-extension/test/e2e/suite.js": {
+            "total_additions": 210,
+            "total_deletions": 1,
+            "accepted_lines": 209,
+            "overriden_lines": 0
+          },
+          "architecture_diagram.md": {
+            "total_additions": 10,
+            "total_deletions": 10,
+            "accepted_lines": 9,
+            "overriden_lines": 0
+          },
+          "backend/README.md": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/agent/graph.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/__init__.py": {
+            "total_additions": 1,
+            "total_deletions": 1,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/confirm.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/context.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/execute.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/narrate.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/reason.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/recover.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/understand.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/agent/nodes/verify.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/agent/plan_schema.py": {
+            "total_additions": 1,
+            "total_deletions": 1,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "backend/agent/registry.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/agent/state.py": {
+            "total_additions": 1,
+            "total_deletions": 1,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "backend/api/__init__.py": {
+            "total_additions": 1,
+            "total_deletions": 1,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "backend/api/rest.py": {
+            "total_additions": 1,
+            "total_deletions": 1,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "backend/api/ws.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/config.py": {
+            "total_additions": 12,
+            "total_deletions": 7,
+            "accepted_lines": 9,
+            "overriden_lines": 0
+          },
+          "backend/main.py": {
+            "total_additions": 4,
+            "total_deletions": 4,
+            "accepted_lines": 4,
+            "overriden_lines": 0
+          },
+          "backend/pyproject.toml": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/tools/__init__.py": {
+            "total_additions": 1,
+            "total_deletions": 1,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "backend/tools/diff_intelligence.py": {
+            "total_additions": 4,
+            "total_deletions": 4,
+            "accepted_lines": 4,
+            "overriden_lines": 0
+          },
+          "backend/tools/elevenlabs_tts.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/tools/gemini_llm.py": {
+            "total_additions": 5,
+            "total_deletions": 5,
+            "accepted_lines": 5,
+            "overriden_lines": 0
+          },
+          "backend/tools/git_tool.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/tools/rag_engine.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/tools/sarvam_key_manager.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/tools/sarvam_stt.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/tools/sarvam_tts.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "backend/tools/speech.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "docs/DEMO.md": {
+            "total_additions": 4,
+            "total_deletions": 4,
+            "accepted_lines": 3,
+            "overriden_lines": 0
+          },
+          "proj.build/00-project-context.md": {
+            "total_additions": 1,
+            "total_deletions": 1,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "proj.build_prompt/AGENT_SPEC.md": {
+            "total_additions": 1,
+            "total_deletions": 1,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "proj.build_prompt/DESIGN.md": {
+            "total_additions": 5,
+            "total_deletions": 5,
+            "accepted_lines": 4,
+            "overriden_lines": 0
+          },
+          "proj.build_prompt/PRODUCT.md": {
+            "total_additions": 5,
+            "total_deletions": 5,
+            "accepted_lines": 5,
+            "overriden_lines": 0
+          },
+          "proj.build_prompt/ROADMAP.md": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          },
+          "proj.build_prompt/WORKING_FUNCTIONALITIES.md": {
+            "total_additions": 3,
+            "total_deletions": 3,
+            "accepted_lines": 3,
+            "overriden_lines": 0
+          },
+          "scripts/make_sandbox.py": {
+            "total_additions": 1,
+            "total_deletions": 1,
+            "accepted_lines": 1,
+            "overriden_lines": 0
+          },
+          "scripts/record_demo.py": {
+            "total_additions": 2,
+            "total_deletions": 2,
+            "accepted_lines": 2,
+            "overriden_lines": 0
+          }
+        }
+      }
+    }
+  },
+  "integrity": {"v":1,"commit":"cdb64436c1e25a914de7ef8596c8a63ff0c62a4e","tree":"0a578b7cdef47eceff273c9aaa656775c5fc6cad","files":{".github/workflows/ci.yml":"538d7396063247f5cbf0c3ed8e1695da18b3742f",".gitignore":"b1f3e52dda8f45eab8404bdaea16147db6b6f397","CHANGELOG.md":"4066fed1889fc8ecd03871b6907694cfff74b8bd","DEPLOY.md":"f96ff240897e22bea3d30b550c81be61dd766069","MARKETING.md":"4118656b8596f4978ac292942e59bb24f9b27256","PITCH_DIFFERENTIATION.md":"8bf98e4176c2cc3f507eaa13a15a3dccd8b07f50","README.md":"18d0d6dafb461fc642e129f3d9129cb38149a4d0","STREAM.md":"9af021f942eb22439c10cfc0775da641cb071607","TECH_DES.md":"0e10f36bab36a90076638ca8ae1af8c0164ce891","USECASE.md":"7430233d27ee2631a16f923f6ab52940b409a4c7","angizo-extension/package.json":"291042e4c1db0e9774f0da0174d401608e7a7da9","angizo-extension/src/extension.ts":"cb353134b8564d60ad885225466a34a536e15806","angizo-extension/src/observer/copilot-watcher.ts":"c18dcc274a6f048b3ddbd3fd2941f6546c55bb30","angizo-extension/src/observer/manual-watcher.ts":"7e53f914e7c418be61a7a0950d6ab4f21d4cbd74","angizo-extension/src/observer/observer-earcon.ts":"ee5aed10e9baf19d08220bf365f3c5aa7ace0e1c","angizo-extension/src/observer/observer-hud.ts":"9784abd1e1ce624611c570a6ad69f1fc565395bc","angizo-extension/src/observer/observer-status-bar.ts":"b75c4e1baf07b56609b4e1f43863bb4a8b911a14","angizo-extension/src/observer/terminal-watcher.ts":"f51a64871361a89d23e5b739f7f9ef7125e505fa","angizo-extension/src/webview-bridge.ts":"f2cca10a3cc7a96a36c16cf0834665a3ae0bebcb","angizo-extension/src/webview/main.js":"3726d4f8479bdbc3ac2bd0eecbb67671382524f3","angizo-extension/src/webview/pcm-processor.js":"c6ad3378cef26bf6c32ddb5e55f2521c8fe7b9cd","angizo-extension/src/ws-client.ts":"d58b555a54977992199daa0f9678f735728661ab","angizo-extension/test/demo/scenes.js":"f8aeb8e1a3ffd08dd69feb606c428f4fb1dd5cf7","angizo-extension/test/e2e/suite.js":"7da026c3b2c6f4853ddad2a1552d12c69b6b6e8e","architecture_diagram.md":"a15c134ca31c1b7d70095dcb4a17561fbe582f36","backend/README.md":"55602a1c091534a4c5ca9f841292460af92f49b9","backend/agent/graph.py":"7b79a3a98442bdefd7fe1a45632ee4adcc6fcfb8","backend/agent/nodes/__init__.py":"5fbf9046d8b056ace972806b7933d89f6dc8f67a","backend/agent/nodes/confirm.py":"520b4518a7395f378bdd4eaeea8b4cc42f724751","backend/agent/nodes/context.py":"32b474923a1a6cce3ecf3a4ab0422d1fdf2abd42","backend/agent/nodes/execute.py":"c7d63e93ce9c472ed8383a01bb2a49bb59dc5c47","backend/agent/nodes/narrate.py":"44804b30f659a0db5f99940c03bb6ec8dad5c87a","backend/agent/nodes/reason.py":"70cb0417876931cf55fae2153d2042f6c8c18842","backend/agent/nodes/recover.py":"ffc97c8449b588ee95b28157ff241e6fa080f48a","backend/agent/nodes/understand.py":"68de746bf269c30d2d9b3db4f71c45dd8b483734","backend/agent/nodes/verify.py":"e7b13445d249b8fa4c2ff9d8b372ddad9055c732","backend/agent/plan_schema.py":"a2607597cbf84140733578e3e57223f5998a6d61","backend/agent/registry.py":"d749a77a58776ff78d66ecae480d36aecf80def0","backend/agent/state.py":"b9f8e1133297eeffa7da73a54d1c92a5095569e0","backend/api/__init__.py":"0be6c3884db5d64437222cc859033920bca6703a","backend/api/rest.py":"82db2d399da2fb30bc1207e1a79ca7f77bcdfd21","backend/api/ws.py":"b8fd73e4d6e543c8c84b34fac031b496ef2a9ad5","backend/config.py":"30f3c8d83ecdfeec71f6d715996334fe804dc5c9","backend/main.py":"4982cf957106fbd79a2c3dc021596dce10020176","backend/pyproject.toml":"de9515b0612099b8e4567f6e98dff2d6b358d022","backend/tools/__init__.py":"28171349dec03c26a37a4238d2a06b7e3ab39de2","backend/tools/diff_intelligence.py":"b30057608b3872ca5f3b42c432b4797cbd5fa238","backend/tools/elevenlabs_tts.py":"e642e5672ef2acde802cb58c36c350b69e35e7d9","backend/tools/gemini_llm.py":"b2c4616210279dd34cfd1f7941dc4d465f755e97","backend/tools/git_tool.py":"c0fa545d0b646fc10e79a3a703876f58bbee1dcf","backend/tools/rag_engine.py":"421834983c5d68855f2f90948f7e20a020b5438b","backend/tools/sarvam_key_manager.py":"8e20b5a098052ce6fcacdf0281172abc1f535a4c","backend/tools/sarvam_stt.py":"be7982dfa6eac81b7855b6521077fe74c406f5e6","backend/tools/sarvam_tts.py":"0c2367c2166649cf34fa5e1c42517a9f9af85121","backend/tools/speech.py":"42d771bca5bd4f796af8c4fabc43c7f440707528","docs/DEMO.md":"31af273a8e5c76f224add4762952fed32de764b0","proj.build/00-project-context.md":"2ee4d2eba8f3f42c33911ddaaa9c491dda4f7231","proj.build_prompt/AGENT_SPEC.md":"75cd8455a595c7f5edaff077cf8411054be2b3c0","proj.build_prompt/DESIGN.md":"8f3ad79a166e955c85d405834f5d29fb4f086e9c","proj.build_prompt/PRODUCT.md":"ac6c7a0856aa3b88371933a9ec930864a87d1e2c","proj.build_prompt/ROADMAP.md":"d0b962caa14f659f1b50f84389997fdc424b872a","proj.build_prompt/WORKING_FUNCTIONALITIES.md":"8bc7c55e29c376aedee973e0c87aa902a1eced51","scripts/make_sandbox.py":"ae0ce9da9130e5750d01534cc2a2fb01df263564","scripts/record_demo.py":"430aba618e77bfb3b4262da55674291d0f032f78"},"digest":"2ef1415f7a33a51f724d3a03984c0e16a8c9307556283677b565001ee4524fdd"}
+}
