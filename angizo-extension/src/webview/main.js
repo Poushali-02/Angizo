@@ -126,8 +126,9 @@
 
   if (micBtn) {
     micBtn.disabled = false;
-    micBtn.title = 'Toggle Voice Input (Backend OS Mic)';
     micBtn.addEventListener('click', () => {
+      // Same as Ctrl+Alt+Space: cut off any speech, then start or stop listening
+      AudioQueue.stop();
       vscode.postMessage({ type: 'toggle_backend_mic' });
     });
   }
@@ -257,9 +258,63 @@
         // Low double-tone: 200Hz + 160Hz
         playTone(200, 0.2, 'sawtooth', 0.14);
         setTimeout(() => playTone(160, 0.2, 'sawtooth', 0.12), 220);
+        flashCatError();
+        break;
+      case 'mic_on':
+        // Rising blip: the mic is listening
+        playTone(660, 0.08, 'sine', 0.2);
+        setTimeout(() => playTone(880, 0.1, 'sine', 0.18), 70);
+        break;
+      case 'mic_off':
+        // Falling blip: the mic stopped
+        playTone(880, 0.08, 'sine', 0.18);
+        setTimeout(() => playTone(587, 0.12, 'sine', 0.16), 70);
         break;
     }
   }
+
+  // --- The cat: a picture of what Angizo is doing (decorative; everything is also spoken) ---
+  const catEl = document.getElementById('cat');
+  const catCaptionEl = document.getElementById('catCaption');
+  const CAT_CAPTIONS = {
+    idle: 'Asleep. Press Ctrl+Alt+Space to talk.',
+    listening: 'Listening… stop talking and I will stop too.',
+    thinking: 'Thinking…',
+    speaking: 'Talking. Ctrl+Alt+Space cuts me off.',
+    waiting: 'Waiting for your yes: Alt+Y, or Alt+N for no.',
+    error: 'Something went wrong.',
+  };
+  let catListening = false;
+  let catTranscribing = false;
+  let catErrorUntil = 0;
+
+  function flashCatError() {
+    catErrorUntil = Date.now() + 1600;
+    updateCat();
+  }
+
+  function isSpeaking() {
+    return AudioQueue._playing || ('speechSynthesis' in window && window.speechSynthesis.speaking);
+  }
+
+  function catState() {
+    if (Date.now() < catErrorUntil) return 'error';
+    if (catListening) return 'listening';
+    if (isSpeaking()) return 'speaking';
+    if (confirmArea && confirmArea.style.display === 'block') return 'waiting';
+    if (catTranscribing || pendingRequestTicker) return 'thinking';
+    return 'idle';
+  }
+
+  function updateCat() {
+    if (!catEl) return;
+    const state = catState();
+    if (catEl.getAttribute('data-state') !== state) {
+      catEl.setAttribute('data-state', state);
+      if (catCaptionEl) catCaptionEl.textContent = CAT_CAPTIONS[state];
+    }
+  }
+  setInterval(updateCat, 250);
 
   // --- Observer Status Strip ---
   function updateObserverStrip(state, extra) {
@@ -399,6 +454,9 @@
 
     if (msg.type === 'play_earcon') {
       playEarcon(msg.earconType);
+    } else if (msg.type === 'stop_speech') {
+      // The mic shortcut or a new command interrupts whatever Angizo is saying
+      AudioQueue.stop();
     } else if (msg.type === 'speak_text') {
       speakText(msg.text);
     } else if (msg.type === 'command_sent') {
@@ -408,18 +466,20 @@
     } else if (msg.type === 'observer_status') {
       const extra = msg.state === 'complete' ? msg.linesAdded : msg.file;
       updateObserverStrip(msg.state, extra);
-    } else if (msg.type === 'start_mic') {
-      vscode.postMessage({ type: 'toggle_backend_mic' });
-    } else if (msg.type === 'stop_mic') {
-      vscode.postMessage({ type: 'toggle_backend_mic' });
+    } else if (msg.type === 'mic_toggled') {
+      // Shortcut pressed: show it at once, before the backend confirms
+      catListening = !!msg.listening;
     } else if (msg.type === 'backend_message') {
       const payload = msg.payload;
       if (payload.type === 'mic_status') {
         if (payload.state === 'recording') {
           isCapturing = true;
+          catListening = true;
+          catTranscribing = false;
+          playEarcon('mic_on');
           if (micBtn) {
             micBtn.classList.add('recording');
-            micBtn.innerHTML = '🛑';
+            micBtn.setAttribute('aria-pressed', 'true');
           }
           if (statusEl) {
             statusEl.textContent = 'Listening…';
@@ -427,15 +487,21 @@
           }
           log('Microphone listening (OS Recording)...');
         } else if (payload.state === 'transcribing') {
+          if (catListening) playEarcon('mic_off');
+          catListening = false;
+          catTranscribing = true;
           if (statusEl) {
             statusEl.textContent = 'Transcribing…';
           }
           log('Transcribing voice audio...');
         } else if (payload.state === 'idle') {
+          if (catListening) playEarcon('mic_off');
           isCapturing = false;
+          catListening = false;
+          catTranscribing = false;
           if (micBtn) {
             micBtn.classList.remove('recording');
-            micBtn.innerHTML = '🎙️';
+            micBtn.setAttribute('aria-pressed', 'false');
           }
           if (statusEl) {
             statusEl.textContent = 'microphone off';
@@ -447,6 +513,8 @@
         }
       } else if (payload.type === 'action_result') {
         stopProcessingAudio();
+        if (confirmArea) confirmArea.style.display = 'none';
+        if (payload.status === 'failure' || payload.status === 'error') flashCatError();
         log('Backend: ' + payload.detail);
         // audio_base64 holds the first sentence; the rest follows as 'agent_continuation'
         playAudioNarration(payload.audio_base64, payload.spoken_text || payload.detail);
@@ -462,6 +530,7 @@
         playAudioNarration(payload.audio_base64, payload.spoken_text || payload.prompt);
       } else if (payload.type === 'ack') {
         // Instant acknowledgement of a command, then keep ticking until the answer arrives
+        if (confirmArea) confirmArea.style.display = 'none';
         playAudioNarration(payload.audio_base64, payload.text);
         if (!pendingRequestTicker) {
           pendingRequestTicker = setInterval(() => playEarcon('tick'), 1800);
@@ -527,7 +596,7 @@
       isCapturing = true;
       if (micBtn) {
         micBtn.classList.add('recording');
-        micBtn.innerHTML = '🛑';
+        micBtn.setAttribute('aria-pressed', 'true');
       }
       if (statusEl) {
         statusEl.textContent = 'Listening…';
@@ -539,7 +608,7 @@
       isCapturing = false;
       if (micBtn) {
         micBtn.classList.remove('recording');
-        micBtn.innerHTML = '🎙️';
+        micBtn.setAttribute('aria-pressed', 'false');
         micBtn.title = 'Microphone error: ' + err.message;
       }
       if (statusEl) {
@@ -565,7 +634,7 @@
     isCapturing = false;
     if (micBtn) {
       micBtn.classList.remove('recording');
-      micBtn.innerHTML = '🎙️';
+      micBtn.setAttribute('aria-pressed', 'false');
     }
     if (statusEl) {
       statusEl.textContent = 'microphone off';
@@ -573,4 +642,8 @@
     }
     log('Mic capture stopped');
   }
+
+  // Tell the extension the script is listening, so it can send anything it queued.
+  updateCat();
+  vscode.postMessage({ type: 'webview_ready' });
 })();

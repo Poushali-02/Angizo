@@ -10,7 +10,7 @@ Angizo is two programs that talk over one WebSocket (`ws://localhost:7001/ws/ses
  ManualWatcher   syntax errors ──── manual_observer ──▶ fixed sentence ─────────────┐
  TerminalWatcher terminal crashes ─ runtime_error ────▶ Groq explains the crash ────┤
  CopilotWatcher  AI-sized edits ─── copilot_complete ─▶ Groq: one-sentence summary ─┤
- Panel / mic / "Run a Command…" ─── text_command ─────▶ LangGraph agent (below) ────┤
+ Panel / Ctrl+Alt+Space / "Run a Command…" ─ text_command ▶ LangGraph agent (below) ┤
  Alt+Y / Alt+N / spoken yes-no ──── confirm_response ─▶ resumes the paused agent ───┤
                                                                                     ▼
  Panel plays the audio ◀──── ack / confirmation_request / action_result ◀── Sarvam speech
@@ -74,7 +74,7 @@ context → understand → reason → confirm ⇄ interrupt(): pause for a spoke
    code --extensionDevelopmentPath=C:\Users\poush\OneDrive\Desktop\angizo\angizo-extension C:\Users\poush\OneDrive\Projects\angizo-sandbox\playground
    ```
 
-3. Press `Ctrl+Shift+P`, then run **Angizo: Start Voice Input** to open the panel.
+3. Angizo is in the right sidebar, with the cat asleep at the top. If the sidebar is closed, press `Ctrl+Alt+B` (or run **Angizo: Show Panel**). It never opens an editor tab or takes focus from your code.
 
 ### The scenes
 
@@ -89,7 +89,7 @@ context → understand → reason → confirm ⇄ interrupt(): pause for a spoke
 | 7 | `Alt+Y` | "Committed 1 file with message: …" | "It commits exactly the files and message it read out." |
 | 8 | Make a teammate push first (commands below), then `push my branch`, `Alt+Y` | "The push was rejected… Should I pull them and push again?" | "The agentic loop: verify → recover → confirm." |
 | 9 | `Alt+Y` | "Pulled the new commits from origin, merged them, and pushed successfully." | "Merges, never rebases or force-pushes; a conflict is undone and explained." |
-| 10 | (optional) click the mic, say "what is my git status", click again | the status | "Sarvam speech-to-text, Indian English." |
+| 10 | (optional) press `Ctrl+Alt+Space`, say "what is my git status", then just stop talking | a blip when it starts and stops listening, then the status | "Push to talk; it stops by itself after 1.2 s of silence, and pressing it while Angizo talks cuts it off." |
 
 **Make a teammate push first (for scene 8),** in a separate terminal:
 
@@ -116,8 +116,8 @@ It takes about 3 minutes. It records the screen area where the VS Code window si
 
 | Layer | Command | What it proves | Cost |
 |---|---|---|---|
-| Backend logic | `cd backend; .venv\Scripts\python.exe -m pytest` | ~180 tests: git safety, the graph with `interrupt()` and the recovery loop, schema validation, the plan guard, the WebSocket API, speech fallbacks | free, offline |
-| Extension in real VS Code | `cd angizo-extension; npm run test:e2e` | 12 checks: syntax errors (late ones too), Copilot detection, the terminal crash, Alt+Y/N, mute | free, offline    |
+| Backend logic | `cd backend; .venv\Scripts\python.exe -m pytest` | ~186 tests: git safety, the graph with `interrupt()` and the recovery loop, schema validation, the plan guard, the WebSocket API, speech fallbacks | free, offline |
+| Extension in real VS Code | `cd angizo-extension; npm run test:e2e` | 14 checks: the sidebar panel (no editor tab), the mic shortcut, syntax errors (late ones too), Copilot detection, the terminal crash, Alt+Y/N, mute | free, offline    |
 | Real APIs | `$env:ANGIZO_LIVE="1"; $env:ANGIZO_SANDBOX="C:\Users\poush\OneDrive\Projects\angizo-sandbox"; cd backend; .venv\Scripts\python.exe -m pytest tests_live` | Groq planning and answers, speech, transcription, latency; add `$env:ANGIZO_LIVE_MIC="1"` for the microphone | Groq free; about 30 Sarvam requests |
 | Measurements | `cd backend; .venv\Scripts\python.exe evals\measure.py --runs 3 --speech` | planner accuracy, unsafe-action count, time per node, code search, token use, writes `reports/measurements.md` | Groq free; 4 Sarvam requests |
 | Everything, as a user sees it | the demo recording (section 3) | the whole loop: VS Code → backend → LLM → git → speech → panel | about 25 Sarvam requests |

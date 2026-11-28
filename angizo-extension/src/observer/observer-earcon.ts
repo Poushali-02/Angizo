@@ -14,20 +14,23 @@
  *   "error"    - low double-tone alert (errors introduced)
  */
 
-import * as vscode from "vscode";
+/** Anything that can carry a message to the webview (the Angizo sidebar view). */
+export interface MessageTarget {
+  postMessage(message: unknown): unknown;
+}
 
 export type EarconType = "start" | "tick" | "complete" | "error";
 
 export class ObserverEarcon {
-  private panel: vscode.WebviewPanel | undefined;
+  private panel: MessageTarget | undefined;
   private tickTimer: ReturnType<typeof setInterval> | null = null;
   private muted = false;
 
-  constructor(panel?: vscode.WebviewPanel) {
+  constructor(panel?: MessageTarget) {
     this.panel = panel;
   }
 
-  setPanel(panel: vscode.WebviewPanel): void {
+  setPanel(panel: MessageTarget): void {
     this.panel = panel;
   }
 
@@ -37,15 +40,15 @@ export class ObserverEarcon {
   }
 
   /** Play a one-shot earcon in the webview */
-  play(type: EarconType, targetPanel?: vscode.WebviewPanel): void {
+  play(type: EarconType, targetPanel?: MessageTarget): void {
     if (this.muted) return;
     const p = targetPanel || this.panel;
     if (!p) return;
-    p.webview.postMessage({ type: "play_earcon", earconType: type });
+    p.postMessage({ type: "play_earcon", earconType: type });
   }
 
   /** Start repeating tick pulse (every 1s) */
-  startTick(targetPanel?: vscode.WebviewPanel): void {
+  startTick(targetPanel?: MessageTarget): void {
     if (this.muted) return;
     this.stopTick(); // clear any existing
     this.play("tick", targetPanel);

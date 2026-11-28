@@ -61,6 +61,31 @@ exports.run = async function run() {
     assert.strictEqual(path.resolve(msg.workspace_path), path.resolve(root.fsPath));
   });
 
+  await check("the panel opens in the right sidebar, never as an editor tab", async () => {
+    const ext = vscode.extensions.getExtension("angizo-team.angizo");
+    const end = Date.now() + 15000;
+    while (!(ext.exports && ext.exports.viewReady)) {
+      if (Date.now() > end) throw new Error("the Angizo sidebar view never became ready");
+      await sleep(200);
+    }
+    const tabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
+    const angizoTabs = tabs.filter((t) => t.input instanceof vscode.TabInputWebview || t.label === "Angizo");
+    assert.strictEqual(angizoTabs.length, 0, "found an Angizo editor tab: " + angizoTabs.map((t) => t.label).join(", "));
+  });
+
+  await check("the mic shortcut (Ctrl+Alt+Space) starts and stops the backend mic", async () => {
+    const bindings = vscode.extensions.getExtension("angizo-team.angizo").packageJSON.contributes.keybindings;
+    assert.ok(bindings.some((b) => b.command === "angizo.toggleMic" && b.key === "ctrl+alt+space"));
+    const before = countWhere((m) => m.type === "toggle_backend_mic");
+    await vscode.commands.executeCommand("angizo.toggleMic");
+    await vscode.commands.executeCommand("angizo.toggleMic");
+    const end = Date.now() + 5000;
+    while (countWhere((m) => m.type === "toggle_backend_mic") < before + 2) {
+      if (Date.now() > end) throw new Error("toggle_backend_mic was not sent twice");
+      await sleep(200);
+    }
+  });
+
   await check("manual stream: a syntax error is reported when the cursor leaves its line", async () => {
     const doc = await vscode.workspace.openTextDocument(file("sample.ts"));
     const editor = await vscode.window.showTextDocument(doc);

@@ -129,6 +129,11 @@ export class AngizoWsClient extends EventEmitter {
   /**
    * Toggle backend OS microphone recording.
    */
+  /** Stop the backend mic if it is recording (never starts it). */
+  stopBackendMic(): void {
+    this.send({ type: "stop_backend_mic" });
+  }
+
   toggleBackendMic(): void {
     console.log("[ws-client] Toggling backend OS microphone");
     this.send({ type: "toggle_backend_mic" });

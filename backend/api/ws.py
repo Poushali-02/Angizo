@@ -300,27 +300,46 @@ active_mic_tasks = {}
 async def record_backend_audio(ws: WebSocket, session_id: str):
     """Records audio directly from OS microphone using sounddevice, then transcribes."""
     logger.info(f"[Backend Mic] Starting OS microphone capture for session {session_id}")
-    await ws.send_json({"type": "mic_status", "state": "recording"})
+    # Registered before the first await, so a quick second press stops this recording
+    # instead of starting another one.
+    task = {"recording": True, "stop_reason": None}
+    active_mic_tasks[session_id] = task
+
+    def release_mic():
+        if active_mic_tasks.get(session_id) is task:
+            active_mic_tasks.pop(session_id, None)
 
     try:
+        await ws.send_json({"type": "mic_status", "state": "recording"})
         import sounddevice as sd
         import numpy as np
 
+        from tools.vad import SilenceDetector
+
         audio_buffer = bytearray()
-        active_mic_tasks[session_id] = {"recording": True}
 
         sample_rate = 16000
         channels = 1
+        detector = SilenceDetector(sample_rate=sample_rate)
 
         def audio_callback(indata, frames, time, status):
             if status:
                 logger.warning(f"[Backend Mic] Status: {status}")
-            if active_mic_tasks.get(session_id, {}).get("recording"):
+            if task.get("recording"):
                 # Convert float32 [-1.0, 1.0] to int16 PCM
                 pcm_data = (indata * 32767).astype(np.int16).tobytes()
                 audio_buffer.extend(pcm_data)
+                reason = detector.feed(indata[:, 0] if getattr(indata, "ndim", 1) > 1 else indata)
+                if reason:
+                    # Auto-stop: the user stopped talking (or never started).
+                    task["stop_reason"] = reason
+                    task["recording"] = False
 
+        from tools.vad import pick_input_device
+        device, device_name = pick_input_device()
+        logger.info(f"[Backend Mic] Recording from: {device_name}")
         stream = sd.InputStream(
+            device=device,
             samplerate=sample_rate,
             channels=channels,
             dtype='float32',
@@ -328,11 +347,22 @@ async def record_backend_audio(ws: WebSocket, session_id: str):
         )
 
         with stream:
-            while active_mic_tasks.get(session_id, {}).get("recording"):
+            while task.get("recording"):
                 await asyncio.sleep(0.1)
 
-        logger.info(f"[Backend Mic] Recording stopped. Total bytes captured: {len(audio_buffer)}")
-        await ws.send_json({"type": "mic_status", "state": "transcribing"})
+        # The mic is free again: the next press starts a new recording, even while this
+        # one is still being transcribed and answered.
+        release_mic()
+        reason = task.get("stop_reason") or "manual"
+        logger.info(f"[Backend Mic] Recording stopped ({reason}). Total bytes captured: {len(audio_buffer)}, "
+                    f"speech threshold {detector.threshold:.4f}")
+        if reason == "no_speech":
+            # Nothing was said: skip transcription so no Sarvam credits are spent on silence.
+            await ws.send_json({"type": "mic_status", "state": "idle", "reason": "no_speech"})
+            await ws.send_json({"type": "action_result", "status": "failure",
+                                "detail": "I didn't hear anything.", "spoken_text": "I didn't hear anything."})
+            return
+        await ws.send_json({"type": "mic_status", "state": "transcribing", "reason": reason})
 
         if len(audio_buffer) > 0:
             from tools.sarvam_stt import sarvam_stt_client
@@ -360,7 +390,7 @@ async def record_backend_audio(ws: WebSocket, session_id: str):
         await ws.send_json({"type": "mic_status", "state": "idle"})
         await ws.send_json({"type": "action_result", "status": "failure", "detail": f"Mic error: {str(e)}"})
     finally:
-        active_mic_tasks.pop(session_id, None)
+        release_mic()
 
 
 async def handle_observer_event(ws: WebSocket, session_id: int, msg: dict):

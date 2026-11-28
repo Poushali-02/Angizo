@@ -2,6 +2,36 @@
 
 All notable changes to Angizo, newest first. Everything below is on the `v1` branch and not yet in `main`.
 
+## 2026-11-28: Sidebar panel, the cat, and push-to-talk (branch `v1-UI`)
+
+### Added
+- **Mic shortcut: `Ctrl+Alt+Space`** (`Cmd+Alt+Space` on Mac), command `angizo.toggleMic`. Press it and speak. A rising blip means it is listening, a falling blip means it stopped. Pressing it while Angizo is talking cuts the speech off. Sending a new command also cuts it off.
+- **Recording stops by itself** (`backend/tools/vad.py`). It stops about 1.2 s after you stop talking (`ANGIZO_MIC_SILENCE_MS` changes this). The first 0.3 s measure the room's noise, so a fan doesn't count as speech. If nothing is said within 6 s it stops and says "I didn't hear anything." That case is never sent for transcription, so no Sarvam credits are spent on silence. A recording is 15 s at most.
+- **The cat**: a grey tabby in headphones with a mic, sitting on a terminal, at the top of the panel. It keeps the same pose in every state; only the face, ears, paw, tail and small extras change:
+  - idle: asleep, ears down, slow breathing, "z z"
+  - listening: eyes open, ears twitch, sound waves pulse toward the headphones
+  - thinking: eyes look up, tail swishes, a "…" bubble blinks
+  - talking: happy eyes, mouth moving, music notes
+  - waiting for your yes: looks at you, waves a paw, "?" bubble
+  - failed: wide eyes, worried brows, a startled hop, "!"
+
+  The terminal under it shows a hint of the state (for example `yes? Alt+Y / Alt+N`). The cat is hidden from screen readers, because every state is already spoken or played as a sound. The notes, waves and bubbles use the theme's text colour, so they show on light and dark themes. It stays still when the system asks for reduced motion.
+- **Logo and icons**: the cat's head in a circle is the extension icon (`media/logo.png`, `logo.svg`) and is at the top of the README. A one-colour outline of it is the sidebar icon.
+- **Angizo: Show Panel** command.
+- `angizo-extension/.vscodeignore`: the packaged extension (`npx @vscode/vsce package`) leaves out the tests and TypeScript sources (37 files, 107 KB).
+- 9 offline tests for the auto-stop (two run the real mic loop with a fake microphone and prove silence is never sent to Sarvam), and 2 end-to-end checks: the panel never opens as an editor tab, and the shortcut starts and stops the mic. The suites now have 186 backend tests and 14 end-to-end checks.
+
+### Changed
+- **The panel is in the right (secondary) sidebar instead of an editor tab.** It no longer opens beside your code every time something happens, and never takes focus. It is created once at startup, and focus goes straight back to the editor. Messages sent before it is ready wait in a queue and are not lost. It keeps playing audio while the sidebar is closed.
+- **The "Voice Interface" box is gone.** Its Pause, Resume and Stop buttons did nothing (no code behind them), and its "Idle" label repeated the cat's caption. A small mic button under the cat replaces it; clicking it works like `Ctrl+Alt+Space`, including cutting off speech. Its icon stays the same and screen readers hear it as pressed or not pressed (it used to swap to emoji). The feed gets the space.
+- **Angizo: Start Voice Input** now starts listening. It used to only open the panel.
+- The confirmation box hides as soon as you answer with Alt+Y or Alt+N. It used to stay open after a keyboard answer.
+
+### Fixed
+- **Quiet microphones were never heard.** Measured on a real laptop mic (room noise 0.0035, speech bursts 0.006–0.018), most speech was below the auto-stop's fixed 0.01 floor, so every recording ended with "I didn't hear anything." Speech now only has to be twice as loud as the room's noise, with a floor of 0.004.
+- **The mic can be chosen.** Set `ANGIZO_MIC_DEVICE` in `backend/.env` to part of a device name (for example `ZEB-DUKE` for a headset); the default is the Windows default mic. The backend logs which mic it records from and the speech threshold it used.
+- **Angizo: Stop Voice Input** could start the mic instead of stopping it, because it sent a toggle. It now sends a stop.
+
 ## 2026-11-28: Renamed NeuroCode to Angizo everywhere
 
 ### Changed

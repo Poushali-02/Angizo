@@ -80,10 +80,9 @@ exports.run = async function run() {
   const root = vscode.workspace.workspaceFolders[0].uri;
   const repo = root.fsPath;
 
-  // Tidy window: no chat sidebar, Angizo panel open
-  await vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar").then(undefined, () => {});
+  // Tidy window: no other editors; the right sidebar shows Angizo (with the cat)
   await vscode.commands.executeCommand("workbench.action.closeAllEditors");
-  await vscode.commands.executeCommand("angizo.startVoiceInput");
+  await vscode.commands.executeCommand("angizo.showPanel");
   await sleep(4000); // let the extension connect to the backend
 
   // Tell the recorder the window is ready, and wait until it is recording

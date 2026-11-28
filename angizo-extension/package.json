@@ -4,6 +4,7 @@
   "description": "AI Accessibility Agent — voice-driven code review, Git workflows, and diff intelligence for blind and low-vision developers.",
   "version": "0.1.0",
   "publisher": "angizo-team",
+  "icon": "media/logo.png",
   "engines": {
     "vscode": "^1.93.0"
   },
@@ -19,6 +20,10 @@
       {
         "command": "angizo.runCommand",
         "title": "Angizo: Run a Command…"
+      },
+      {
+        "command": "angizo.toggleMic",
+        "title": "Angizo: Start/Stop Listening (Mic)"
       },
       {
         "command": "angizo.startVoiceInput",
@@ -47,9 +52,18 @@
       {
         "command": "angizo.toggleManualStream",
         "title": "Angizo: Toggle Manual Coding Stream"
+      },
+      {
+        "command": "angizo.showPanel",
+        "title": "Angizo: Show Panel"
       }
     ],
     "keybindings": [
+      {
+        "command": "angizo.toggleMic",
+        "key": "ctrl+alt+space",
+        "mac": "cmd+alt+space"
+      },
       {
         "command": "angizo.announceStatus",
         "key": "ctrl+shift+s",
@@ -85,6 +99,24 @@
           "description": "Port of the Angizo Python backend (ws://localhost:<port>/ws/session)."
         }
       }
+    },
+    "viewsContainers": {
+      "secondarySidebar": [
+        {
+          "id": "angizo-sidebar",
+          "title": "Angizo",
+          "icon": "media/cat.svg"
+        }
+      ]
+    },
+    "views": {
+      "angizo-sidebar": [
+        {
+          "type": "webview",
+          "id": "angizo.view",
+          "name": "Angizo"
+        }
+      ]
     }
   },
   "scripts": {
